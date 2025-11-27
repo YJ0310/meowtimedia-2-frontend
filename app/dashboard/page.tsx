@@ -57,7 +57,8 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!selectedCountry) {
       const addComment = () => {
-        const randomCountries = countries.sort(() => 0.5 - Math.random()).slice(0, 2);
+        const shuffled = [...countries].sort(() => 0.5 - Math.random());
+        const randomCountries = shuffled.slice(0, 2);
         const newComments = randomCountries.map((c, i) => {
           const comments = countryComments[c.slug as keyof typeof countryComments] || ['Explore me!'];
           const randomComment = comments[Math.floor(Math.random() * comments.length)];
@@ -72,7 +73,7 @@ export default function DashboardPage() {
       };
 
       addComment();
-      const interval = setInterval(addComment, Math.random() * 3000 + 2000);
+      const interval = setInterval(addComment, 5000);
       return () => clearInterval(interval);
     }
   }, [selectedCountry]);
@@ -90,7 +91,7 @@ export default function DashboardPage() {
       };
 
       updateComments();
-      const interval = setInterval(updateComments, Math.random() * 4000 + 3000);
+      const interval = setInterval(updateComments, 6000);
       return () => clearInterval(interval);
     } else {
       setSelectedCountryComments([]);
@@ -260,75 +261,56 @@ export default function DashboardPage() {
                   {countries.map((c, i) => (
                     <Marker key={c.id} coordinates={c.coordinates}>
                       <g onClick={() => handleCountryClick(c.slug)} style={{ cursor: 'pointer' }}>
-                        <motion.circle
-                          r={selectedCountry === c.slug ? 8 : 6}
+                        <circle
+                          r={selectedCountry === c.slug ? 8 / zoom : 6 / zoom}
                           fill={selectedCountry === c.slug ? "#EFE4D4" : "#A8BEDF"}
                           stroke="#fff"
-                          strokeWidth={2}
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: 0.5 + i * 0.1, type: "spring" }}
-                          whileHover={{ scale: 1.5 }}
+                          strokeWidth={2 / zoom}
                         />
-                        <motion.circle
-                          r={12}
+                        <circle
+                          r={12 / zoom}
                           fill="#A8BEDF"
                           opacity={0.3}
-                          animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0, 0.3] }}
-                          transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
                         />
                       </g>
                     </Marker>
                   ))}
 
                   {/* Floating Comments as Markers */}
-                  <AnimatePresence>
-                    {!selectedCountry && floatingComments.map((comment) => (
-                      <Marker key={comment.id} coordinates={comment.coordinates}>
-                        <motion.g
-                          initial={{ opacity: 0, scale: 0 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0 }}
-                        >
-                          <foreignObject x="10" y="-10" width="120" height="30">
-                            <div className="glass-strong backdrop-blur-xl px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shadow-lg">
+                  {!selectedCountry && floatingComments.map((comment) => (
+                    <Marker key={comment.id} coordinates={comment.coordinates}>
+                      <g transform={`scale(${1 / zoom})`}>
+                        <foreignObject x="10" y="-10" width="120" height="30">
+                          <div className="glass-strong backdrop-blur-xl px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shadow-lg">
+                            {comment.text}
+                          </div>
+                        </foreignObject>
+                      </g>
+                    </Marker>
+                  ))}
+
+                  {/* Selected Country Comments */}
+                  {selectedCountry && country && selectedCountryComments.map((comment, index) => {
+                    const offsetX = [15, -15, 25][index] || 15;
+                    const offsetY = [-15, -25, -10][index] || -15;
+                    return (
+                      <Marker 
+                        key={comment.id} 
+                        coordinates={[
+                          country.coordinates[0] + offsetX * 0.3,
+                          country.coordinates[1] + offsetY * 0.3
+                        ]}
+                      >
+                        <g transform={`scale(${1 / zoom})`}>
+                          <foreignObject x="0" y="0" width="140" height="40">
+                            <div className="glass-strong backdrop-blur-xl px-4 py-2 rounded-lg text-sm font-medium shadow-lg whitespace-nowrap">
                               {comment.text}
                             </div>
                           </foreignObject>
-                        </motion.g>
+                        </g>
                       </Marker>
-                    ))}
-                  </AnimatePresence>
-
-                  {/* Selected Country Comments */}
-                  <AnimatePresence>
-                    {selectedCountry && country && selectedCountryComments.map((comment, index) => {
-                      const offsetX = [15, -15, 25][index] || 15;
-                      const offsetY = [-15, -25, -10][index] || -15;
-                      return (
-                        <Marker 
-                          key={comment.id} 
-                          coordinates={[
-                            country.coordinates[0] + offsetX * 0.3,
-                            country.coordinates[1] + offsetY * 0.3
-                          ]}
-                        >
-                          <motion.g
-                            initial={{ opacity: 0, scale: 0 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0 }}
-                            transition={{ delay: index * 0.2 }}
-                          >
-                            <foreignObject x="0" y="0" width="140" height="40">
-                              <div className="glass-strong backdrop-blur-xl px-4 py-2 rounded-lg text-sm font-medium shadow-lg whitespace-nowrap">
-                                {comment.text}
-                              </div>
-                            </foreignObject>
-                          </motion.g>
-                        </Marker>
-                      );
-                    })}
-                  </AnimatePresence>
+                    );
+                  })}
                 </ZoomableGroup>
               </ComposableMap>
 
