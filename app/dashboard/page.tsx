@@ -222,7 +222,6 @@ export default function DashboardPage() {
             {/* Map Container */}
             <div className="relative w-full aspect-16/10 glass-strong rounded-3xl overflow-hidden shadow-2xl">
               <ComposableMap
-                projection="geoMercator"
                 projectionConfig={{
                   scale: 400,
                   center: center

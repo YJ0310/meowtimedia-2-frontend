@@ -3,7 +3,7 @@ import { User, Country, Topic, Stamp, Lesson } from './types';
 export const mockUser: User = {
   name: "Aldof Hitler",
   email: "yinjia@nazi.german",
-  image: "https://cdn.britannica.com/58/129958-050-C0EF01A4/Adolf-Hitler-1933.jpg?w=400&h=300&c=crop",
+  image: "https://cdn.britannica.com/58/129958-050-C0EF01A4/Adolf-Hitler-1933.jpg",
   totalStamps: 12
 };
 
