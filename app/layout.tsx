@@ -16,7 +16,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
         <Navbar />
-        <main className="pt-16">
+        <main className="pt-16 md:pt-16 pb-24 md:pb-0">
           {children}
         </main>
       </body>

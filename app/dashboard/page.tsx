@@ -26,7 +26,7 @@ const countryComments = {
 
 export default function DashboardPage() {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
-  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [center, setCenter] = useState<[number, number]>([100, 25]);
@@ -115,6 +115,7 @@ export default function DashboardPage() {
   const handleBackToMap = () => {
     setSelectedCountry(null);
     setSidebarExpanded(true);
+    setMobileMenuOpen(false);
     setZoom(1);
     setCenter([100, 25]);
   };
@@ -133,10 +134,13 @@ export default function DashboardPage() {
       <motion.aside
         initial={false}
         animate={{ 
-          x: (sidebarExpanded || mobileMenuOpen) ? 0 : -320,
+          x: mobileMenuOpen ? 0 : (sidebarExpanded ? 0 : -320),
         }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="fixed left-0 top-16 bottom-0 w-80 glass-strong border-r backdrop-blur-xl z-40 overflow-hidden"
+        className="fixed left-0 top-16 bottom-0 md:bottom-0 w-80 glass-strong border-r backdrop-blur-xl z-40 overflow-hidden hidden md:block md:left-0"
+        style={{
+          display: mobileMenuOpen ? 'block' : undefined
+        }}
       >
         <div className="p-6 space-y-6 w-80">
           {/* Time & Greeting */}
@@ -213,12 +217,104 @@ export default function DashboardPage() {
         </div>
       </motion.aside>
 
+      {/* Mobile Bottom Menu Sheet */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/10 backdrop-blur-lg border-t border-white/20 shadow-lg rounded-t-3xl max-h-[70vh] overflow-y-auto"
+          >
+            <div className="p-6 space-y-6">
+              {/* Close Handle */}
+              <div className="flex justify-center">
+                <div className="w-12 h-1.5 bg-white/30 rounded-full"></div>
+              </div>
+
+              {/* Time & Greeting */}
+              <div className="text-center space-y-2">
+                <div className="flex items-center justify-center gap-2 text-primary">
+                  <Clock className="w-4 h-4" />
+                  <div className="text-sm font-mono">
+                    {currentTime.toLocaleTimeString()}
+                  </div>
+                </div>
+                <h2 className="text-xl font-semibold">{greeting}, {mockUser.name}!</h2>
+              </div>
+
+              {/* User Profile */}
+              <div className="text-center space-y-3">
+                <motion.img 
+                  whileHover={{ scale: 1.05, rotate: 5 }}
+                  src={mockUser.image} 
+                  alt={mockUser.name}
+                  className="w-24 h-24 rounded-full mx-auto border-4 border-primary shadow-xl"
+                />
+                <div className="glass p-3 rounded-lg">
+                  <div className="text-3xl font-bold text-gradient">{mockUser.totalStamps}/48</div>
+                  <div className="text-xs text-muted-foreground">Stamps Collected</div>
+                </div>
+              </div>
+
+              {/* Countries Progress */}
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                  <MapPin className="w-4 h-4" />
+                  Your Progress
+                </h3>
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
+                  {countries.map((c) => {
+                    const countryStamps = stamps.filter(s => s.countrySlug === c.slug).length;
+                    return (
+                      <motion.button
+                        key={c.id}
+                        onClick={() => handleCountryClick(c.slug)}
+                        whileHover={{ scale: 1.02, x: 4 }}
+                        whileTap={{ scale: 0.98 }}
+                        className={`w-full glass p-3 rounded-lg text-left transition-all ${
+                          selectedCountry === c.slug ? 'ring-2 ring-primary shadow-lg' : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-2xl shrink-0">{c.flag}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-sm truncate">{c.name}</div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shrink-0">
+                                <motion.div 
+                                  className="h-full bg-linear-to-r from-primary to-secondary"
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${c.progress}%` }}
+                                  transition={{ duration: 1, delay: 0.1 }}
+                                />
+                              </div>
+                              <span className="text-xs text-muted-foreground w-8 text-right shrink-0">{c.progress}%</span>
+                            </div>
+                          </div>
+                          {countryStamps > 0 && (
+                            <div className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full font-semibold shrink-0">
+                              {countryStamps} 🐾
+                            </div>
+                          )}
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Main Map Area */}
-      <div className="transition-all duration-300 md:ml-0">
-        {/* Mobile Menu Toggle */}
+      <div className="transition-all duration-300 md:ml-80">
+        {/* Mobile Menu Toggle - Bottom Dock Style */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden fixed top-20 left-4 z-50 glass-strong p-3 rounded-lg shadow-lg"
+          className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg p-4 rounded-full active:scale-95 transition-transform"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -250,7 +346,14 @@ export default function DashboardPage() {
                 height={500}
                 className="w-full h-full"
               >
-                <ZoomableGroup zoom={zoom} center={center}>
+                <ZoomableGroup 
+                  zoom={zoom} 
+                  center={center}
+                  onMoveEnd={(position) => {
+                    setCenter(position.coordinates);
+                    setZoom(position.zoom);
+                  }}
+                >
                   <Geographies geography={geoUrl}>
                     {({ geographies }) =>
                       geographies.map((geo) => {
@@ -310,14 +413,15 @@ export default function DashboardPage() {
 
                   {/* Selected Country Comments */}
                   {selectedCountry && country && selectedCountryComments.map((comment, index) => {
-                    const offsetX = [15, -15, 25][index] || 15;
-                    const offsetY = [-15, -25, -10][index] || -15;
+                    // Tighter positioning around country - reduced offsets by 50%
+                    const offsetX = [5, -5, 7][index] || 5;
+                    const offsetY = [-5, -8, -3][index] || -5;
                     return (
                       <Marker 
                         key={comment.id} 
                         coordinates={[
-                          country.coordinates[0] + offsetX * 0.3,
-                          country.coordinates[1] + offsetY * 0.3
+                          country.coordinates[0] + offsetX * 0.15,
+                          country.coordinates[1] + offsetY * 0.15
                         ]}
                       >
                         <g transform={`scale(${1 / zoom})`}>
