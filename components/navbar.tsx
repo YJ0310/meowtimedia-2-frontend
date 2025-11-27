@@ -28,7 +28,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group">
           <span className="text-3xl animate-paw">🐾</span>
-          <h1 className="text-2xl font-bold">Meowtimap</h1>
+          <h1 className="text-2xl font-bold text-gradient">Meowtimap</h1>
         </Link>
 
         <div className="flex items-center gap-6">
