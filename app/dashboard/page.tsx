@@ -26,7 +26,8 @@ const countryComments = {
 
 export default function DashboardPage() {
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
-  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [center, setCenter] = useState<[number, number]>([100, 25]);
   const [floatingComments, setFloatingComments] = useState<Array<{id: number, country: string, text: string, coordinates: [number, number]}>>([]);
@@ -104,6 +105,7 @@ export default function DashboardPage() {
     if (country) {
       setSelectedCountry(countrySlug);
       setSidebarExpanded(false);
+      setMobileMenuOpen(false);
       setZoom(2.5);
       setCenter([country.coordinates[0], country.coordinates[1]]);
     }
@@ -119,15 +121,22 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen relative bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <motion.aside
         initial={false}
         animate={{ 
-          x: sidebarExpanded ? 0 : -320,
-          width: sidebarExpanded ? 320 : 0
+          x: (sidebarExpanded || mobileMenuOpen) ? 0 : -320,
         }}
         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="fixed left-0 top-16 bottom-0 glass-strong border-r backdrop-blur-xl z-40 overflow-hidden"
+        className="fixed left-0 top-16 bottom-0 w-80 glass-strong border-r backdrop-blur-xl z-40 overflow-hidden"
       >
         <div className="p-6 space-y-6 w-80">
           {/* Time & Greeting */}
@@ -205,23 +214,33 @@ export default function DashboardPage() {
       </motion.aside>
 
       {/* Main Map Area */}
-      <div className={`transition-all duration-300 ${sidebarExpanded ? 'ml-80' : 'ml-0'}`}>
+      <div className="transition-all duration-300 md:ml-0">
+        {/* Mobile Menu Toggle */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden fixed top-20 left-4 z-50 glass-strong p-3 rounded-lg shadow-lg"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
         <div className="relative min-h-screen p-4 md:p-8">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-6 space-y-2"
+              className="text-center mb-4 md:mb-6 space-y-2"
             >
-              <h1 className="text-5xl font-bold logo-text text-gradient">Explore Asia</h1>
-              <p className="text-muted-foreground text-lg">
+              <h1 className="text-3xl md:text-5xl font-bold logo-text text-gradient">Explore Asia</h1>
+              <p className="text-muted-foreground text-sm md:text-lg px-4">
                 Click on any country pin to begin your cultural journey
               </p>
             </motion.div>
 
             {/* Map Container */}
-            <div className="relative w-full aspect-16/10 glass-strong rounded-3xl overflow-hidden shadow-2xl">
+            <div className="relative w-full aspect-video md:aspect-16/10 glass-strong rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl mt-16 md:mt-0">
               <ComposableMap
                 projection="geoMercator"
                 projectionConfig={{
@@ -318,22 +337,22 @@ export default function DashboardPage() {
               <div className="absolute bottom-4 right-4 flex flex-col gap-2">
                 <button
                   onClick={() => setZoom(Math.min(zoom * 1.5, 4))}
-                  className="glass-strong p-2 rounded-lg hover:bg-primary/20 transition-colors"
+                  className="glass-strong p-3 md:p-2 rounded-lg hover:bg-primary/20 transition-colors active:scale-95"
                 >
-                  <span className="text-xl">+</span>
+                  <span className="text-2xl md:text-xl">+</span>
                 </button>
                 <button
                   onClick={() => setZoom(Math.max(zoom / 1.5, 1))}
-                  className="glass-strong p-2 rounded-lg hover:bg-primary/20 transition-colors"
+                  className="glass-strong p-3 md:p-2 rounded-lg hover:bg-primary/20 transition-colors active:scale-95"
                 >
-                  <span className="text-xl">−</span>
+                  <span className="text-2xl md:text-xl">−</span>
                 </button>
                 {selectedCountry && (
                   <button
                     onClick={handleBackToMap}
-                    className="glass-strong p-2 rounded-lg hover:bg-primary/20 transition-colors"
+                    className="glass-strong p-3 md:p-2 rounded-lg hover:bg-primary/20 transition-colors active:scale-95"
                   >
-                    <span className="text-sm">⟲</span>
+                    <span className="text-lg md:text-sm">⟲</span>
                   </button>
                 )}
               </div>
@@ -352,23 +371,23 @@ export default function DashboardPage() {
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="fixed right-0 top-16 bottom-0 w-full md:w-[480px] glass-strong border-l overflow-y-auto z-50 shadow-2xl"
           >
-            <div className="p-6 space-y-6">
+            <div className="p-4 md:p-6 space-y-4 md:space-y-6">
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="flex items-start justify-between"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 md:gap-3">
                   <motion.span 
-                    className="text-5xl"
+                    className="text-3xl md:text-5xl"
                     animate={{ rotate: [0, 10, -10, 0] }}
                     transition={{ duration: 2, repeat: Infinity }}
                   >
                     {country.flag}
                   </motion.span>
                   <div>
-                    <h2 className="text-3xl font-bold">{country.name}</h2>
-                    <p className="text-sm text-muted-foreground">
+                    <h2 className="text-2xl md:text-3xl font-bold">{country.name}</h2>
+                    <p className="text-xs md:text-sm text-muted-foreground">
                       {country.unlockedTopics}/{country.totalTopics} topics unlocked
                     </p>
                   </div>

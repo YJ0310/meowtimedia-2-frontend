@@ -74,19 +74,19 @@ export default function Home() {
               transition={{ duration: 0.8 }}
               className="space-y-4"
             >
-              <div className="flex items-center justify-center gap-4">
+              <div className="flex items-center justify-center gap-2 md:gap-4">
                 <motion.span 
-                  className="text-7xl"
+                  className="text-4xl md:text-7xl"
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
                 >
                   🐾
                 </motion.span>
-                <h1 className="text-7xl md:text-9xl font-bold text-gradient">
+                <h1 className="text-5xl md:text-9xl font-bold text-gradient">
                   Meowtimap
                 </h1>
                 <motion.span 
-                  className="text-7xl"
+                  className="text-4xl md:text-7xl"
                   animate={{ rotate: [0, -10, 10, 0] }}
                   transition={{ duration: 2, repeat: Infinity, repeatDelay: 3, delay: 0.3 }}
                 >
@@ -98,7 +98,7 @@ export default function Home() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
-                className="text-2xl md:text-3xl text-muted-foreground font-light"
+                className="text-lg md:text-2xl lg:text-3xl text-muted-foreground font-light px-4"
               >
                 Collect cultures. Earn stamps. Fall in love with Asia.
               </motion.p>

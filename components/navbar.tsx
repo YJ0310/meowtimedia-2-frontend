@@ -25,13 +25,13 @@ export default function Navbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-strong border-b backdrop-blur-xl">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div className="container mx-auto px-3 md:px-4 py-3 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group">
-          <span className="text-3xl animate-paw">🐾</span>
-          <h1 className="text-2xl font-bold logo-text text-gradient">Meowtimap</h1>
+          <span className="text-2xl md:text-3xl animate-paw">🐾</span>
+          <h1 className="text-xl md:text-2xl font-bold logo-text text-gradient">Meowtimap</h1>
         </Link>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2 md:gap-6">
           <Link 
             href="/dashboard" 
             className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors"
@@ -41,9 +41,9 @@ export default function Navbar() {
 
           <Link 
             href="/passport" 
-            className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors"
+            className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors"
           >
-            <Book size={20} />
+            <Book size={18} className="md:w-5 md:h-5" />
             <span className="hidden md:inline">Passport</span>
           </Link>
 
@@ -52,14 +52,14 @@ export default function Navbar() {
             className="p-2 rounded-lg hover:bg-primary/20 transition-colors"
             aria-label="Toggle theme"
           >
-            {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+            {theme === 'light' ? <Moon size={18} className="md:w-5 md:h-5" /> : <Sun size={18} className="md:w-5 md:h-5" />}
           </button>
 
           <Link href="/dashboard" className="flex items-center gap-2">
             <img 
               src={mockUser.image} 
               alt={mockUser.name}
-              className="w-10 h-10 rounded-full border-2 border-primary"
+              className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-primary"
             />
             <div className="hidden lg:block text-sm">
               <p className="font-semibold">{mockUser.name}</p>
