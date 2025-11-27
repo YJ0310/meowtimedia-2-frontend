@@ -222,10 +222,12 @@ export default function DashboardPage() {
             {/* Map Container */}
             <div className="relative w-full aspect-16/10 glass-strong rounded-3xl overflow-hidden shadow-2xl">
               <ComposableMap
+                projection="geoMercator"
                 projectionConfig={{
-                  scale: 400,
-                  center: center
+                  scale: 400
                 }}
+                width={800}
+                height={500}
                 className="w-full h-full"
               >
                 <ZoomableGroup zoom={zoom} center={center}>
@@ -329,55 +331,6 @@ export default function DashboardPage() {
                   </AnimatePresence>
                 </ZoomableGroup>
               </ComposableMap>
-
-                  {/* Floating Comments as Markers */}
-                  <AnimatePresence>
-                    {!selectedCountry && floatingComments.map((comment) => (
-                      <Marker key={comment.id} coordinates={comment.coordinates}>
-                        <motion.g
-                          initial={{ opacity: 0, scale: 0 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0 }}
-                        >
-                          <foreignObject x="10" y="-10" width="120" height="30">
-                            <div className="glass-strong backdrop-blur-xl px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shadow-lg">
-                              {comment.text}
-                            </div>
-                          </foreignObject>
-                        </motion.g>
-                      </Marker>
-                    ))}
-                  </AnimatePresence>
-
-                  {/* Selected Country Comments */}
-                  <AnimatePresence>
-                    {selectedCountry && country && selectedCountryComments.map((comment, index) => {
-                      const offsetX = [15, -15, 25][index] || 15;
-                      const offsetY = [-15, -25, -10][index] || -15;
-                      return (
-                        <Marker 
-                          key={comment.id} 
-                          coordinates={[
-                            country.coordinates[0] + offsetX * 0.3,
-                            country.coordinates[1] + offsetY * 0.3
-                          ]}
-                        >
-                          <motion.g
-                            initial={{ opacity: 0, scale: 0 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0 }}
-                            transition={{ delay: index * 0.2 }}
-                          >
-                            <foreignObject x="0" y="0" width="140" height="40">
-                              <div className="glass-strong backdrop-blur-xl px-4 py-2 rounded-lg text-sm font-medium shadow-lg whitespace-nowrap">
-                                {comment.text}
-                              </div>
-                            </foreignObject>
-                          </motion.g>
-                        </Marker>
-                      );
-                    })}
-                  </AnimatePresence>
 
               {/* Zoom Controls */}
               <div className="absolute bottom-4 right-4 flex flex-col gap-2">
