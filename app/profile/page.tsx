@@ -1,0 +1,361 @@
+'use client';
+
+import { useState, useRef, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Camera, Upload, Check, X, ZoomIn, ZoomOut, RotateCw, Save } from 'lucide-react';
+import Link from 'next/link';
+import { mockUser } from '@/lib/mock-data';
+
+export default function ProfilePage() {
+  const [image, setImage] = useState<string>(mockUser.image);
+  const [originalImage, setOriginalImage] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cropAreaRef = useRef<HTMLDivElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setOriginalImage(result);
+        setIsEditing(true);
+        setZoom(1);
+        setRotation(0);
+        setPosition({ x: 0, y: 0 });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDragStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    setIsDragging(true);
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    setDragStart({ x: clientX - position.x, y: clientY - position.y });
+  }, [position]);
+
+  const handleDragMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDragging) return;
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    setPosition({
+      x: clientX - dragStart.x,
+      y: clientY - dragStart.y
+    });
+  }, [isDragging, dragStart]);
+
+  const handleDragEnd = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 3));
+  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.1, 0.5));
+  const handleRotate = () => setRotation(prev => (prev + 90) % 360);
+
+  const handleSave = async () => {
+    if (!originalImage) return;
+    
+    setIsSaving(true);
+    
+    // Simulate saving to server
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // In a real app, you would:
+    // 1. Create a canvas with the cropped/transformed image
+    // 2. Convert to blob
+    // 3. Upload to server
+    // For now, we'll just use the transformed image
+    setImage(originalImage);
+    setIsEditing(false);
+    setOriginalImage(null);
+    setIsSaving(false);
+    setShowSuccess(true);
+    
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setOriginalImage(null);
+    setZoom(1);
+    setRotation(0);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  return (
+    <div className="min-h-screen bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 px-4">
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center mb-8"
+        >
+          <h1 className="text-3xl md:text-4xl font-bold text-gradient mb-2">Profile Picture</h1>
+          <p className="text-muted-foreground">Upload and customize your avatar</p>
+        </motion.div>
+
+        {/* Main Content */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="glass-strong rounded-3xl p-6 md:p-8 space-y-8"
+        >
+          {/* Current Profile Picture */}
+          {!isEditing && (
+            <div className="text-center space-y-6">
+              <motion.div
+                className="relative inline-block"
+                whileHover={{ scale: 1.02 }}
+              >
+                <img
+                  src={image}
+                  alt="Profile"
+                  className="w-48 h-48 md:w-64 md:h-64 rounded-full object-cover border-4 border-primary shadow-2xl mx-auto"
+                />
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-2 right-2 md:bottom-4 md:right-4 bg-primary text-white p-3 rounded-full shadow-lg"
+                >
+                  <Camera className="w-5 h-5 md:w-6 md:h-6" />
+                </motion.button>
+              </motion.div>
+
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold">{mockUser.name}</h2>
+                <p className="text-muted-foreground">{mockUser.email}</p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="glass px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
+                >
+                  <Upload className="w-5 h-5" />
+                  Upload New Photo
+                </motion.button>
+                <Link href="/dashboard">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="glass px-6 py-3 rounded-xl font-semibold text-muted-foreground"
+                  >
+                    Back to Dashboard
+                  </motion.button>
+                </Link>
+              </div>
+            </div>
+          )}
+
+          {/* Image Editor */}
+          <AnimatePresence>
+            {isEditing && originalImage && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-6"
+              >
+                {/* Crop Area */}
+                <div 
+                  ref={cropAreaRef}
+                  className="relative w-full aspect-square max-w-md mx-auto rounded-3xl overflow-hidden bg-gray-900 cursor-move"
+                  onMouseDown={handleDragStart}
+                  onMouseMove={handleDragMove}
+                  onMouseUp={handleDragEnd}
+                  onMouseLeave={handleDragEnd}
+                  onTouchStart={handleDragStart}
+                  onTouchMove={handleDragMove}
+                  onTouchEnd={handleDragEnd}
+                >
+                  {/* Overlay Grid */}
+                  <div className="absolute inset-0 pointer-events-none z-10">
+                    <div className="w-full h-full border-2 border-white/30 rounded-full m-auto" 
+                      style={{ 
+                        width: '80%', 
+                        height: '80%', 
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)'
+                      }} 
+                    />
+                  </div>
+
+                  {/* Image */}
+                  <img
+                    src={originalImage}
+                    alt="Edit preview"
+                    className="absolute select-none"
+                    style={{
+                      transform: `translate(${position.x}px, ${position.y}px) scale(${zoom}) rotate(${rotation}deg)`,
+                      transformOrigin: 'center',
+                      top: '50%',
+                      left: '50%',
+                      marginTop: '-50%',
+                      marginLeft: '-50%',
+                      minWidth: '100%',
+                      minHeight: '100%',
+                      objectFit: 'cover',
+                      transition: isDragging ? 'none' : 'transform 0.1s ease-out'
+                    }}
+                    draggable={false}
+                  />
+
+                  {/* Vignette Overlay */}
+                  <div className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background: 'radial-gradient(circle, transparent 35%, rgba(0,0,0,0.6) 70%)'
+                    }}
+                  />
+                </div>
+
+                {/* Controls */}
+                <div className="flex items-center justify-center gap-4">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleZoomOut}
+                    className="glass p-3 rounded-full"
+                    disabled={zoom <= 0.5}
+                  >
+                    <ZoomOut className="w-5 h-5" />
+                  </motion.button>
+                  
+                  <div className="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary transition-all"
+                      style={{ width: `${((zoom - 0.5) / 2.5) * 100}%` }}
+                    />
+                  </div>
+                  
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleZoomIn}
+                    className="glass p-3 rounded-full"
+                    disabled={zoom >= 3}
+                  >
+                    <ZoomIn className="w-5 h-5" />
+                  </motion.button>
+
+                  <div className="w-px h-8 bg-gray-300 dark:bg-gray-600 mx-2" />
+
+                  <motion.button
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleRotate}
+                    className="glass p-3 rounded-full"
+                  >
+                    <RotateCw className="w-5 h-5" />
+                  </motion.button>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-4 justify-center">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleCancel}
+                    className="glass px-6 py-3 rounded-xl font-semibold flex items-center gap-2"
+                  >
+                    <X className="w-5 h-5" />
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleSave}
+                    disabled={isSaving}
+                    className="bg-linear-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-xl disabled:opacity-50"
+                  >
+                    {isSaving ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                        >
+                          <Save className="w-5 h-5" />
+                        </motion.div>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-5 h-5" />
+                        Save Photo
+                      </>
+                    )}
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Hidden File Input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+        </motion.div>
+
+        {/* Success Toast */}
+        <AnimatePresence>
+          {showSuccess && (
+            <motion.div
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 50, scale: 0.9 }}
+              className="fixed bottom-8 left-1/2 -translate-x-1/2 glass-strong px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 z-50"
+            >
+              <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
+                <Check className="w-5 h-5 text-white" />
+              </div>
+              <span className="font-semibold">Profile picture updated successfully!</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8"
+        >
+          <div className="glass rounded-2xl p-4 text-center">
+            <div className="text-2xl font-bold text-primary">{mockUser.totalStamps}</div>
+            <div className="text-xs text-muted-foreground">Stamps</div>
+          </div>
+          <div className="glass rounded-2xl p-4 text-center">
+            <div className="text-2xl font-bold text-primary">10</div>
+            <div className="text-xs text-muted-foreground">Countries</div>
+          </div>
+          <div className="glass rounded-2xl p-4 text-center">
+            <div className="text-2xl font-bold text-primary">42</div>
+            <div className="text-xs text-muted-foreground">Topics</div>
+          </div>
+          <div className="glass rounded-2xl p-4 text-center">
+            <div className="text-2xl font-bold text-primary">Level 5</div>
+            <div className="text-xs text-muted-foreground">Explorer</div>
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
+}

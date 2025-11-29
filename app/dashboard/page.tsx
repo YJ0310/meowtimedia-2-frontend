@@ -310,7 +310,13 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       {/* Main Map Area */}
-      <div className="transition-all duration-300 md:ml-80">
+      <motion.div 
+        className="md:ml-80"
+        animate={{ 
+          marginRight: selectedCountry ? 480 : 0,
+        }}
+        transition={{ type: "spring", damping: 30, stiffness: 200 }}
+      >
         {/* Mobile Menu Toggle - Bottom Dock Style */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -345,13 +351,22 @@ export default function DashboardPage() {
                 width={800}
                 height={500}
                 className="w-full h-full"
+                style={{ transition: 'all 0.3s ease-out' }}
               >
                 <ZoomableGroup 
                   zoom={zoom} 
                   center={center}
+                  translateExtent={[[-200, -100], [1000, 600]]}
                   onMoveEnd={(position) => {
                     setCenter(position.coordinates);
                     setZoom(position.zoom);
+                  }}
+                  filterZoomEvent={(evt: SVGElement | WheelEvent | TouchEvent) => {
+                    // Prevent scroll zoom on touch devices for smoother experience
+                    if ('type' in evt && 'ctrlKey' in evt) {
+                      return (evt as WheelEvent).type !== 'wheel' || (evt as WheelEvent).ctrlKey;
+                    }
+                    return true;
                   }}
                 >
                   <Geographies geography={geoUrl}>
@@ -398,12 +413,23 @@ export default function DashboardPage() {
                     </Marker>
                   ))}
 
-                  {/* Floating Comments as Markers */}
+                  {/* Floating Comments as Markers - anchored to pins */}
                   {!selectedCountry && floatingComments.map((comment) => (
                     <Marker key={comment.id} coordinates={comment.coordinates}>
                       <g transform={`scale(${1 / zoom})`}>
-                        <foreignObject x="10" y="-10" width="120" height="30">
-                          <div className="glass-strong backdrop-blur-xl px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shadow-lg">
+                        {/* Connector line from pin to comment */}
+                        <line
+                          x1="0"
+                          y1="0"
+                          x2="15"
+                          y2="-15"
+                          stroke="#A8BEDF"
+                          strokeWidth="1.5"
+                          strokeDasharray="3,2"
+                          opacity="0.6"
+                        />
+                        <foreignObject x="15" y="-35" width="130" height="35">
+                          <div className="glass-strong backdrop-blur-xl px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shadow-lg border border-primary/20">
                             {comment.text}
                           </div>
                         </foreignObject>
@@ -411,22 +437,40 @@ export default function DashboardPage() {
                     </Marker>
                   ))}
 
-                  {/* Selected Country Comments */}
+                  {/* Selected Country Comments - anchored to pin with connectors */}
                   {selectedCountry && country && selectedCountryComments.map((comment, index) => {
-                    // Tighter positioning around country - reduced offsets by 50%
-                    const offsetX = [5, -5, 7][index] || 5;
-                    const offsetY = [-5, -8, -3][index] || -5;
+                    // Position comments in arc around pin
+                    const angle = (index - 1) * 45; // -45, 0, 45 degrees
+                    const distance = 25;
+                    const radians = (angle * Math.PI) / 180;
+                    const endX = Math.cos(radians) * distance;
+                    const endY = Math.sin(radians) * distance - 20;
                     return (
                       <Marker 
                         key={comment.id} 
-                        coordinates={[
-                          country.coordinates[0] + offsetX * 0.15,
-                          country.coordinates[1] + offsetY * 0.15
-                        ]}
+                        coordinates={country.coordinates}
                       >
                         <g transform={`scale(${1 / zoom})`}>
-                          <foreignObject x="0" y="0" width="140" height="40">
-                            <div className="glass-strong backdrop-blur-xl px-4 py-2 rounded-lg text-sm font-medium shadow-lg whitespace-nowrap">
+                          {/* Connector line from pin to comment */}
+                          <line
+                            x1="0"
+                            y1="0"
+                            x2={endX}
+                            y2={endY}
+                            stroke="#EFE4D4"
+                            strokeWidth="2"
+                            strokeDasharray="4,2"
+                            opacity="0.8"
+                          />
+                          {/* Small dot at connection point */}
+                          <circle cx={endX} cy={endY} r="3" fill="#EFE4D4" />
+                          <foreignObject 
+                            x={endX - (index === 0 ? 140 : index === 1 ? 70 : 0)} 
+                            y={endY - 35} 
+                            width="150" 
+                            height="40"
+                          >
+                            <div className="glass-strong backdrop-blur-xl px-4 py-2 rounded-lg text-sm font-medium shadow-lg whitespace-nowrap border border-accent/30">
                               {comment.text}
                             </div>
                           </foreignObject>
@@ -463,120 +507,207 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Country Detail Panel */}
       <AnimatePresence>
         {country && (
-          <motion.div
-            initial={{ x: '100%', scale: 0.9 }}
-            animate={{ x: 0, scale: 1 }}
-            exit={{ x: '100%', scale: 0.9 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed right-0 top-16 bottom-0 w-full md:w-[480px] glass-strong border-l overflow-y-auto z-50 shadow-2xl"
-          >
-            <div className="p-4 md:p-6 space-y-4 md:space-y-6">
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex items-start justify-between"
-              >
-                <div className="flex items-center gap-2 md:gap-3">
-                  <motion.span 
-                    className="text-3xl md:text-5xl"
-                    animate={{ rotate: [0, 10, -10, 0] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  >
-                    {country.flag}
-                  </motion.span>
-                  <div>
-                    <h2 className="text-2xl md:text-3xl font-bold">{country.name}</h2>
-                    <p className="text-xs md:text-sm text-muted-foreground">
-                      {country.unlockedTopics}/{country.totalTopics} topics unlocked
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={handleBackToMap}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </motion.div>
-
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="flex justify-center"
-              >
-                <ProgressCircle progress={country.progress} />
-              </motion.div>
-
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="space-y-3"
-              >
-                <p className="text-muted-foreground leading-relaxed">{country.description}</p>
-                <div className="glass p-4 rounded-lg">
-                  <div className="text-sm font-semibold text-primary mb-1">💡 Fun Fact</div>
-                  <p className="text-sm">{country.funFact}</p>
-                </div>
-              </motion.div>
-
-              {userStamps.length > 0 && (
-                <motion.div
+          <>
+            {/* Desktop/Tablet - slides from right */}
+            <motion.div
+              initial={{ x: '100%', opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '100%', opacity: 0 }}
+              transition={{ type: "spring", damping: 30, stiffness: 250 }}
+              className="hidden md:block fixed right-0 top-16 bottom-0 w-[480px] glass-strong border-l overflow-y-auto z-50 shadow-2xl"
+            >
+              <div className="p-6 space-y-6">
+                <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
+                  className="flex items-start justify-between"
+                >
+                  <div className="flex items-center gap-3">
+                    <motion.span 
+                      className="text-5xl"
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      {country.flag}
+                    </motion.span>
+                    <div>
+                      <h2 className="text-3xl font-bold">{country.name}</h2>
+                      <p className="text-sm text-muted-foreground">
+                        {country.unlockedTopics}/{country.totalTopics} topics unlocked
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleBackToMap}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </motion.div>
+
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="flex justify-center"
+                >
+                  <ProgressCircle progress={country.progress} />
+                </motion.div>
+
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
                   className="space-y-3"
                 >
-                  <h3 className="font-semibold flex items-center gap-2">
-                    <span>Your Stamps</span>
-                    <span className="text-2xl">🐾</span>
-                  </h3>
-                  <div className="space-y-2">
-                    {userStamps.map((stamp, index) => (
-                      <motion.div
-                        key={stamp.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.5 + index * 0.1 }}
-                        className="glass p-3 rounded-lg flex items-center gap-3 hover:shadow-lg transition-shadow"
-                      >
-                        <span className="text-2xl">{stamp.icon}</span>
-                        <div className="flex-1">
-                          <div className="font-semibold text-sm">{stamp.topicName}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {new Date(stamp.date).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
+                  <p className="text-muted-foreground leading-relaxed">{country.description}</p>
+                  <div className="glass p-4 rounded-lg">
+                    <div className="text-sm font-semibold text-primary mb-1">💡 Fun Fact</div>
+                    <p className="text-sm">{country.funFact}</p>
                   </div>
                 </motion.div>
-              )}
 
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.6 }}
-              >
+                {userStamps.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="space-y-3"
+                  >
+                    <h3 className="font-semibold flex items-center gap-2">
+                      <span>Your Stamps</span>
+                      <span className="text-2xl">🐾</span>
+                    </h3>
+                    <div className="space-y-2">
+                      {userStamps.map((stamp, index) => (
+                        <motion.div
+                          key={stamp.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.5 + index * 0.1 }}
+                          className="glass p-3 rounded-lg flex items-center gap-3 hover:shadow-lg transition-shadow"
+                        >
+                          <span className="text-2xl">{stamp.icon}</span>
+                          <div className="flex-1">
+                            <div className="font-semibold text-sm">{stamp.topicName}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {new Date(stamp.date).toLocaleDateString()}
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <Link href={`/country/${country.slug}`}>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full bg-linear-to-r from-primary to-secondary text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transition-shadow"
+                    >
+                      Explore {country.name}
+                      <ArrowRight className="w-5 h-5" />
+                    </motion.button>
+                  </Link>
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Mobile - slides up from bottom */}
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="md:hidden fixed left-0 right-0 bottom-0 max-h-[85vh] bg-white/10 backdrop-blur-lg border-t border-white/20 shadow-lg rounded-t-3xl overflow-y-auto z-50"
+            >
+              {/* Drag handle */}
+              <div className="sticky top-0 flex justify-center py-3 bg-white/5 backdrop-blur-sm">
+                <div className="w-12 h-1.5 bg-white/40 rounded-full" />
+              </div>
+              
+              <div className="p-4 space-y-4 pb-8">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <motion.span 
+                      className="text-4xl"
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      {country.flag}
+                    </motion.span>
+                    <div>
+                      <h2 className="text-2xl font-bold">{country.name}</h2>
+                      <p className="text-xs text-muted-foreground">
+                        {country.unlockedTopics}/{country.totalTopics} topics unlocked
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleBackToMap}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="flex justify-center">
+                  <ProgressCircle progress={country.progress} />
+                </div>
+
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground leading-relaxed">{country.description}</p>
+                  <div className="glass p-3 rounded-lg">
+                    <div className="text-sm font-semibold text-primary mb-1">💡 Fun Fact</div>
+                    <p className="text-xs">{country.funFact}</p>
+                  </div>
+                </div>
+
+                {userStamps.length > 0 && (
+                  <div className="space-y-2">
+                    <h3 className="font-semibold text-sm flex items-center gap-2">
+                      <span>Your Stamps</span>
+                      <span className="text-xl">🐾</span>
+                    </h3>
+                    <div className="flex gap-2 overflow-x-auto pb-2">
+                      {userStamps.map((stamp) => (
+                        <div
+                          key={stamp.id}
+                          className="glass p-2 rounded-lg shrink-0 flex items-center gap-2"
+                        >
+                          <span className="text-xl">{stamp.icon}</span>
+                          <div>
+                            <div className="font-semibold text-xs">{stamp.topicName}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <Link href={`/country/${country.slug}`}>
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full bg-linear-to-r from-primary to-secondary text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transition-shadow"
+                    className="w-full bg-linear-to-r from-primary to-secondary text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-xl"
                   >
                     Explore {country.name}
                     <ArrowRight className="w-5 h-5" />
                   </motion.button>
                 </Link>
-              </motion.div>
-            </div>
-          </motion.div>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>
