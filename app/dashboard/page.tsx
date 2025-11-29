@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { X, ArrowRight, Clock, MapPin } from 'lucide-react';
+import { X, ArrowRight, Clock, MapPin, Compass } from 'lucide-react';
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
 import { countries, mockUser, stamps } from '@/lib/mock-data';
 import ProgressCircle from '@/components/progress-circle';
@@ -31,7 +31,8 @@ export default function DashboardPage() {
   const [zoom, setZoom] = useState(1);
   const [center, setCenter] = useState<[number, number]>([100, 25]);
   const [floatingComments, setFloatingComments] = useState<Array<{id: number, country: string, text: string, coordinates: [number, number]}>>([]);
-  const [selectedCountryComments, setSelectedCountryComments] = useState<Array<{id: number, text: string}>>([]);
+  const [selectedCountryComments, setSelectedCountryComments] = useState<Array<{id: number, text: string, offset: [number, number]}>>([]);
+  const [showToast, setShowToast] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [greeting, setGreeting] = useState('');
 
@@ -79,25 +80,50 @@ export default function DashboardPage() {
     }
   }, [selectedCountry]);
 
-  // Selected country comments
+  // Calculate spread positions for comments around a country
+  const getSpreadOffsets = useCallback((count: number): [number, number][] => {
+    // Fixed positions spread around the pin - these stay constant regardless of zoom
+    const positions: [number, number][] = [
+      [-8, -5],   // top-left
+      [6, -6],    // top-right  
+      [-9, 3],    // middle-left
+      [7, 2],     // middle-right
+      [-5, 7],    // bottom-left
+      [5, 8],     // bottom-right
+    ];
+    return positions.slice(0, count);
+  }, []);
+
+  // Selected country comments with spread offsets
   useEffect(() => {
     if (selectedCountry) {
       const updateComments = () => {
         const comments = countryComments[selectedCountry as keyof typeof countryComments] || [];
-        const randomComments = comments
-          .sort(() => 0.5 - Math.random())
-          .slice(0, 3)
-          .map((text, i) => ({ id: Date.now() + i, text }));
+        const shuffled = comments.sort(() => 0.5 - Math.random()).slice(0, 4);
+        const offsets = getSpreadOffsets(shuffled.length);
+        const randomComments = shuffled.map((text, i) => ({ 
+          id: Date.now() + i, 
+          text,
+          offset: offsets[i] || [0, 0]
+        }));
         setSelectedCountryComments(randomComments);
       };
 
       updateComments();
-      const interval = setInterval(updateComments, 6000);
+      const interval = setInterval(updateComments, 8000);
       return () => clearInterval(interval);
     } else {
       setSelectedCountryComments([]);
     }
-  }, [selectedCountry]);
+  }, [selectedCountry, getSpreadOffsets]);
+
+  // Auto-hide toast after 5 seconds
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => setShowToast(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
 
   // Handle country selection with zoom
   const handleCountryClick = (countrySlug: string) => {
@@ -329,34 +355,52 @@ export default function DashboardPage() {
 
         <div className="relative min-h-screen p-4 md:p-8">
           <div className="max-w-7xl mx-auto">
-            {/* Header */}
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-4 md:mb-6 space-y-2"
-            >
-              <h1 className="text-3xl md:text-5xl font-bold logo-text text-gradient">Explore Asia</h1>
-              <p className="text-muted-foreground text-sm md:text-lg px-4">
-                Click on any country pin to begin your cultural journey
-              </p>
-            </motion.div>
+            {/* Toast Notification */}
+            <AnimatePresence>
+              {showToast && !selectedCountry && (
+                <motion.div
+                  initial={{ opacity: 0, y: -50, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -30, scale: 0.9 }}
+                  transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                  className="fixed top-20 left-1/2 -translate-x-1/2 z-50 glass-strong px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-primary/20"
+                >
+                  <div className="w-10 h-10 rounded-full bg-linear-to-br from-primary to-secondary flex items-center justify-center">
+                    <Compass className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">Explore Asia</h3>
+                    <p className="text-sm text-muted-foreground">Click on any country pin to begin your cultural journey</p>
+                  </div>
+                  <button
+                    onClick={() => setShowToast(false)}
+                    className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors ml-2"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-            {/* Map Container */}
-            <div className="relative w-full aspect-video md:aspect-16/10 glass-strong rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl mt-16 md:mt-0">
+            {/* Map Container - Full World Map */}
+            <div className="relative w-full h-[calc(100vh-140px)] md:h-[calc(100vh-120px)] glass-strong rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
               <ComposableMap
                 projection="geoMercator"
                 projectionConfig={{
-                  scale: 400
+                  scale: 150,
+                  center: [0, 20]
                 }}
                 width={800}
-                height={500}
+                height={450}
                 className="w-full h-full"
                 style={{ transition: 'all 0.3s ease-out' }}
               >
                 <ZoomableGroup 
                   zoom={zoom} 
                   center={center}
-                  translateExtent={[[-200, -100], [1000, 600]]}
+                  minZoom={1}
+                  maxZoom={8}
+                  translateExtent={[[-500, -300], [1300, 800]]}
                   onMoveEnd={(position) => {
                     setCenter(position.coordinates);
                     setZoom(position.zoom);
@@ -437,43 +481,46 @@ export default function DashboardPage() {
                     </Marker>
                   ))}
 
-                  {/* Selected Country Comments - anchored to pin with connectors */}
-                  {selectedCountry && country && selectedCountryComments.map((comment, index) => {
-                    // Position comments in arc around pin
-                    const angle = (index - 1) * 45; // -45, 0, 45 degrees
-                    const distance = 25;
-                    const radians = (angle * Math.PI) / 180;
-                    const endX = Math.cos(radians) * distance;
-                    const endY = Math.sin(radians) * distance - 20;
+                  {/* Selected Country Comments - spread around the country area with fixed geo positions */}
+                  {selectedCountry && country && selectedCountryComments.map((comment) => {
+                    // Use fixed geo coordinate offsets so comments stay in place during zoom
+                    const commentCoords: [number, number] = [
+                      country.coordinates[0] + comment.offset[0],
+                      country.coordinates[1] + comment.offset[1]
+                    ];
                     return (
                       <Marker 
                         key={comment.id} 
-                        coordinates={country.coordinates}
+                        coordinates={commentCoords}
                       >
                         <g transform={`scale(${1 / zoom})`}>
-                          {/* Connector line from pin to comment */}
+                          {/* Connector line from comment to country pin */}
                           <line
                             x1="0"
                             y1="0"
-                            x2={endX}
-                            y2={endY}
+                            x2={(country.coordinates[0] - commentCoords[0]) * zoom * 2}
+                            y2={(country.coordinates[1] - commentCoords[1]) * zoom * 2}
                             stroke="#EFE4D4"
-                            strokeWidth="2"
-                            strokeDasharray="4,2"
-                            opacity="0.8"
+                            strokeWidth="1.5"
+                            strokeDasharray="4,3"
+                            opacity="0.6"
                           />
-                          {/* Small dot at connection point */}
-                          <circle cx={endX} cy={endY} r="3" fill="#EFE4D4" />
-                          <foreignObject 
-                            x={endX - (index === 0 ? 140 : index === 1 ? 70 : 0)} 
-                            y={endY - 35} 
-                            width="150" 
-                            height="40"
+                          <motion.g
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ type: "spring", delay: Math.random() * 0.3 }}
                           >
-                            <div className="glass-strong backdrop-blur-xl px-4 py-2 rounded-lg text-sm font-medium shadow-lg whitespace-nowrap border border-accent/30">
-                              {comment.text}
-                            </div>
-                          </foreignObject>
+                            <foreignObject 
+                              x="-70" 
+                              y="-18" 
+                              width="140" 
+                              height="36"
+                            >
+                              <div className="glass-strong backdrop-blur-xl px-3 py-1.5 rounded-full text-xs md:text-sm font-medium shadow-lg whitespace-nowrap text-center border border-accent/30">
+                                {comment.text}
+                              </div>
+                            </foreignObject>
+                          </motion.g>
                         </g>
                       </Marker>
                     );
