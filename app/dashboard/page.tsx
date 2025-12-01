@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { X, ArrowRight, Clock, MapPin, Compass } from 'lucide-react';
+import { X, ArrowRight, Clock, MapPin } from 'lucide-react';
 import { ComposableMap, Geographies, Geography, Marker, ZoomableGroup } from 'react-simple-maps';
 import { countries, mockUser, stamps } from '@/lib/mock-data';
 import ProgressCircle from '@/components/progress-circle';
@@ -21,7 +21,9 @@ const countryComments = {
   malaysia: ['Food fusion 🍛', 'Twin towers', 'Rainforest life', 'Multicultural hub'],
   philippines: ['Beach dreams 🌴', '7,000+ islands', 'Warm hearts', 'Island adventures'],
   singapore: ['Food paradise! 🍜', 'Garden city', 'Modern marvel', 'Hawker culture'],
-  india: ['Spice heaven 🌶️', 'Taj Mahal beauty', 'Yoga origins', 'Colorful festivals']
+  india: ['Spice heaven 🌶️', 'Taj Mahal beauty', 'Yoga origins', 'Colorful festivals'],
+  taiwan: ['Bubble tea! 🧋', 'Night markets', 'Mountain beauty', 'Tech innovation'],
+  brunei: ['Golden mosque ✨', 'Royal splendor', 'Rainforest gems', 'Oil rich nation']
 };
 
 export default function DashboardPage() {
@@ -373,7 +375,7 @@ export default function DashboardPage() {
 
       {/* Full-screen Map Area */}
       <div className="absolute inset-0 pt-16">
-            {/* Toast Notification */}
+            {/* Profile Toast Notification */}
             <AnimatePresence>
               {showToast && !selectedCountry && (
                 <motion.div
@@ -381,18 +383,22 @@ export default function DashboardPage() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -30, scale: 0.9 }}
                   transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                  className="fixed top-20 left-1/2 -translate-x-1/2 z-50 glass-strong px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-primary/20"
+                  className="fixed top-20 md:top-20 left-1/2 -translate-x-1/2 z-50 glass-strong px-4 md:px-6 py-3 md:py-4 rounded-2xl shadow-2xl flex items-center gap-3 md:gap-4 border border-primary/20 max-w-[90vw] md:max-w-md"
                 >
-                  <div className="w-10 h-10 rounded-full bg-linear-to-br from-primary to-secondary flex items-center justify-center">
-                    <Compass className="w-5 h-5 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg">Explore Asia</h3>
-                    <p className="text-sm text-muted-foreground">Click on any country pin to begin your cultural journey</p>
+                  <motion.img 
+                    src={mockUser.image} 
+                    alt={mockUser.name}
+                    className="w-12 h-12 md:w-14 md:h-14 rounded-full border-3 border-primary shadow-lg shrink-0"
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                  />
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-base md:text-lg truncate">{greeting}, {mockUser.name}!</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground">Ready to explore Asia? 🐾 Click any country!</p>
                   </div>
                   <button
                     onClick={() => setShowToast(false)}
-                    className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors ml-2"
+                    className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors shrink-0"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -427,20 +433,42 @@ export default function DashboardPage() {
                   <Geographies geography={geoUrl}>
                     {({ geographies }) =>
                       geographies.map((geo) => {
+                        const countryName = geo.properties.name;
+                        // Map geography names to our country slugs
+                        const geoToSlug: Record<string, string> = {
+                          'Japan': 'japan',
+                          'South Korea': 'south-korea',
+                          'China': 'china',
+                          'Thailand': 'thailand',
+                          'Vietnam': 'vietnam',
+                          'Indonesia': 'indonesia',
+                          'Malaysia': 'malaysia',
+                          'Philippines': 'philippines',
+                          'Singapore': 'singapore',
+                          'India': 'india',
+                          'Taiwan': 'taiwan',
+                          'Brunei': 'brunei'
+                        };
+                        const isSelectable = countryName in geoToSlug;
                         const isAsian = ['Japan', 'South Korea', 'China', 'Thailand', 'Vietnam', 
-                          'Indonesia', 'Malaysia', 'Philippines', 'Singapore', 'India', 'Myanmar',
-                          'Cambodia', 'Laos', 'Nepal', 'Bangladesh', 'Sri Lanka'].includes(geo.properties.name);
+                          'Indonesia', 'Malaysia', 'Philippines', 'Singapore', 'India', 'Taiwan', 'Brunei',
+                          'Myanmar', 'Cambodia', 'Laos', 'Nepal', 'Bangladesh', 'Sri Lanka'].includes(countryName);
                         
                         return (
                           <Geography
                             key={geo.rsmKey}
                             geography={geo}
+                            onClick={() => {
+                              if (isSelectable) {
+                                handleCountryClick(geoToSlug[countryName]);
+                              }
+                            }}
                             fill={isAsian ? "#A8BEDF" : "#374151"}
                             stroke={isAsian ? "#FFFFFF" : "#1F2937"}
                             strokeWidth={isAsian ? 0.8 : 0.3}
                             style={{
-                              default: { outline: 'none' },
-                              hover: { fill: isAsian ? "#C7D5E8" : "#374151", outline: 'none' },
+                              default: { outline: 'none', cursor: isSelectable ? 'pointer' : 'default' },
+                              hover: { fill: isSelectable ? "#EFE4D4" : (isAsian ? "#C7D5E8" : "#374151"), outline: 'none', cursor: isSelectable ? 'pointer' : 'default' },
                               pressed: { outline: 'none' }
                             }}
                           />
@@ -680,20 +708,29 @@ export default function DashboardPage() {
               </div>
             </motion.div>
 
-            {/* Mobile - slides up from bottom */}
+            {/* Mobile - slides up from bottom - Fixed with proper colors */}
+            {/* Backdrop to hide the dock */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="md:hidden fixed inset-0 bg-black/40 z-55"
+              onClick={handleBackToMap}
+            />
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="md:hidden fixed left-0 right-0 bottom-0 max-h-[85vh] bg-white/10 backdrop-blur-lg border-t border-white/20 shadow-lg rounded-t-3xl overflow-y-auto z-50"
+              className="md:hidden fixed inset-x-0 bottom-0 max-h-[85vh] bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-2xl rounded-t-3xl z-60"
+              onClick={(e) => e.stopPropagation()}
             >
               {/* Drag handle */}
-              <div className="sticky top-0 flex justify-center py-3 bg-white/5 backdrop-blur-sm">
-                <div className="w-12 h-1.5 bg-white/40 rounded-full" />
+              <div className="flex justify-center py-3">
+                <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full" />
               </div>
               
-              <div className="p-4 space-y-4 pb-8">
+              <div className="p-4 space-y-4 pb-8 overflow-y-auto max-h-[calc(80vh-48px)]">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <motion.span 
@@ -704,17 +741,17 @@ export default function DashboardPage() {
                       {country.flag}
                     </motion.span>
                     <div>
-                      <h2 className="text-2xl font-bold">{country.name}</h2>
-                      <p className="text-xs text-muted-foreground">
+                      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{country.name}</h2>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         {country.unlockedTopics}/{country.totalTopics} topics unlocked
                       </p>
                     </div>
                   </div>
                   <button
                     onClick={handleBackToMap}
-                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    className="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                   </button>
                 </div>
 
@@ -723,16 +760,16 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground leading-relaxed">{country.description}</p>
-                  <div className="glass p-3 rounded-lg">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{country.description}</p>
+                  <div className="bg-primary/10 dark:bg-primary/20 p-3 rounded-lg border border-primary/20">
                     <div className="text-sm font-semibold text-primary mb-1">💡 Fun Fact</div>
-                    <p className="text-xs">{country.funFact}</p>
+                    <p className="text-xs text-gray-700 dark:text-gray-200">{country.funFact}</p>
                   </div>
                 </div>
 
                 {userStamps.length > 0 && (
                   <div className="space-y-2">
-                    <h3 className="font-semibold text-sm flex items-center gap-2">
+                    <h3 className="font-semibold text-sm flex items-center gap-2 text-gray-900 dark:text-white">
                       <span>Your Stamps</span>
                       <span className="text-xl">🐾</span>
                     </h3>
@@ -740,11 +777,11 @@ export default function DashboardPage() {
                       {userStamps.map((stamp) => (
                         <div
                           key={stamp.id}
-                          className="glass p-2 rounded-lg shrink-0 flex items-center gap-2"
+                          className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg shrink-0 flex items-center gap-2 border border-gray-200 dark:border-gray-700"
                         >
                           <span className="text-xl">{stamp.icon}</span>
                           <div>
-                            <div className="font-semibold text-xs">{stamp.topicName}</div>
+                            <div className="font-semibold text-xs text-gray-900 dark:text-white">{stamp.topicName}</div>
                           </div>
                         </div>
                       ))}

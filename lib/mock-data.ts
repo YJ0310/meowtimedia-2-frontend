@@ -137,6 +137,32 @@ export const countries: Country[] = [
     unlockedTopics: 4,
     description: 'Vibrant subcontinent with ancient wisdom, colorful festivals, and diverse cultures.',
     funFact: 'India has 22 officially recognized languages and over 19,500 dialects!'
+  },
+  {
+    id: '11',
+    name: 'Taiwan',
+    slug: 'taiwan',
+    flag: '🇹🇼',
+    coordinates: [120.9605, 23.6978],
+    progress: 30,
+    isUnlocked: true,
+    totalTopics: 8,
+    unlockedTopics: 2,
+    description: 'Beautiful island known for night markets, bubble tea, and stunning mountain scenery.',
+    funFact: 'Taiwan invented bubble tea in the 1980s!'
+  },
+  {
+    id: '12',
+    name: 'Brunei',
+    slug: 'brunei',
+    flag: '🇧🇳',
+    coordinates: [114.7277, 4.5353],
+    progress: 15,
+    isUnlocked: true,
+    totalTopics: 8,
+    unlockedTopics: 1,
+    description: 'Tiny wealthy nation on Borneo island with grand mosques and rainforests.',
+    funFact: 'Brunei has one of the world\'s largest royal palaces with 1,788 rooms!'
   }
 ];
 

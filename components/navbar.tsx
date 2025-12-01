@@ -26,7 +26,7 @@ export default function Navbar() {
   return (
     <>
       {/* Desktop Navbar - Frosted Glass Bar */}
-      <nav className="hidden md:block fixed top-0 left-0 right-0 z-50 bg-white/10 dark:bg-black/20 backdrop-blur-2xl border-b border-white/20 dark:border-white/10 shadow-lg">
+      <nav className="hidden md:block fixed top-0 left-0 right-0 z-50 bg-white/20 dark:bg-black/30 backdrop-blur-2xl backdrop-saturate-150 border-b border-white/30 dark:border-white/10 shadow-lg shadow-black/5">
         <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 group">
@@ -76,7 +76,7 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile Bottom Dock */}
-      <nav className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg rounded-full px-6 py-3">
+      <nav className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white/20 dark:bg-black/30 backdrop-blur-2xl backdrop-saturate-150 border border-white/30 dark:border-white/10 shadow-xl shadow-black/10 rounded-full px-6 py-3">
         <div className="flex items-center gap-6">
           <Link 
             href="/" 
