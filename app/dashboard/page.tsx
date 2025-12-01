@@ -353,8 +353,8 @@ export default function DashboardPage() {
           </svg>
         </button>
 
-        <div className="relative min-h-screen p-4 md:p-8">
-          <div className="max-w-7xl mx-auto">
+        <div className="relative min-h-screen p-4 md:p-0">
+          <div className="w-full h-full">
             {/* Toast Notification */}
             <AnimatePresence>
               {showToast && !selectedCountry && (
@@ -382,35 +382,28 @@ export default function DashboardPage() {
               )}
             </AnimatePresence>
 
-            {/* Map Container - Full World Map */}
-            <div className="relative w-full h-[calc(100vh-140px)] md:h-[calc(100vh-120px)] glass-strong rounded-2xl md:rounded-3xl overflow-hidden shadow-2xl">
+            {/* Map Container - Asia Region Full Screen */}
+            <div className="relative w-full h-[calc(100vh-140px)] md:h-[calc(100vh-64px)] md:rounded-none rounded-2xl glass-strong overflow-hidden shadow-2xl">
               <ComposableMap
                 projection="geoMercator"
                 projectionConfig={{
-                  scale: 150,
-                  center: [0, 20]
+                  scale: 400,
+                  center: [105, 20]
                 }}
                 width={800}
-                height={450}
+                height={500}
                 className="w-full h-full"
                 style={{ transition: 'all 0.3s ease-out' }}
               >
                 <ZoomableGroup 
                   zoom={zoom} 
                   center={center}
-                  minZoom={1}
+                  minZoom={0.8}
                   maxZoom={8}
-                  translateExtent={[[-500, -300], [1300, 800]]}
+                  translateExtent={[[-100, -50], [900, 550]]}
                   onMoveEnd={(position) => {
                     setCenter(position.coordinates);
                     setZoom(position.zoom);
-                  }}
-                  filterZoomEvent={(evt: SVGElement | WheelEvent | TouchEvent) => {
-                    // Prevent scroll zoom on touch devices for smoother experience
-                    if ('type' in evt && 'ctrlKey' in evt) {
-                      return (evt as WheelEvent).type !== 'wheel' || (evt as WheelEvent).ctrlKey;
-                    }
-                    return true;
                   }}
                 >
                   <Geographies geography={geoUrl}>
