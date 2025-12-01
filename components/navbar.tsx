@@ -25,50 +25,51 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Desktop Navbar */}
-      <nav className="hidden md:block fixed top-0 left-0 right-0 z-50 glass-strong border-b backdrop-blur-xl">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+      {/* Desktop Navbar - Dock Style */}
+      <nav className="hidden md:block fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-white/10 dark:bg-black/30 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl rounded-full px-8 py-3">
+        <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-3xl animate-paw">🐾</span>
-            <h1 className="text-2xl font-bold logo-text text-gradient">Meowtimap</h1>
+            <span className="text-2xl animate-paw">🐾</span>
+            <h1 className="text-xl font-bold logo-text text-gradient">Meowtimap</h1>
           </Link>
 
-          <div className="flex items-center gap-6">
-            <Link 
-              href="/dashboard" 
-              className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors"
-            >
-              <span>Explore</span>
-            </Link>
+          <div className="w-px h-6 bg-white/20" />
 
-            <Link 
-              href="/passport" 
-              className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-primary/20 transition-colors"
-            >
-              <Book size={20} />
-              <span>Passport</span>
-            </Link>
+          <Link 
+            href="/dashboard" 
+            className="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-white/20 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="text-sm font-medium">Explore</span>
+          </Link>
 
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-primary/20 transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
-            </button>
+          <Link 
+            href="/passport" 
+            className="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-white/20 transition-colors"
+          >
+            <Book size={18} />
+            <span className="text-sm font-medium">Passport</span>
+          </Link>
 
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <img 
-                src={mockUser.image} 
-                alt={mockUser.name}
-                className="w-10 h-10 rounded-full border-2 border-primary"
-              />
-              <div className="hidden lg:block text-sm">
-                <p className="font-semibold">{mockUser.name}</p>
-                <p className="text-xs text-muted-foreground">{mockUser.totalStamps} stamps</p>
-              </div>
-            </Link>
-          </div>
+          <div className="w-px h-6 bg-white/20" />
+
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-full hover:bg-white/20 transition-colors"
+            aria-label="Toggle theme"
+          >
+            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+          </button>
+
+          <Link href="/profile" className="flex items-center gap-2 group">
+            <img 
+              src={mockUser.image} 
+              alt={mockUser.name}
+              className="w-9 h-9 rounded-full border-2 border-primary/50 group-hover:border-primary transition-colors"
+            />
+          </Link>
         </div>
       </nav>
 
@@ -107,7 +108,7 @@ export default function Navbar() {
           </button>
 
           <Link 
-            href="/dashboard" 
+            href="/profile" 
             className="p-0 rounded-full border-2 border-primary active:scale-95 transition-transform"
           >
             <img 

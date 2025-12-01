@@ -82,14 +82,14 @@ export default function DashboardPage() {
 
   // Calculate spread positions for comments around a country
   const getSpreadOffsets = useCallback((count: number): [number, number][] => {
-    // Fixed positions spread around the pin - these stay constant regardless of zoom
+    // Fixed positions spread around the pin - spread wider to prevent overlap
     const positions: [number, number][] = [
-      [-8, -5],   // top-left
-      [6, -6],    // top-right  
-      [-9, 3],    // middle-left
-      [7, 2],     // middle-right
-      [-5, 7],    // bottom-left
-      [5, 8],     // bottom-right
+      [-18, -12],  // top-left (wider spread)
+      [14, -14],   // top-right  
+      [-20, 4],    // middle-left
+      [16, 3],     // middle-right
+      [-14, 14],   // bottom-left
+      [12, 16],    // bottom-right
     ];
     return positions.slice(0, count);
   }, []);
@@ -164,9 +164,9 @@ export default function DashboardPage() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -350, opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="hidden md:block fixed left-6 top-24 bottom-6 w-80 bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/20 shadow-2xl z-40 rounded-3xl overflow-hidden"
+            className="hidden md:block fixed left-6 top-24 bottom-6 w-80 bg-white/10 dark:bg-black/30 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl z-40 rounded-3xl overflow-hidden"
           >
-            <div className="p-6 space-y-6 h-full overflow-y-auto">
+            <div className="p-5 space-y-4 h-full overflow-y-auto scrollbar-hide">
               {/* Close button */}
               <div className="flex justify-end -mt-2 -mr-2">
                 <button
@@ -188,44 +188,48 @@ export default function DashboardPage() {
           </div>
 
           {/* User Profile */}
-          <div className="text-center space-y-3">
-            <motion.img 
-              whileHover={{ scale: 1.05, rotate: 5 }}
-              src={mockUser.image} 
-              alt={mockUser.name}
-              className="w-24 h-24 rounded-full mx-auto border-4 border-primary shadow-xl"
-            />
-            <div className="glass p-3 rounded-lg">
-              <div className="text-3xl font-bold text-gradient">{mockUser.totalStamps}/48</div>
+          <div className="text-center space-y-2">
+            <Link href="/profile">
+              <motion.img 
+                whileHover={{ scale: 1.05, rotate: 5 }}
+                src={mockUser.image} 
+                alt={mockUser.name}
+                className="w-20 h-20 rounded-full mx-auto border-4 border-primary shadow-xl cursor-pointer"
+              />
+            </Link>
+            <div className="glass p-2 rounded-lg">
+              <div className="text-2xl font-bold text-gradient">{mockUser.totalStamps}/48</div>
               <div className="text-xs text-muted-foreground">Stamps Collected</div>
             </div>
           </div>
 
           {/* Countries Progress */}
-          <div className="space-y-3">
-            <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
+          <div className="space-y-2 flex-1 min-h-0 flex flex-col">
+            <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-2 shrink-0">
+              <MapPin className="w-3 h-3" />
               Your Progress
             </h3>
-            <div className="space-y-2 max-h-[calc(100vh-450px)] overflow-y-auto pr-2">
+            <div className="space-y-1.5 overflow-y-auto scrollbar-hide flex-1 pr-1">
               {countries.map((c) => {
                 const countryStamps = stamps.filter(s => s.countrySlug === c.slug).length;
                 return (
                   <motion.button
                     key={c.id}
                     onClick={() => handleCountryClick(c.slug)}
-                    whileHover={{ scale: 1.02, x: 4 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`w-full glass p-3 rounded-lg text-left transition-all ${
+                    whileHover={{ scale: 1.01, x: 2 }}
+                    whileTap={{ scale: 0.99 }}
+                    className={`w-full glass p-2 rounded-lg text-left transition-all ${
                       selectedCountry === c.slug ? 'ring-2 ring-primary shadow-lg' : ''
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl shrink-0">{c.flag}</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 flex items-center justify-center bg-primary/10 dark:bg-primary/20 rounded-md shrink-0 text-[10px] font-bold text-primary uppercase">
+                        {c.slug.substring(0, 2)}
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-sm truncate">{c.name}</div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shrink-0">
+                        <div className="font-medium text-xs truncate">{c.name}</div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <div className="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                             <motion.div 
                               className="h-full bg-linear-to-r from-primary to-secondary"
                               initial={{ width: 0 }}
@@ -233,12 +237,12 @@ export default function DashboardPage() {
                               transition={{ duration: 1, delay: 0.1 }}
                             />
                           </div>
-                          <span className="text-xs text-muted-foreground w-8 text-right shrink-0">{c.progress}%</span>
+                          <span className="text-[10px] text-muted-foreground w-6 text-right shrink-0">{c.progress}%</span>
                         </div>
                       </div>
                       {countryStamps > 0 && (
-                        <div className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full font-semibold shrink-0">
-                          {countryStamps} 🐾
+                        <div className="text-[9px] bg-primary/20 text-primary px-1 py-0.5 rounded font-semibold shrink-0">
+                          {countryStamps}🐾
                         </div>
                       )}
                     </div>
@@ -324,7 +328,9 @@ export default function DashboardPage() {
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <span className="text-2xl shrink-0">{c.flag}</span>
+                          <div className="w-8 h-8 flex items-center justify-center bg-primary/10 dark:bg-primary/20 rounded-lg text-xs font-bold text-primary uppercase shrink-0">
+                            {c.slug.substring(0, 2)}
+                          </div>
                           <div className="flex-1 min-w-0">
                             <div className="font-semibold text-sm truncate">{c.name}</div>
                             <div className="flex items-center gap-2 mt-1">
@@ -429,12 +435,12 @@ export default function DashboardPage() {
                           <Geography
                             key={geo.rsmKey}
                             geography={geo}
-                            fill={isAsian ? "#C7D5E8" : "#E5E7EB"}
-                            stroke="#FFFFFF"
-                            strokeWidth={0.5}
+                            fill={isAsian ? "#A8BEDF" : "#374151"}
+                            stroke={isAsian ? "#FFFFFF" : "#1F2937"}
+                            strokeWidth={isAsian ? 0.8 : 0.3}
                             style={{
                               default: { outline: 'none' },
-                              hover: { fill: isAsian ? "#A8BEDF" : "#E5E7EB", outline: 'none' },
+                              hover: { fill: isAsian ? "#C7D5E8" : "#374151", outline: 'none' },
                               pressed: { outline: 'none' }
                             }}
                           />

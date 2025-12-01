@@ -10,6 +10,7 @@ export default function PassportPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
   const [flipDirection, setFlipDirection] = useState<'left' | 'right'>('right');
+  const [showToast, setShowToast] = useState(true);
   const totalPages = Math.ceil((stamps.length + 4) / 4); // 4 stamps per page spread
   const dragX = useMotionValue(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -21,6 +22,19 @@ export default function PassportPage() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Auto-hide toast after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => setShowToast(false), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Show toast briefly when page changes
+  useEffect(() => {
+    setShowToast(true);
+    const timer = setTimeout(() => setShowToast(false), 2000);
+    return () => clearTimeout(timer);
+  }, [currentPage]);
 
   const nextPage = () => {
     if (currentPage < totalPages - 1 && !isFlipping) {
@@ -83,7 +97,7 @@ export default function PassportPage() {
   );
 
   const renderStampPage = (pageStamps: typeof stamps) => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6 p-4 md:p-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3 p-3 md:p-4 h-full">
       {pageStamps.map((stamp, index) => (
         <motion.div
           key={stamp.id}
@@ -93,32 +107,32 @@ export default function PassportPage() {
           className="relative"
         >
           {/* Visa Stamp */}
-          <div className="glass-strong p-3 md:p-6 rounded-xl border-2 md:border-4 border-dashed border-primary/30 relative overflow-hidden">
+          <div className="glass-strong p-2 md:p-3 rounded-xl border-2 md:border-3 border-dashed border-primary/30 relative overflow-hidden">
             {/* Watermark */}
             <div className="absolute inset-0 flex items-center justify-center opacity-5">
-              <span className="text-6xl md:text-9xl">{stamp.icon}</span>
+              <span className="text-4xl md:text-6xl">{stamp.icon}</span>
             </div>
             
             {/* Content */}
-            <div className="relative z-10 space-y-2 md:space-y-3">
+            <div className="relative z-10 space-y-1 md:space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-2xl md:text-4xl">{stamp.icon}</span>
-                <span className="text-xl md:text-3xl opacity-30">
+                <span className="text-xl md:text-2xl">{stamp.icon}</span>
+                <span className="text-lg md:text-xl opacity-30">
                   {countries.find(c => c.slug === stamp.countrySlug)?.flag}
                 </span>
               </div>
               
               <div>
-                <div className="text-xs uppercase tracking-wide text-muted-foreground mb-1">
+                <div className="text-[9px] md:text-[10px] uppercase tracking-wide text-muted-foreground">
                   Cultural Achievement
                 </div>
-                <h3 className="font-bold text-sm md:text-lg leading-tight">{stamp.topicName}</h3>
-                <p className="text-xs md:text-sm text-muted-foreground">{stamp.countryName}</p>
+                <h3 className="font-bold text-[11px] md:text-xs leading-tight line-clamp-1">{stamp.topicName}</h3>
+                <p className="text-[9px] md:text-[10px] text-muted-foreground">{stamp.countryName}</p>
               </div>
 
-              <div className="pt-2 md:pt-3 border-t border-dashed border-primary/20">
-                <div className="text-xs text-muted-foreground">Earned on</div>
-                <div className="font-mono text-xs md:text-sm font-semibold">
+              <div className="pt-1 border-t border-dashed border-primary/20">
+                <div className="text-[8px] md:text-[9px] text-muted-foreground">Earned on</div>
+                <div className="font-mono text-[9px] md:text-[10px] font-semibold">
                   {new Date(stamp.date).toLocaleDateString('en-US', {
                     month: 'short',
                     day: '2-digit',
@@ -127,29 +141,50 @@ export default function PassportPage() {
                 </div>
               </div>
 
-              {/* Stamp Effect */}
-              <div className="absolute top-1 right-1 md:top-2 md:right-2">
-                <svg width="30" height="30" viewBox="0 0 40 40" className="md:w-10 md:h-10">
-                  <circle 
-                    cx="20" 
-                    cy="20" 
-                    r="18" 
-                    fill="none" 
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeDasharray="3 2"
-                    className="text-primary/40"
-                  />
-                  <text 
-                    x="20" 
-                    y="25" 
-                    textAnchor="middle" 
-                    className="text-xs font-bold fill-primary/60"
-                  >
-                    ✓
-                  </text>
-                </svg>
-              </div>
+              {/* Ink Stamp Effect - More realistic */}
+              <motion.div 
+                className="absolute -top-1 -right-1 md:top-0 md:right-0"
+                initial={{ rotate: -15, scale: 0 }}
+                animate={{ rotate: -15, scale: 1 }}
+                transition={{ delay: index * 0.1 + 0.3, type: "spring", stiffness: 200 }}
+              >
+                <div className="relative">
+                  <svg width="40" height="40" viewBox="0 0 60 60" className="md:w-12 md:h-12">
+                    <circle 
+                      cx="30" cy="30" r="26" 
+                      fill="none" 
+                      stroke="rgba(220, 38, 38, 0.6)"
+                      strokeWidth="3"
+                      strokeDasharray="4 2"
+                    />
+                    <circle 
+                      cx="30" cy="30" r="20" 
+                      fill="none" 
+                      stroke="rgba(220, 38, 38, 0.5)"
+                      strokeWidth="2"
+                    />
+                    <text 
+                      x="30" y="26" 
+                      textAnchor="middle" 
+                      className="text-[7px] md:text-[8px] font-bold"
+                      fill="rgba(220, 38, 38, 0.7)"
+                    >
+                      VERIFIED
+                    </text>
+                    <text 
+                      x="30" y="38" 
+                      textAnchor="middle" 
+                      className="text-[10px] md:text-xs font-bold"
+                      fill="rgba(220, 38, 38, 0.8)"
+                    >
+                      ✓
+                    </text>
+                  </svg>
+                  <div className="absolute inset-0 opacity-20" style={{
+                    background: 'radial-gradient(ellipse at 30% 40%, rgba(220, 38, 38, 0.3) 0%, transparent 50%)'
+                  }} />
+                </div>
+              </motion.div>
             </div>
           </div>
         </motion.div>
@@ -159,11 +194,11 @@ export default function PassportPage() {
       {[...Array(4 - pageStamps.length)].map((_, index) => (
         <div
           key={`empty-${index}`}
-          className="glass p-3 md:p-6 rounded-xl border-2 md:border-4 border-dashed border-gray-300 dark:border-gray-700 opacity-30"
+          className="glass p-2 md:p-3 rounded-xl border-2 md:border-3 border-dashed border-gray-300 dark:border-gray-700 opacity-30"
         >
-          <div className="h-full flex flex-col items-center justify-center text-center space-y-2">
-            <div className="text-2xl md:text-4xl opacity-50">🔒</div>
-            <p className="text-xs text-muted-foreground">Awaiting Adventure</p>
+          <div className="h-full flex flex-col items-center justify-center text-center space-y-1">
+            <div className="text-xl md:text-2xl opacity-50">🔒</div>
+            <p className="text-[9px] md:text-[10px] text-muted-foreground">Awaiting Adventure</p>
           </div>
         </div>
       ))}
@@ -381,31 +416,50 @@ export default function PassportPage() {
   const totalMobilePages = 1 + stamps.length + (48 - stamps.length);
 
   return (
-    <div className="min-h-screen bg-gradient-soft flex items-center justify-center p-4 md:p-8">
-      <div className="w-full max-w-7xl">
-        {/* Page Counter */}
+    <div className="h-screen bg-gradient-soft flex flex-col overflow-hidden">
+      {/* Toast for Page Counter */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-50"
+          >
+            <div className="glass-strong px-4 py-2 rounded-full shadow-lg border border-white/20">
+              <p className="text-sm font-medium">
+                {isMobile ? `Page ${currentPage + 1} of ${totalMobilePages}` : `Page ${currentPage + 1} of ${totalPages}`}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="flex-1 flex flex-col items-center justify-center p-2 md:p-4 max-w-7xl mx-auto w-full">
+        {/* Header - Compact */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="text-center mb-2 md:mb-4 shrink-0"
         >
-          <h1 className="text-4xl md:text-5xl font-bold text-gradient mb-2">
+          <h1 className="text-2xl md:text-4xl font-bold text-gradient">
             My Passport
           </h1>
-          <p className="text-muted-foreground">
-            {isMobile ? `Page ${currentPage + 1} of ${totalMobilePages}` : `Page ${currentPage + 1} of ${totalPages}`}
-          </p>
         </motion.div>
 
         {/* Mobile View - Single Page Flip */}
-        {isMobile && renderMobilePage()}
+        {isMobile && (
+          <div className="flex-1 flex items-center justify-center w-full overflow-hidden">
+            {renderMobilePage()}
+          </div>
+        )}
 
         {/* Desktop View - Book Spread */}
         {!isMobile && (
-          <>
+          <div className="flex-1 flex items-center justify-center w-full overflow-hidden">
             {/* Passport Book */}
-            <div className="relative" style={{ perspective: '2000px' }}>
-              <div className="relative w-full" style={{ paddingBottom: '70%' }}>
+            <div className="relative w-full h-full flex items-center justify-center" style={{ perspective: '2000px' }}>
+              <div className="relative w-full max-w-5xl" style={{ height: 'calc(100vh - 180px)', maxHeight: '600px' }}>
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={currentPage}
@@ -417,14 +471,14 @@ export default function PassportPage() {
                   >
                     <div className="grid grid-cols-2 gap-0 h-full">
                       {/* Left Page */}
-                      <div className="relative bg-white dark:bg-gray-900 rounded-l-3xl shadow-2xl">
+                      <div className="relative bg-white dark:bg-gray-900 rounded-l-3xl shadow-2xl overflow-hidden">
                         {pageContent.left}
                         {/* Page binding effect */}
                         <div className="absolute right-0 top-0 bottom-0 w-8 bg-linear-to-r from-transparent to-gray-900/10" />
                       </div>
 
                       {/* Right Page */}
-                      <div className="relative bg-white dark:bg-gray-900 rounded-r-3xl shadow-2xl">
+                      <div className="relative bg-white dark:bg-gray-900 rounded-r-3xl shadow-2xl overflow-hidden">
                         {pageContent.right}
                         {/* Page binding effect */}
                         <div className="absolute left-0 top-0 bottom-0 w-8 bg-linear-to-l from-transparent to-gray-900/10" />
@@ -434,36 +488,36 @@ export default function PassportPage() {
                 </AnimatePresence>
               </div>
             </div>
-          </>
+          </div>
         )}
 
-        {/* Navigation */}
-        <div className="flex items-center justify-between mt-8 max-w-md mx-auto px-4">
+        {/* Navigation - Compact */}
+        <div className="flex items-center justify-between mt-2 md:mt-4 max-w-md mx-auto px-4 w-full shrink-0">
           <motion.button
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={prevPage}
             disabled={currentPage === 0 || isFlipping}
-            className="glass p-3 md:p-4 rounded-full disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+            className="glass p-2 md:p-3 rounded-full disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
           >
-            <ChevronLeft className="w-5 h-5 md:w-6 md:h-6" />
+            <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
           </motion.button>
 
           {/* Page Indicators */}
-          <div className="flex gap-1 md:gap-2 flex-wrap justify-center max-w-[200px]">
+          <div className="flex gap-1 flex-wrap justify-center max-w-[180px]">
             {[...Array(isMobile ? Math.min(totalMobilePages, 10) : totalPages)].map((_, index) => (
               <button
                 key={index}
                 onClick={() => !isFlipping && setCurrentPage(index)}
-                className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all ${
+                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all ${
                   index === currentPage
-                    ? 'bg-primary w-4 md:w-6'
+                    ? 'bg-primary w-3 md:w-4'
                     : 'bg-gray-300 dark:bg-gray-700'
                 }`}
               />
             ))}
             {isMobile && totalMobilePages > 10 && (
-              <span className="text-xs text-muted-foreground">...</span>
+              <span className="text-[10px] text-muted-foreground">...</span>
             )}
           </div>
 
@@ -472,21 +526,11 @@ export default function PassportPage() {
             whileTap={{ scale: 0.9 }}
             onClick={nextPage}
             disabled={(isMobile ? currentPage >= totalMobilePages - 1 : currentPage >= totalPages - 1) || isFlipping}
-            className="glass p-3 md:p-4 rounded-full disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
+            className="glass p-2 md:p-3 rounded-full disabled:opacity-30 disabled:cursor-not-allowed active:scale-95"
           >
-            <ChevronRight className="w-5 h-5 md:w-6 md:h-6" />
+            <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
           </motion.button>
         </div>
-
-        {/* Helper Text */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="text-center text-muted-foreground mt-8 text-sm"
-        >
-          🐾 Collect more stamps by completing lessons across Asia! 🐾
-        </motion.p>
       </div>
     </div>
   );
