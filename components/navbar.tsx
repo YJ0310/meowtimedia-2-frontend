@@ -25,51 +25,53 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Desktop Navbar - Dock Style */}
-      <nav className="hidden md:block fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-white/10 dark:bg-black/30 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl rounded-full px-8 py-3">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-2xl animate-paw">🐾</span>
-            <h1 className="text-xl font-bold logo-text text-gradient">Meowtimap</h1>
-          </Link>
+      {/* Desktop Navbar - Frosted Glass Bar */}
+      <nav className="hidden md:block fixed top-0 left-0 right-0 z-50 bg-white/10 dark:bg-black/20 backdrop-blur-2xl border-b border-white/20 dark:border-white/10 shadow-lg">
+        <div className="max-w-7xl mx-auto px-6 py-3">
+          <div className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-2 group">
+              <span className="text-2xl animate-paw">🐾</span>
+              <h1 className="text-xl font-bold logo-text text-gradient">Meowtimap</h1>
+            </Link>
 
-          <div className="w-px h-6 bg-white/20" />
+            <div className="flex items-center gap-4">
+              <Link 
+                href="/dashboard" 
+                className="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-white/20 dark:hover:bg-white/10 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm font-medium">Explore</span>
+              </Link>
 
-          <Link 
-            href="/dashboard" 
-            className="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-white/20 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="text-sm font-medium">Explore</span>
-          </Link>
+              <Link 
+                href="/passport" 
+                className="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-white/20 dark:hover:bg-white/10 transition-colors"
+              >
+                <Book size={18} />
+                <span className="text-sm font-medium">Passport</span>
+              </Link>
 
-          <Link 
-            href="/passport" 
-            className="flex items-center gap-2 px-4 py-2 rounded-full hover:bg-white/20 transition-colors"
-          >
-            <Book size={18} />
-            <span className="text-sm font-medium">Passport</span>
-          </Link>
+              <div className="w-px h-6 bg-white/20" />
 
-          <div className="w-px h-6 bg-white/20" />
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-full hover:bg-white/20 dark:hover:bg-white/10 transition-colors"
+                aria-label="Toggle theme"
+              >
+                {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+              </button>
 
-          <button
-            onClick={toggleTheme}
-            className="p-2 rounded-full hover:bg-white/20 transition-colors"
-            aria-label="Toggle theme"
-          >
-            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
-
-          <Link href="/profile" className="flex items-center gap-2 group">
-            <img 
-              src={mockUser.image} 
-              alt={mockUser.name}
-              className="w-9 h-9 rounded-full border-2 border-primary/50 group-hover:border-primary transition-colors"
-            />
-          </Link>
+              <Link href="/profile" className="flex items-center gap-2 group">
+                <img 
+                  src={mockUser.image} 
+                  alt={mockUser.name}
+                  className="w-9 h-9 rounded-full border-2 border-primary/50 group-hover:border-primary transition-colors"
+                />
+              </Link>
+            </div>
+          </div>
         </div>
       </nav>
 

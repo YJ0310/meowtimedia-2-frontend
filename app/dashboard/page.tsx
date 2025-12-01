@@ -483,8 +483,8 @@ export default function DashboardPage() {
                           strokeDasharray="3,2"
                           opacity="0.6"
                         />
-                        <foreignObject x="15" y="-35" width="130" height="35">
-                          <div className="glass-strong backdrop-blur-xl px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap shadow-lg border border-primary/20">
+                        <foreignObject x="15" y="-40" width="140" height="40">
+                          <div className="bg-white/20 dark:bg-black/30 backdrop-blur-2xl px-3 py-2 rounded-full text-xs font-medium whitespace-nowrap shadow-2xl border border-white/30 dark:border-white/10">
                             {comment.text}
                           </div>
                         </foreignObject>
@@ -522,12 +522,12 @@ export default function DashboardPage() {
                             transition={{ type: "spring", delay: Math.random() * 0.3 }}
                           >
                             <foreignObject 
-                              x="-70" 
-                              y="-18" 
-                              width="140" 
-                              height="36"
+                              x="-75" 
+                              y="-20" 
+                              width="150" 
+                              height="40"
                             >
-                              <div className="glass-strong backdrop-blur-xl px-3 py-1.5 rounded-full text-xs md:text-sm font-medium shadow-lg whitespace-nowrap text-center border border-accent/30">
+                              <div className="bg-white/20 dark:bg-black/30 backdrop-blur-2xl px-3 py-2 rounded-full text-xs md:text-sm font-medium shadow-2xl whitespace-nowrap text-center border border-white/30 dark:border-white/10">
                                 {comment.text}
                               </div>
                             </foreignObject>

@@ -417,18 +417,18 @@ export default function PassportPage() {
 
   return (
     <div className="h-screen bg-gradient-soft flex flex-col overflow-hidden">
-      {/* Toast for Page Counter */}
+      {/* Toast for Title and Page Counter */}
       <AnimatePresence>
         {showToast && (
           <motion.div
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-50"
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-50"
           >
-            <div className="glass-strong px-4 py-2 rounded-full shadow-lg border border-white/20">
-              <p className="text-sm font-medium">
-                {isMobile ? `Page ${currentPage + 1} of ${totalMobilePages}` : `Page ${currentPage + 1} of ${totalPages}`}
+            <div className="frosted px-6 py-3 rounded-full shadow-2xl">
+              <p className="text-sm md:text-base font-semibold">
+                🐾 My Passport • {isMobile ? `Page ${currentPage + 1} of ${totalMobilePages}` : `Page ${currentPage + 1} of ${totalPages}`}
               </p>
             </div>
           </motion.div>
@@ -436,16 +436,6 @@ export default function PassportPage() {
       </AnimatePresence>
 
       <div className="flex-1 flex flex-col items-center justify-center p-2 md:p-4 max-w-7xl mx-auto w-full">
-        {/* Header - Compact */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-2 md:mb-4 shrink-0"
-        >
-          <h1 className="text-2xl md:text-4xl font-bold text-gradient">
-            My Passport
-          </h1>
-        </motion.div>
 
         {/* Mobile View - Single Page Flip */}
         {isMobile && (
