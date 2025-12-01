@@ -147,7 +147,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen relative bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="h-screen w-screen fixed inset-0 overflow-hidden bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div 
@@ -156,19 +156,26 @@ export default function DashboardPage() {
         />
       )}
 
-      {/* Sidebar */}
-      <motion.aside
-        initial={false}
-        animate={{ 
-          x: mobileMenuOpen ? 0 : (sidebarExpanded ? 0 : -320),
-        }}
-        transition={{ type: "spring", damping: 25, stiffness: 200 }}
-        className="fixed left-0 top-16 bottom-0 md:bottom-0 w-80 glass-strong border-r backdrop-blur-xl z-40 overflow-hidden hidden md:block md:left-0"
-        style={{
-          display: mobileMenuOpen ? 'block' : undefined
-        }}
-      >
-        <div className="p-6 space-y-6 w-80">
+      {/* Dock-style Sidebar */}
+      <AnimatePresence>
+        {sidebarExpanded && (
+          <motion.aside
+            initial={{ x: -350, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -350, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="hidden md:block fixed left-6 top-24 bottom-6 w-80 bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/20 shadow-2xl z-40 rounded-3xl overflow-hidden"
+          >
+            <div className="p-6 space-y-6 h-full overflow-y-auto">
+              {/* Close button */}
+              <div className="flex justify-end -mt-2 -mr-2">
+                <button
+                  onClick={() => setSidebarExpanded(false)}
+                  className="p-2 hover:bg-white/20 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
           {/* Time & Greeting */}
           <div className="text-center space-y-2">
             <div className="flex items-center justify-center gap-2 text-primary">
@@ -241,7 +248,20 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
-      </motion.aside>
+          </motion.aside>
+        )}
+      </AnimatePresence>
+
+      {/* Sidebar Toggle Button - Desktop */}
+      {!sidebarExpanded && (
+        <button
+          onClick={() => setSidebarExpanded(true)}
+          className="hidden md:flex fixed left-6 top-24 z-40 bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg p-3 rounded-xl hover:bg-white/20 transition-colors items-center gap-2"
+        >
+          <MapPin className="w-5 h-5" />
+          <span className="text-sm font-medium">Menu</span>
+        </button>
+      )}
 
       {/* Mobile Bottom Menu Sheet */}
       <AnimatePresence>
@@ -335,26 +355,18 @@ export default function DashboardPage() {
         )}
       </AnimatePresence>
 
-      {/* Main Map Area */}
-      <motion.div 
-        className="md:ml-80"
-        animate={{ 
-          marginRight: selectedCountry ? 480 : 0,
-        }}
-        transition={{ type: "spring", damping: 30, stiffness: 200 }}
+      {/* Mobile Menu Toggle - Bottom Dock Style */}
+      <button
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg p-4 rounded-full active:scale-95 transition-transform"
       >
-        {/* Mobile Menu Toggle - Bottom Dock Style */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg p-4 rounded-full active:scale-95 transition-transform"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
 
-        <div className="relative min-h-screen p-4 md:p-0">
-          <div className="w-full h-full">
+      {/* Full-screen Map Area */}
+      <div className="absolute inset-0 pt-16">
             {/* Toast Notification */}
             <AnimatePresence>
               {showToast && !selectedCountry && (
@@ -382,8 +394,8 @@ export default function DashboardPage() {
               )}
             </AnimatePresence>
 
-            {/* Map Container - Asia Region Full Screen */}
-            <div className="relative w-full h-[calc(100vh-140px)] md:h-[calc(100vh-64px)] md:rounded-none rounded-2xl glass-strong overflow-hidden shadow-2xl">
+        {/* Map Container - Full Screen */}
+        <div className="w-full h-full">
               <ComposableMap
                 projection="geoMercator"
                 projectionConfig={{
@@ -520,46 +532,44 @@ export default function DashboardPage() {
                   })}
                 </ZoomableGroup>
               </ComposableMap>
-
-              {/* Zoom Controls */}
-              <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-                <button
-                  onClick={() => setZoom(Math.min(zoom * 1.5, 4))}
-                  className="glass-strong p-3 md:p-2 rounded-lg hover:bg-primary/20 transition-colors active:scale-95"
-                >
-                  <span className="text-2xl md:text-xl">+</span>
-                </button>
-                <button
-                  onClick={() => setZoom(Math.max(zoom / 1.5, 1))}
-                  className="glass-strong p-3 md:p-2 rounded-lg hover:bg-primary/20 transition-colors active:scale-95"
-                >
-                  <span className="text-2xl md:text-xl">−</span>
-                </button>
-                {selectedCountry && (
-                  <button
-                    onClick={handleBackToMap}
-                    className="glass-strong p-3 md:p-2 rounded-lg hover:bg-primary/20 transition-colors active:scale-95"
-                  >
-                    <span className="text-lg md:text-sm">⟲</span>
-                  </button>
-                )}
-              </div>
             </div>
-          </div>
+
+        {/* Zoom Controls */}
+        <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-20">
+          <button
+            onClick={() => setZoom(Math.min(zoom * 1.5, 8))}
+            className="bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg p-3 rounded-xl hover:bg-white/20 transition-colors active:scale-95"
+          >
+            <span className="text-xl">+</span>
+          </button>
+          <button
+            onClick={() => setZoom(Math.max(zoom / 1.5, 0.8))}
+            className="bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg p-3 rounded-xl hover:bg-white/20 transition-colors active:scale-95"
+          >
+            <span className="text-xl">−</span>
+          </button>
+          {selectedCountry && (
+            <button
+              onClick={handleBackToMap}
+              className="bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg p-3 rounded-xl hover:bg-white/20 transition-colors active:scale-95"
+            >
+              <span className="text-sm">⟲</span>
+            </button>
+          )}
         </div>
-      </motion.div>
+      </div>
 
       {/* Country Detail Panel */}
       <AnimatePresence>
         {country && (
           <>
-            {/* Desktop/Tablet - slides from right */}
+            {/* Desktop/Tablet - dock style from right */}
             <motion.div
               initial={{ x: '100%', opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: '100%', opacity: 0 }}
               transition={{ type: "spring", damping: 30, stiffness: 250 }}
-              className="hidden md:block fixed right-0 top-16 bottom-0 w-[480px] glass-strong border-l overflow-y-auto z-50 shadow-2xl"
+              className="hidden md:block fixed right-6 top-24 bottom-6 w-[420px] bg-white/10 dark:bg-black/20 backdrop-blur-xl border border-white/20 shadow-2xl z-50 rounded-3xl overflow-hidden"
             >
               <div className="p-6 space-y-6">
                 <motion.div 
