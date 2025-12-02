@@ -200,22 +200,36 @@ html {
 
 /* Hide all scrollbars globally but keep scrollable */
 * {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 
 *::-webkit-scrollbar {
-  display: none;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* Legacy scrollbar-hide class (kept for compatibility) */
 .scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;
+  display: none !important;
+}
+
+/* Safe area for mobile devices */
+.safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Hide mobile dock when country card is open */
+body.country-card-open .mobile-dock {
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* Custom animations */

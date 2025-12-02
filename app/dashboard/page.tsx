@@ -127,6 +127,18 @@ export default function DashboardPage() {
     }
   }, [showToast]);
 
+  // Toggle body class to hide mobile dock when country card is shown
+  useEffect(() => {
+    if (selectedCountry) {
+      document.body.classList.add('country-card-open');
+    } else {
+      document.body.classList.remove('country-card-open');
+    }
+    return () => {
+      document.body.classList.remove('country-card-open');
+    };
+  }, [selectedCountry]);
+
   // Handle country selection with zoom
   const handleCountryClick = (countrySlug: string) => {
     const country = countries.find(c => c.slug === countrySlug);
@@ -708,29 +720,24 @@ export default function DashboardPage() {
               </div>
             </motion.div>
 
-            {/* Mobile - slides up from bottom - Fixed with proper colors */}
-            {/* Backdrop to hide the dock */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="md:hidden fixed inset-0 bg-black/40 z-55"
-              onClick={handleBackToMap}
-            />
+            {/* Mobile - slides up from bottom - No backdrop, card only */}
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="md:hidden fixed inset-x-0 bottom-0 max-h-[85vh] bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-2xl rounded-t-3xl z-60"
+              className="md:hidden fixed inset-x-0 bottom-0 max-h-[85vh] bg-white dark:bg-gray-900 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.5)] rounded-t-3xl z-60 safe-area-inset-bottom"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Drag handle */}
-              <div className="flex justify-center py-3">
+              {/* Drag handle - tap to close */}
+              <button 
+                onClick={handleBackToMap}
+                className="w-full flex justify-center py-3 cursor-pointer"
+              >
                 <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full" />
-              </div>
+              </button>
               
-              <div className="p-4 space-y-4 pb-8 overflow-y-auto max-h-[calc(80vh-48px)]">
+              <div className="px-4 pb-8 space-y-4 overflow-y-auto max-h-[calc(85vh-48px)]">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <motion.span 
