@@ -386,7 +386,7 @@ export default function DashboardPage() {
       </button>
 
       {/* Full-screen Map Area */}
-      <div className="absolute inset-0 pt-16">
+      <div className="absolute inset-0">
             {/* Profile Toast Notification */}
             <AnimatePresence>
               {showToast && !selectedCountry && (
