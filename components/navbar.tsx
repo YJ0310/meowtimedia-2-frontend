@@ -76,7 +76,7 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile Bottom Dock */}
-      <nav className="mobile-dock md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white/20 dark:bg-black/30 backdrop-blur-2xl backdrop-saturate-150 border border-white/30 dark:border-white/10 shadow-xl shadow-black/10 rounded-full px-6 py-3 transition-all duration-300">
+      <nav className="mobile-dock md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white/20 dark:bg-black/30 backdrop-blur-2xl backdrop-saturate-150 border border-white/30 dark:border-white/10 shadow-xl shadow-black/10 rounded-full px-6 py-3 transition-all duration-300 w-10/12">
         <div className="flex items-center gap-6">
           <Link 
             href="/" 

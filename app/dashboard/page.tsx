@@ -580,8 +580,8 @@ export default function DashboardPage() {
               </ComposableMap>
             </div>
 
-        {/* Zoom Controls */}
-        <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-20">
+        {/* Zoom Controls - Hidden on mobile */}
+        <div className="hidden md:flex absolute bottom-6 right-6 flex-col gap-2 z-20">
           <button
             onClick={() => setZoom(Math.min(zoom * 1.5, 8))}
             className="bg-white/10 backdrop-blur-lg border border-white/20 shadow-lg p-3 rounded-xl hover:bg-white/20 transition-colors active:scale-95"
