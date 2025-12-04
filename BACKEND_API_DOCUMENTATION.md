@@ -22,9 +22,10 @@
 ### Recommended Stack
 - **Runtime**: Node.js with Express.js / NestJS OR Python with FastAPI
 - **Database**: PostgreSQL (relational) + Redis (caching)
-- **Authentication**: JWT with OAuth 2.0 (Google, GitHub, etc.)
-- **File Storage**: AWS S3 / Cloudflare R2 / Supabase Storage (for profile images)
+- **Authentication**: Google OAuth 2.0 only (no email/password)
 - **Hosting**: Vercel / Railway / AWS / Azure
+
+> **Note**: Profile pictures are fetched directly from Google account. No file storage needed for avatars.
 
 ### Alternative Stack
 - **Supabase** (PostgreSQL + Auth + Storage + Real-time) - Recommended for faster development
@@ -38,9 +39,11 @@
 ```sql
 CREATE TABLE users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email VARCHAR(255) UNIQUE NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  image_url TEXT,
+  google_id VARCHAR(255) UNIQUE NOT NULL,      -- Google OAuth sub/id
+  email VARCHAR(255) UNIQUE NOT NULL,           -- From Google
+  nickname VARCHAR(255) NOT NULL,               -- Editable by user
+  google_name VARCHAR(255) NOT NULL,            -- Original name from Google (read-only)
+  google_image_url TEXT,                        -- Profile picture from Google (read-only)
   total_stamps INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -169,7 +172,7 @@ CREATE TABLE quiz_attempts (
 
 ### Base URL
 ```
-Production: https://api.meowtimap.com/v1
+Production: https://api1.meowtimedia-test.smoltako.space
 Development: http://localhost:3001/api/v1
 ```
 
@@ -177,46 +180,19 @@ Development: http://localhost:3001/api/v1
 
 ### Authentication Endpoints
 
-#### POST `/auth/register`
-Register a new user.
+> **Important**: This application uses **Google OAuth only**. No email/password registration or login.
 
-**Request Body:**
-```json
-{
-  "email": "user@example.com",
-  "password": "securePassword123",
-  "name": "John Doe"
-}
-```
+#### GET `/auth/google`
+Redirect to Google OAuth consent screen.
 
-**Response (201):**
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "id": "uuid",
-      "email": "user@example.com",
-      "name": "John Doe",
-      "image": null,
-      "totalStamps": 0
-    },
-    "accessToken": "jwt_token_here",
-    "refreshToken": "refresh_token_here"
-  }
-}
-```
+**Response:** Redirects to Google OAuth URL
 
-#### POST `/auth/login`
-Login with email/password.
+#### GET `/auth/google/callback`
+Google OAuth callback endpoint. Handles the OAuth flow and creates/logs in user.
 
-**Request Body:**
-```json
-{
-  "email": "user@example.com",
-  "password": "securePassword123"
-}
-```
+**Query Parameters:**
+- `code`: Authorization code from Google
+- `state`: CSRF state token (optional)
 
 **Response (200):**
 ```json
@@ -225,26 +201,30 @@ Login with email/password.
   "data": {
     "user": {
       "id": "uuid",
-      "email": "user@example.com",
-      "name": "John Doe",
-      "image": "https://...",
+      "email": "user@gmail.com",
+      "nickname": "John Doe",
+      "googleName": "John Doe",
+      "image": "https://lh3.googleusercontent.com/...",
       "totalStamps": 12
     },
     "accessToken": "jwt_token_here",
-    "refreshToken": "refresh_token_here"
+    "refreshToken": "refresh_token_here",
+    "isNewUser": false
   }
 }
 ```
 
-#### POST `/auth/oauth/:provider`
-OAuth login (Google, GitHub, etc.)
+#### POST `/auth/google/token`
+Alternative: Exchange Google ID token directly (for mobile/SPA).
 
 **Request Body:**
 ```json
 {
-  "code": "oauth_authorization_code"
+  "idToken": "google_id_token_from_frontend"
 }
 ```
+
+**Response (200):** Same as callback response above
 
 #### POST `/auth/refresh`
 Refresh access token.
@@ -256,8 +236,29 @@ Refresh access token.
 }
 ```
 
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "accessToken": "new_jwt_token_here",
+    "refreshToken": "new_refresh_token_here"
+  }
+}
+```
+
 #### POST `/auth/logout`
 Logout and invalidate tokens.
+
+**Headers:** `Authorization: Bearer <token>`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Logged out successfully"
+}
+```
 
 ---
 
@@ -274,45 +275,49 @@ Get current user profile.
   "success": true,
   "data": {
     "id": "uuid",
-    "email": "user@example.com",
-    "name": "John Doe",
-    "image": "https://storage.example.com/avatars/uuid.jpg",
+    "email": "user@gmail.com",
+    "nickname": "CatLover123",
+    "googleName": "John Doe",
+    "image": "https://lh3.googleusercontent.com/a/...",
     "totalStamps": 12,
     "createdAt": "2024-01-15T10:30:00Z"
   }
 }
 ```
 
+> **Note**: The `image` field always returns the Google profile picture URL. It cannot be changed by the user.
+
 #### PATCH `/users/me`
-Update current user profile.
+Update current user nickname.
 
 **Headers:** `Authorization: Bearer <token>`
 
 **Request Body:**
 ```json
 {
-  "name": "John Smith"
+  "nickname": "NewNickname123"
 }
 ```
 
-#### POST `/users/me/avatar`
-Upload/update profile picture.
-
-**Headers:** 
-- `Authorization: Bearer <token>`
-- `Content-Type: multipart/form-data`
-
-**Request Body:** Form data with `avatar` file field
+**Validation Rules:**
+- `nickname`: 2-30 characters, alphanumeric and underscores only
 
 **Response (200):**
 ```json
 {
   "success": true,
   "data": {
-    "imageUrl": "https://storage.example.com/avatars/uuid.jpg"
+    "id": "uuid",
+    "email": "user@gmail.com",
+    "nickname": "NewNickname123",
+    "googleName": "John Doe",
+    "image": "https://lh3.googleusercontent.com/a/...",
+    "totalStamps": 12
   }
 }
 ```
+
+> **Note**: Users can only update their `nickname`. Email and profile picture are managed by Google.
 
 ---
 
@@ -652,9 +657,9 @@ Get progress for specific country.
 
 ### Protected Routes
 All routes except the following require authentication:
-- `POST /auth/register`
-- `POST /auth/login`
-- `POST /auth/oauth/:provider`
+- `GET /auth/google` (initiates OAuth flow)
+- `GET /auth/google/callback` (OAuth callback)
+- `POST /auth/google/token` (token exchange)
 - `POST /auth/refresh`
 - `GET /countries` (returns limited data without auth)
 
@@ -669,9 +674,10 @@ All routes except the following require authentication:
 
 interface User {
   id: string;
-  name: string;
-  email: string;
-  image: string | null;
+  email: string;           // From Google (read-only)
+  nickname: string;        // Editable by user
+  googleName: string;      // Original name from Google (read-only)
+  image: string;           // Google profile picture URL (read-only)
   totalStamps: number;
 }
 
@@ -747,7 +753,7 @@ lib/types.ts
 1. **Create API Client**
 ```typescript
 // lib/api.ts
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://api1.meowtimedia-test.smoltako.space';
 
 export const api = {
   async get<T>(endpoint: string): Promise<T> {
@@ -799,16 +805,18 @@ useEffect(() => {
 3. **Environment Variables**
 ```env
 # .env.local
-NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
+NEXT_PUBLIC_API_URL=https://api1.meowtimedia-test.smoltako.space
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id_here
 ```
 
 ### Pages to Update
 
 | Page | Current Mock Usage | API Endpoints Needed |
 |------|-------------------|---------------------|
+| `/` (landing) | - | `GET /auth/google` (login button) |
 | `/dashboard` | `countries`, `mockUser`, `stamps` | `GET /countries`, `GET /users/me`, `GET /stamps` |
 | `/passport` | `mockUser`, `stamps`, `countries` | `GET /users/me`, `GET /stamps`, `GET /countries` |
-| `/profile` | `mockUser` | `GET /users/me`, `PATCH /users/me`, `POST /users/me/avatar` |
+| `/profile` | `mockUser` | `GET /users/me`, `PATCH /users/me` (nickname only) |
 | `/country/[slug]` | `countries`, `topics` | `GET /countries/:slug` |
 | `/learn/[country]/[topic]` | `lessons`, `topics` | `GET /lessons/:country/:topic`, `POST /lessons/:country/:topic/complete` |
 
