@@ -37,9 +37,15 @@ export default function DashboardPage() {
   const [showToast, setShowToast] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [greeting, setGreeting] = useState('');
+  const [isWindows, setIsWindows] = useState(false);
 
   const country = selectedCountry ? countries.find(c => c.slug === selectedCountry) : null;
   const userStamps = stamps.filter(s => s.countrySlug === selectedCountry);
+
+  // Detect OS for toast positioning
+  useEffect(() => {
+    setIsWindows(navigator.platform.toLowerCase().includes('win'));
+  }, []);
 
   // Update time every second
   useEffect(() => {
@@ -119,10 +125,10 @@ export default function DashboardPage() {
     }
   }, [selectedCountry, getSpreadOffsets]);
 
-  // Auto-hide toast after 5 seconds
+  // Auto-hide toast after 4 seconds
   useEffect(() => {
     if (showToast) {
-      const timer = setTimeout(() => setShowToast(false), 5000);
+      const timer = setTimeout(() => setShowToast(false), 4000);
       return () => clearTimeout(timer);
     }
   }, [showToast]);
@@ -387,7 +393,7 @@ export default function DashboardPage() {
 
       {/* Full-screen Map Area */}
       <div className="absolute inset-0">
-            {/* Profile Toast Notification */}
+            {/* Profile Toast Notification - Position based on OS */}
             <AnimatePresence>
               {showToast && !selectedCountry && (
                 <motion.div
@@ -395,7 +401,7 @@ export default function DashboardPage() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -30, scale: 0.9 }}
                   transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                  className="fixed top-20 md:top-20 left-1/2 -translate-x-1/2 z-50 glass-strong px-4 md:px-6 py-3 md:py-4 rounded-2xl shadow-2xl flex items-center gap-3 md:gap-4 border border-primary/20 max-w-[90vw] md:max-w-md"
+                  className={`fixed left-1/2 -translate-x-1/2 z-50 glass-strong px-4 md:px-6 py-3 md:py-4 rounded-2xl shadow-2xl flex items-center gap-3 md:gap-4 border border-primary/20 max-w-[90vw] md:max-w-md ${isWindows ? 'top-20' : 'top-4'}`}
                 >
                   <motion.img 
                     src={mockUser.image} 

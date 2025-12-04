@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Upload, Check, X, ZoomIn, ZoomOut, RotateCw, Save } from 'lucide-react';
 import Link from 'next/link';
@@ -19,6 +19,21 @@ export default function ProfilePage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cropAreaRef = useRef<HTMLDivElement>(null);
+  const [showToast, setShowToast] = useState(true);
+  const [isWindows, setIsWindows] = useState(false);
+
+  // Detect OS for toast positioning
+  useEffect(() => {
+    setIsWindows(navigator.platform.toLowerCase().includes('win'));
+  }, []);
+
+  // Auto-hide toast after 4 seconds
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => setShowToast(false), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -92,17 +107,39 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 px-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="fixed inset-0 bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 px-4">
+      <div className="py-10 max-w-2xl mx-auto">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
-        >
-          <h1 className="text-3xl md:text-4xl font-bold text-gradient mb-2">Profile Picture</h1>
-          <p className="text-muted-foreground">Upload and customize your avatar</p>
-        </motion.div>
+        {/* Profile Toast Notification */}
+            <AnimatePresence>
+              {showToast && (
+                <motion.div
+                  initial={{ opacity: 0, y: -50, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -30, scale: 0.9 }}
+                  transition={{ type: "spring", damping: 20, stiffness: 300 }}
+                  className={`fixed ${isWindows ? 'top-20 md:top-20' : 'top-4 md:top-4'} left-1/2 -translate-x-1/2 z-50 glass-strong px-4 md:px-6 py-3 md:py-4 rounded-2xl shadow-2xl flex items-center gap-3 md:gap-4 border border-primary/20 max-w-[90vw] md:max-w-md`}
+                >
+                  <motion.img 
+                    src={mockUser.image} 
+                    alt={mockUser.name}
+                    className="w-12 h-12 md:w-14 md:h-14 rounded-full border-3 border-primary shadow-lg shrink-0"
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 3, repeat: Infinity }}
+                  />
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-base md:text-lg truncate">Profile Picture</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground">Upload and customize your avatar</p>
+                  </div>
+                  <button
+                    onClick={() => setShowToast(false)}
+                    className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors shrink-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
         {/* Main Content */}
         <motion.div

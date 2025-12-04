@@ -1,12 +1,71 @@
 'use client';
 
-import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowRight, Loader2 } from 'lucide-react';
 
 export default function Home() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleBeginJourney = () => {
+    setIsLoading(true);
+    // Simulate loading for 1 second, then redirect to dashboard
+    // In future: This will redirect to OAuth login page instead
+    setTimeout(() => {
+      router.push('/dashboard');
+    }, 1000);
+  };
+
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <>
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-100 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center gap-6"
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            >
+              <Loader2 className="w-12 h-12 text-primary" />
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-center"
+            >
+              <h2 className="text-2xl font-bold text-gradient">Preparing Your Journey</h2>
+              <p className="text-muted-foreground mt-2">Loading your adventure...</p>
+            </motion.div>
+            <motion.div
+              className="flex gap-2"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              {['🇯🇵', '🇰🇷', '🇨🇳', '🇹🇭', '🇻🇳'].map((flag, i) => (
+                <motion.span
+                  key={i}
+                  className="text-2xl"
+                  animate={{ y: [0, -10, 0] }}
+                  transition={{ duration: 0.5, delay: i * 0.1, repeat: Infinity, repeatDelay: 1 }}
+                >
+                  {flag}
+                </motion.span>
+              ))}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="min-h-screen relative overflow-hidden">
       {/* Animated Background */}
       <div className="fixed inset-0 gradient-soft opacity-40" />
       
@@ -121,19 +180,19 @@ export default function Home() {
               Explore 10 fascinating Asian countries, unlock cultural knowledge, 
               and build your digital passport one stamp at a time.
             </p>
-            <Link href="/dashboard">
-              <motion.button
+            <motion.button
+                onClick={handleBeginJourney}
+                disabled={isLoading}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="gradient-primary text-white px-8 py-4 rounded-xl text-lg font-semibold flex items-center gap-3 mx-auto shadow-xl hover:shadow-2xl transition-shadow"
+                className="gradient-primary text-white px-8 py-4 rounded-xl text-lg font-semibold flex items-center gap-3 mx-auto shadow-xl hover:shadow-2xl transition-shadow disabled:opacity-50"
               >
                 Begin Your Journey
                 <ArrowRight className="w-6 h-6" />
               </motion.button>
-            </Link>
             
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 pt-8 border-t border-white/20">
+            <div className="grid grid-cols-3 gap-4 pt-8">
               <div>
                 <div className="text-3xl font-bold text-primary">10</div>
                 <div className="text-sm text-muted-foreground">Countries</div>
@@ -151,5 +210,6 @@ export default function Home() {
         </motion.div>
       </div>
     </div>
+    </>
   );
 }
