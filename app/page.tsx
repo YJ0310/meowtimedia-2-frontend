@@ -135,8 +135,8 @@ export default function Home() {
             >
               <div className="flex items-center justify-center gap-2 md:gap-4">
                 <motion.img 
-                  src="/cat.png"
-                  alt="Cat"
+                  src="/logo.png"
+                  alt="Paw"
                   className="w-12 h-12 md:w-24 md:h-24 object-contain"
                   animate={{ rotate: [0, 10, -10, 0] }}
                   transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
@@ -145,8 +145,8 @@ export default function Home() {
                   Meowtimap
                 </h1>
                 <motion.img 
-                  src="/logo.png"
-                  alt="Paw"
+                  src="/cat.png"
+                  alt="Cat"
                   className="w-12 h-12 md:w-24 md:h-24 object-contain"
                   animate={{ rotate: [0, -10, 10, 0] }}
                   transition={{ duration: 2, repeat: Infinity, repeatDelay: 3, delay: 0.3 }}

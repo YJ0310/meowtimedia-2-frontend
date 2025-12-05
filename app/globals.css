@@ -51,11 +51,6 @@
   --color-meow-neutral: #d8c9ba;
 }
 
-/* Custom cursor */
-* {
-  cursor: url('/cursor.png'), auto;
-}
-
 :root {
   --radius: 0.625rem;
   --background: oklch(1 0 0);
