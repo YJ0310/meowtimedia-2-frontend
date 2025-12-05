@@ -30,7 +30,7 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2 group">
-              <span className="text-2xl animate-paw">🐾</span>
+              <img src="/logo.png" alt="Paw" className="w-8 h-8 object-contain animate-paw" />
               <h1 className="text-xl font-bold logo-text text-gradient">Meowtimap</h1>
             </Link>
 
@@ -82,7 +82,7 @@ export default function Navbar() {
             href="/" 
             className="p-2 rounded-full hover:bg-primary/20 transition-colors active:scale-95"
           >
-            <span className="text-2xl">🐾</span>
+            <img src="/logo.png" alt="Paw" className="w-8 h-8 object-contain" />
           </Link>
 
           <Link 
