@@ -411,8 +411,8 @@ export default function DashboardPage() {
                     transition={{ duration: 3, repeat: Infinity }}
                   />
                   <div className="min-w-0">
-                    <h3 className="font-bold text-base md:text-lg truncate">{greeting}, {mockUser.name}!</h3>
-                    <p className="text-xs md:text-sm text-muted-foreground">Ready to explore Asia? 🐾 Click any country!</p>
+                    <h3 className="font-bold text-base md:text-lg truncate">Explore Asia</h3>
+                    <p className="text-xs md:text-sm text-muted-foreground">Click on any country pin to begin your cultural journey</p>
                   </div>
                   <button
                     onClick={() => setShowToast(false)}
