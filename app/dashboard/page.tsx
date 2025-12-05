@@ -403,13 +403,6 @@ export default function DashboardPage() {
                   transition={{ type: "spring", damping: 20, stiffness: 300 }}
                   className={`fixed left-1/2 -translate-x-1/2 z-50 glass-strong px-4 md:px-6 py-3 md:py-4 rounded-2xl shadow-2xl flex items-center gap-3 md:gap-4 border border-primary/20 max-w-[90vw] md:max-w-md ${isWindows ? 'top-20' : 'top-4'}`}
                 >
-                  <motion.img 
-                    src={mockUser.image} 
-                    alt={mockUser.name}
-                    className="w-12 h-12 md:w-14 md:h-14 rounded-full border-3 border-primary shadow-lg shrink-0"
-                    animate={{ rotate: [0, 5, -5, 0] }}
-                    transition={{ duration: 3, repeat: Infinity }}
-                  />
                   <div className="min-w-0">
                     <h3 className="font-bold text-base md:text-lg truncate">Explore Asia</h3>
                     <p className="text-xs md:text-sm text-muted-foreground">Click on any country pin to begin your cultural journey</p>
