@@ -5,6 +5,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Global custom cursor for all elements */
+*, *::before, *::after {
+  cursor: url('/cursor.png') 8 8, auto !important;
+}
+
+/* Ensure clickable elements also use custom cursor */
+a, button, input, select, textarea, [role="button"], [onclick] {
+  cursor: url('/cursor.png') 8 8, pointer !important;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
