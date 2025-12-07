@@ -367,31 +367,6 @@ export default function ProfilePage() {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8"
-        >
-          <div className="glass rounded-2xl p-4 text-center">
-            <div className="text-2xl font-bold text-primary">{mockUser.totalStamps}</div>
-            <div className="text-xs text-muted-foreground">Stamps</div>
-          </div>
-          <div className="glass rounded-2xl p-4 text-center">
-            <div className="text-2xl font-bold text-primary">10</div>
-            <div className="text-xs text-muted-foreground">Countries</div>
-          </div>
-          <div className="glass rounded-2xl p-4 text-center">
-            <div className="text-2xl font-bold text-primary">42</div>
-            <div className="text-xs text-muted-foreground">Topics</div>
-          </div>
-          <div className="glass rounded-2xl p-4 text-center">
-            <div className="text-2xl font-bold text-primary">Level 5</div>
-            <div className="text-xs text-muted-foreground">Explorer</div>
-          </div>
-        </motion.div>
       </div>
     </div>
   );

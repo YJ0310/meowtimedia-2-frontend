@@ -623,13 +623,16 @@ export default function DashboardPage() {
                   className="flex items-start justify-between"
                 >
                   <div className="flex items-center gap-3">
-                    <motion.span 
-                      className="text-5xl"
+                    <motion.div
                       animate={{ rotate: [0, 10, -10, 0] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
-                      {country.flag}
-                    </motion.span>
+                      {country.flag.startsWith('/') ? (
+                        <img src={country.flag} alt={country.name} className="w-12 h-12 object-contain" />
+                      ) : (
+                        <span className="text-5xl">{country.flag}</span>
+                      )}
+                    </motion.div>
                     <div>
                       <h2 className="text-3xl font-bold">{country.name}</h2>
                       <p className="text-sm text-muted-foreground">
@@ -739,13 +742,16 @@ export default function DashboardPage() {
               <div className="px-4 pb-8 space-y-4 overflow-y-auto max-h-[calc(85vh-48px)]">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <motion.span 
-                      className="text-4xl"
+                    <motion.div
                       animate={{ rotate: [0, 10, -10, 0] }}
                       transition={{ duration: 2, repeat: Infinity }}
                     >
-                      {country.flag}
-                    </motion.span>
+                      {country.flag.startsWith('/') ? (
+                        <img src={country.flag} alt={country.name} className="w-10 h-10 object-contain" />
+                      ) : (
+                        <span className="text-4xl">{country.flag}</span>
+                      )}
+                    </motion.div>
                     <div>
                       <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{country.name}</h2>
                       <p className="text-xs text-gray-500 dark:text-gray-400">

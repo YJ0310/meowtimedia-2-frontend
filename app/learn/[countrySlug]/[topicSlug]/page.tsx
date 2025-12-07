@@ -117,7 +117,11 @@ export default function LessonPage({
           
           <div className="glass-strong rounded-2xl p-6">
             <div className="flex items-center gap-4">
-              <span className="text-5xl">{country.flag}</span>
+              {country.flag.startsWith('/') ? (
+                <img src={country.flag} alt={country.name} className="w-14 h-14 object-contain" />
+              ) : (
+                <span className="text-5xl">{country.flag}</span>
+              )}
               <div className="flex-1">
                 <div className="text-sm text-primary font-semibold">{country.name}</div>
                 <h1 className="text-3xl font-bold">{lesson.title}</h1>

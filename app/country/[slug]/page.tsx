@@ -52,7 +52,11 @@ export default function CountryPage({ params }: { params: Promise<{ slug: string
               {/* Country Info */}
               <div className="flex-1 text-center md:text-left">
                 <div className="flex items-center gap-4 justify-center md:justify-start mb-4">
-                  <span className="text-7xl">{country.flag}</span>
+                  {country.flag.startsWith('/') ? (
+                    <img src={country.flag} alt={country.name} className="w-20 h-20 object-contain" />
+                  ) : (
+                    <span className="text-7xl">{country.flag}</span>
+                  )}
                   <div>
                     <h1 className="text-5xl font-bold">{country.name}</h1>
                     <p className="text-muted-foreground mt-2">

@@ -117,9 +117,14 @@ export default function PassportPage() {
             <div className="relative z-10 space-y-1 md:space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-xl md:text-2xl">{stamp.icon}</span>
-                <span className="text-lg md:text-xl opacity-30">
-                  {countries.find(c => c.slug === stamp.countrySlug)?.flag}
-                </span>
+                {(() => {
+                  const flag = countries.find(c => c.slug === stamp.countrySlug)?.flag;
+                  return flag?.startsWith('/') ? (
+                    <img src={flag} alt="" className="w-6 h-6 md:w-8 md:h-8 object-contain opacity-30" />
+                  ) : (
+                    <span className="text-lg md:text-xl opacity-30">{flag}</span>
+                  );
+                })()}
               </div>
               
               <div>
@@ -329,9 +334,14 @@ export default function PassportPage() {
                       <div className="relative z-10 space-y-4">
                         <div className="flex items-center justify-between">
                           <span className="text-5xl">{currentContent.stamp.icon}</span>
-                          <span className="text-4xl opacity-30">
-                            {countries.find(c => c.slug === currentContent.stamp!.countrySlug)?.flag}
-                          </span>
+                          {(() => {
+                            const flag = countries.find(c => c.slug === currentContent.stamp!.countrySlug)?.flag;
+                            return flag?.startsWith('/') ? (
+                              <img src={flag} alt="" className="w-12 h-12 object-contain opacity-30" />
+                            ) : (
+                              <span className="text-4xl opacity-30">{flag}</span>
+                            );
+                          })()}
                         </div>
                         
                         <div>
