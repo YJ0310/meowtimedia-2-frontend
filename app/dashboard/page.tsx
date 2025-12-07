@@ -148,7 +148,7 @@ export default function DashboardPage() {
   // Handle country selection with zoom
   const handleCountryClick = (countrySlug: string) => {
     const country = countries.find(c => c.slug === countrySlug);
-    if (country) {
+    if (country && country.isUnlocked) {
       setSelectedCountry(countrySlug);
       setSidebarExpanded(false);
       setMobileMenuOpen(false);
@@ -230,7 +230,7 @@ export default function DashboardPage() {
               Your Progress
             </h3>
             <div className="space-y-1.5 overflow-y-auto scrollbar-hide flex-1 pr-1">
-              {countries.map((c) => {
+              {countries.filter(c => c.isUnlocked).map((c) => {
                 const countryStamps = stamps.filter(s => s.countrySlug === c.slug).length;
                 return (
                   <motion.button
@@ -335,7 +335,7 @@ export default function DashboardPage() {
                   Your Progress
                 </h3>
                 <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                  {countries.map((c) => {
+                  {countries.filter(c => c.isUnlocked).map((c) => {
                     const countryStamps = stamps.filter(s => s.countrySlug === c.slug).length;
                     return (
                       <motion.button
@@ -460,10 +460,14 @@ export default function DashboardPage() {
                           'Taiwan': 'taiwan',
                           'Brunei': 'brunei'
                         };
-                        const isSelectable = countryName in geoToSlug;
+                        const countrySlug = geoToSlug[countryName];
+                        const countryData = countrySlug ? countries.find(c => c.slug === countrySlug) : null;
+                        const isUnlocked = countryData?.isUnlocked ?? false;
+                        const isSelectable = countryName in geoToSlug && isUnlocked;
                         const isAsian = ['Japan', 'South Korea', 'China', 'Thailand', 'Vietnam', 
                           'Indonesia', 'Malaysia', 'Philippines', 'Singapore', 'India', 'Taiwan', 'Brunei',
                           'Myanmar', 'Cambodia', 'Laos', 'Nepal', 'Bangladesh', 'Sri Lanka'].includes(countryName);
+                        const isLockedAsian = countryName in geoToSlug && !isUnlocked;
                         
                         return (
                           <Geography
@@ -474,12 +478,12 @@ export default function DashboardPage() {
                                 handleCountryClick(geoToSlug[countryName]);
                               }
                             }}
-                            fill={isAsian ? "#A8BEDF" : "#374151"}
+                            fill={isLockedAsian ? "#6B7280" : (isAsian ? "#A8BEDF" : "#374151")}
                             stroke={isAsian ? "#FFFFFF" : "#1F2937"}
                             strokeWidth={isAsian ? 0.8 : 0.3}
                             style={{
-                              default: { outline: 'none', cursor: isSelectable ? 'pointer' : 'default' },
-                              hover: { fill: isSelectable ? "#EFE4D4" : (isAsian ? "#C7D5E8" : "#374151"), outline: 'none', cursor: isSelectable ? 'pointer' : 'default' },
+                              default: { outline: 'none', cursor: isSelectable ? 'pointer' : 'default', opacity: isLockedAsian ? 0.5 : 1 },
+                              hover: { fill: isSelectable ? "#EFE4D4" : (isLockedAsian ? "#6B7280" : (isAsian ? "#C7D5E8" : "#374151")), outline: 'none', cursor: isSelectable ? 'pointer' : 'default', opacity: isLockedAsian ? 0.5 : 1 },
                               pressed: { outline: 'none' }
                             }}
                           />
@@ -491,18 +495,24 @@ export default function DashboardPage() {
                   {/* Country Markers */}
                   {countries.map((c, i) => (
                     <Marker key={c.id} coordinates={c.coordinates}>
-                      <g onClick={() => handleCountryClick(c.slug)} style={{ cursor: 'pointer' }}>
+                      <g 
+                        onClick={() => c.isUnlocked && handleCountryClick(c.slug)} 
+                        style={{ cursor: c.isUnlocked ? 'pointer' : 'not-allowed' }}
+                      >
                         <circle
                           r={selectedCountry === c.slug ? 8 / zoom : 6 / zoom}
-                          fill={selectedCountry === c.slug ? "#EFE4D4" : "#A8BEDF"}
-                          stroke="#fff"
+                          fill={!c.isUnlocked ? "#6B7280" : (selectedCountry === c.slug ? "#EFE4D4" : "#A8BEDF")}
+                          stroke={c.isUnlocked ? "#fff" : "#4B5563"}
                           strokeWidth={2 / zoom}
+                          opacity={c.isUnlocked ? 1 : 0.5}
                         />
-                        <circle
-                          r={12 / zoom}
-                          fill="#A8BEDF"
-                          opacity={0.3}
-                        />
+                        {c.isUnlocked && (
+                          <circle
+                            r={12 / zoom}
+                            fill="#A8BEDF"
+                            opacity={0.3}
+                          />
+                        )}
                       </g>
                     </Marker>
                   ))}

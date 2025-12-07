@@ -45,20 +45,20 @@ export default function Home() {
               <p className="text-muted-foreground mt-2">Loading your adventure...</p>
             </motion.div>
             <motion.div
-              className="flex gap-2"
+              className="flex gap-3"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              {['🇯🇵', '🇰🇷', '🇨🇳', '🇹🇭', '🇻🇳'].map((flag, i) => (
-                <motion.span
+              {['/japan.gif', '/south korea.gif', '/thailand.gif', '/malaysia.gif', '/indonesia.gif'].map((flag, i) => (
+                <motion.img
                   key={i}
-                  className="text-2xl"
+                  src={flag}
+                  alt="Flag"
+                  className="w-8 h-8 object-contain"
                   animate={{ y: [0, -10, 0] }}
                   transition={{ duration: 0.5, delay: i * 0.1, repeat: Infinity, repeatDelay: 1 }}
-                >
-                  {flag}
-                </motion.span>
+                />
               ))}
             </motion.div>
           </motion.div>
@@ -177,7 +177,7 @@ export default function Home() {
               Your Journey Awaits
             </h2>
             <p className="text-muted-foreground text-lg">
-              Explore 10 fascinating Asian countries, unlock cultural knowledge, 
+              Explore Asian countries, unlock cultural knowledge, 
               and build your digital passport one stamp at a time.
             </p>
             <motion.button
@@ -192,7 +192,7 @@ export default function Home() {
               </motion.button>
             
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 pt-8">
+            {/* <div className="grid grid-cols-3 gap-4 pt-8">
               <div>
                 <div className="text-3xl font-bold text-primary">10</div>
                 <div className="text-sm text-muted-foreground">Countries</div>
@@ -205,7 +205,7 @@ export default function Home() {
                 <div className="text-3xl font-bold text-primary">48</div>
                 <div className="text-sm text-muted-foreground">Stamps</div>
               </div>
-            </div>
+            </div> */}
           </div>
         </motion.div>
       </div>
