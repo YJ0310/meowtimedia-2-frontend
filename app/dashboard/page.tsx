@@ -63,11 +63,13 @@ export default function DashboardPage() {
     else setGreeting('Good Evening');
   }, [currentTime]);
 
-  // Random floating comments - now using country coordinates
+  // Random floating comments - only for selectable (unlocked) countries
   useEffect(() => {
     if (!selectedCountry) {
       const addComment = () => {
-        const shuffled = [...countries].sort(() => 0.5 - Math.random());
+        // Only show comments for unlocked/selectable countries
+        const selectableCountries = countries.filter(c => c.isUnlocked);
+        const shuffled = [...selectableCountries].sort(() => 0.5 - Math.random());
         const randomCountries = shuffled.slice(0, 2);
         const newComments = randomCountries.map((c, i) => {
           const comments = countryComments[c.slug as keyof typeof countryComments] || ['Explore me!'];
@@ -445,29 +447,17 @@ export default function DashboardPage() {
                     {({ geographies }) =>
                       geographies.map((geo) => {
                         const countryName = geo.properties.name;
-                        // Map geography names to our country slugs
-                        const geoToSlug: Record<string, string> = {
+                        // Map geography names to our country slugs (Selectable countries)
+                        const selectableCountries: Record<string, string> = {
                           'Japan': 'japan',
                           'South Korea': 'south-korea',
-                          'China': 'china',
                           'Thailand': 'thailand',
-                          'Vietnam': 'vietnam',
                           'Indonesia': 'indonesia',
-                          'Malaysia': 'malaysia',
-                          'Philippines': 'philippines',
-                          'Singapore': 'singapore',
-                          'India': 'india',
-                          'Taiwan': 'taiwan',
-                          'Brunei': 'brunei'
+                          'Malaysia': 'malaysia'
                         };
-                        const countrySlug = geoToSlug[countryName];
-                        const countryData = countrySlug ? countries.find(c => c.slug === countrySlug) : null;
-                        const isUnlocked = countryData?.isUnlocked ?? false;
-                        const isSelectable = countryName in geoToSlug && isUnlocked;
-                        const isAsian = ['Japan', 'South Korea', 'China', 'Thailand', 'Vietnam', 
-                          'Indonesia', 'Malaysia', 'Philippines', 'Singapore', 'India', 'Taiwan', 'Brunei',
-                          'Myanmar', 'Cambodia', 'Laos', 'Nepal', 'Bangladesh', 'Sri Lanka'].includes(countryName);
-                        const isLockedAsian = countryName in geoToSlug && !isUnlocked;
+                        
+                        // Two types: Selectable (unlocked) or Unselectable (everything else)
+                        const isSelectable = countryName in selectableCountries;
                         
                         return (
                           <Geography
@@ -475,15 +465,15 @@ export default function DashboardPage() {
                             geography={geo}
                             onClick={() => {
                               if (isSelectable) {
-                                handleCountryClick(geoToSlug[countryName]);
+                                handleCountryClick(selectableCountries[countryName]);
                               }
                             }}
-                            fill={isLockedAsian ? "#6B7280" : (isAsian ? "#A8BEDF" : "#374151")}
-                            stroke={isAsian ? "#FFFFFF" : "#1F2937"}
-                            strokeWidth={isAsian ? 0.8 : 0.3}
+                            fill={isSelectable ? "#A8BEDF" : "#4B5563"}
+                            stroke={isSelectable ? "#FFFFFF" : "#374151"}
+                            strokeWidth={isSelectable ? 0.8 : 0.3}
                             style={{
-                              default: { outline: 'none', cursor: isSelectable ? 'pointer' : 'default', opacity: isLockedAsian ? 0.5 : 1 },
-                              hover: { fill: isSelectable ? "#EFE4D4" : (isLockedAsian ? "#6B7280" : (isAsian ? "#C7D5E8" : "#374151")), outline: 'none', cursor: isSelectable ? 'pointer' : 'default', opacity: isLockedAsian ? 0.5 : 1 },
+                              default: { outline: 'none', cursor: isSelectable ? 'pointer' : 'default' },
+                              hover: { fill: isSelectable ? "#EFE4D4" : "#4B5563", outline: 'none', cursor: isSelectable ? 'pointer' : 'default' },
                               pressed: { outline: 'none' }
                             }}
                           />
@@ -492,27 +482,24 @@ export default function DashboardPage() {
                     }
                   </Geographies>
 
-                  {/* Country Markers */}
-                  {countries.map((c, i) => (
+                  {/* Country Markers - Only for Selectable countries */}
+                  {countries.filter(c => c.isUnlocked).map((c) => (
                     <Marker key={c.id} coordinates={c.coordinates}>
                       <g 
-                        onClick={() => c.isUnlocked && handleCountryClick(c.slug)} 
-                        style={{ cursor: c.isUnlocked ? 'pointer' : 'not-allowed' }}
+                        onClick={() => handleCountryClick(c.slug)} 
+                        style={{ cursor: 'pointer' }}
                       >
                         <circle
                           r={selectedCountry === c.slug ? 8 / zoom : 6 / zoom}
-                          fill={!c.isUnlocked ? "#6B7280" : (selectedCountry === c.slug ? "#EFE4D4" : "#A8BEDF")}
-                          stroke={c.isUnlocked ? "#fff" : "#4B5563"}
+                          fill={selectedCountry === c.slug ? "#EFE4D4" : "#A8BEDF"}
+                          stroke="#fff"
                           strokeWidth={2 / zoom}
-                          opacity={c.isUnlocked ? 1 : 0.5}
                         />
-                        {c.isUnlocked && (
-                          <circle
-                            r={12 / zoom}
-                            fill="#A8BEDF"
-                            opacity={0.3}
-                          />
-                        )}
+                        <circle
+                          r={12 / zoom}
+                          fill="#A8BEDF"
+                          opacity={0.3}
+                        />
                       </g>
                     </Marker>
                   ))}
