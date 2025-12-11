@@ -1,9 +1,9 @@
 import { User, Country, Topic, Stamp, Lesson } from './types';
 
 export const mockUser: User = {
-  name: "Aldof Hitler",
-  email: "yinjia@nazi.german",
-  image: "https://cdn.britannica.com/58/129958-050-C0EF01A4/Adolf-Hitler-1933.jpg",
+  name: "Yin Jia",
+  email: "yinjiasek@gmail.com",
+  image: "https://preview.redd.it/a-takodachi-just-a-takodachi-v0-ldrg2gtlug091.jpg?width=320&crop=smart&auto=webp&s=ddcc2845cf1268adb3c454427781d779e13ae908",
   totalStamps: 12
 };
 
