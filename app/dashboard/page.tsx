@@ -300,11 +300,11 @@ export default function DashboardPage() {
                     className="w-20 h-20 rounded-full mx-auto border-4 border-primary shadow-xl cursor-pointer"
                   />
                 </Link>
-                <div className="glass p-2 rounded-lg">
+                <div className="glass p-2 rounded-lg text-black dark:text-white">
                   <div className="text-2xl font-bold text-gradient">
                     {mockUser.totalStamps}/48
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
                     Stamps Collected
                   </div>
                 </div>
@@ -329,7 +329,7 @@ export default function DashboardPage() {
                           onClick={() => handleCountryClick(c.slug)}
                           whileHover={{ scale: 1.01, x: 2 }}
                           whileTap={{ scale: 0.99 }}
-                          className={`w-full glass p-2 rounded-lg text-left transition-all ${
+                          className={`w-full glass p-2 rounded-lg text-left transition-all text-black dark:text-white ${
                             selectedCountry === c.slug
                               ? "ring-2 ring-primary shadow-lg"
                               : ""
@@ -340,7 +340,7 @@ export default function DashboardPage() {
                               {c.slug.substring(0, 2)}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="font-medium text-xs truncate">
+                              <div className="font-medium text-xs truncate text-black dark:text-white">
                                 {c.name}
                               </div>
                               <div className="flex items-center gap-1 mt-0.5">
@@ -352,7 +352,7 @@ export default function DashboardPage() {
                                     transition={{ duration: 1, delay: 0.1 }}
                                   />
                                 </div>
-                                <span className="text-[10px] text-muted-foreground w-6 text-right shrink-0">
+                                <span className="text-[10px] text-gray-600 dark:text-gray-400 w-6 text-right shrink-0">
                                   {c.progress}%
                                 </span>
                               </div>
@@ -421,11 +421,11 @@ export default function DashboardPage() {
                   alt={mockUser.name}
                   className="w-24 h-24 rounded-full mx-auto border-4 border-primary shadow-xl"
                 />
-                <div className="glass p-3 rounded-lg">
+                <div className="glass p-3 rounded-lg text-black dark:text-white">
                   <div className="text-3xl font-bold text-gradient">
                     {mockUser.totalStamps}/48
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
                     Stamps Collected
                   </div>
                 </div>
@@ -450,7 +450,7 @@ export default function DashboardPage() {
                           onClick={() => handleCountryClick(c.slug)}
                           whileHover={{ scale: 1.02, x: 4 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`w-full glass p-3 rounded-lg text-left transition-all ${
+                          className={`w-full glass p-3 rounded-lg text-left transition-all text-black dark:text-white ${
                             selectedCountry === c.slug
                               ? "ring-2 ring-primary shadow-lg"
                               : ""
@@ -461,7 +461,7 @@ export default function DashboardPage() {
                               {c.slug.substring(0, 2)}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="font-semibold text-sm truncate">
+                              <div className="font-semibold text-sm truncate text-black dark:text-white">
                                 {c.name}
                               </div>
                               <div className="flex items-center gap-2 mt-1">
@@ -473,7 +473,7 @@ export default function DashboardPage() {
                                     transition={{ duration: 1, delay: 0.1 }}
                                   />
                                 </div>
-                                <span className="text-xs text-muted-foreground w-8 text-right shrink-0">
+                                <span className="text-xs text-gray-600 dark:text-gray-400 w-8 text-right shrink-0">
                                   {c.progress}%
                                 </span>
                               </div>
@@ -823,11 +823,11 @@ export default function DashboardPage() {
                   <p className="text-muted-foreground leading-relaxed">
                     {country.description}
                   </p>
-                  <div className="glass p-4 rounded-lg">
+                  <div className="glass p-4 rounded-lg text-black dark:text-white">
                     <div className="text-sm font-semibold text-primary mb-1">
                       💡 Fun Fact
                     </div>
-                    <p className="text-sm">{country.funFact}</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300">{country.funFact}</p>
                   </div>
                 </motion.div>
 
@@ -849,14 +849,14 @@ export default function DashboardPage() {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.5 + index * 0.1 }}
-                          className="glass p-3 rounded-lg flex items-center gap-3 hover:shadow-lg transition-shadow"
+                          className="glass p-3 rounded-lg flex items-center gap-3 hover:shadow-lg transition-shadow text-black dark:text-white"
                         >
                           <span className="text-2xl">{stamp.icon}</span>
                           <div className="flex-1">
-                            <div className="font-semibold text-sm">
+                            <div className="font-semibold text-sm text-black dark:text-white">
                               {stamp.topicName}
                             </div>
-                            <div className="text-xs text-muted-foreground">
+                            <div className="text-xs text-gray-600 dark:text-gray-400">
                               {new Date(stamp.date).toLocaleDateString()}
                             </div>
                           </div>
