@@ -312,7 +312,7 @@ export default function DashboardPage() {
 
               {/* Countries Progress */}
               <div className="space-y-2 flex-1 min-h-0 flex flex-col">
-                <h3 className="font-semibold text-xs text-muted-foreground uppercase tracking-wide flex items-center gap-2 shrink-0">
+                <h3 className="font-semibold text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2 shrink-0">
                   <MapPin className="w-3 h-3" />
                   Your Progress
                 </h3>
@@ -433,7 +433,7 @@ export default function DashboardPage() {
 
               {/* Countries Progress */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+                <h3 className="font-semibold text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
                   Your Progress
                 </h3>
@@ -534,10 +534,10 @@ export default function DashboardPage() {
         ${isWindows ? "top-20" : "top-4"}`}
             >
               <div className="min-w-0">
-                <h3 className="font-bold text-base md:text-lg truncate">
+                <h3 className="font-bold text-base md:text-lg truncate text-black dark:text-white">
                   Explore Asia
                 </h3>
-                <p className="text-xs md:text-sm text-muted-foreground">
+                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
                   Click on any country pin to begin your cultural journey
                 </p>
               </div>
@@ -790,8 +790,8 @@ export default function DashboardPage() {
                       )}
                     </motion.div>
                     <div>
-                      <h2 className="text-3xl font-bold">{country.name}</h2>
-                      <p className="text-sm text-muted-foreground">
+                      <h2 className="text-3xl font-bold text-black dark:text-white">{country.name}</h2>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
                         {country.unlockedTopics}/{country.totalTopics} topics
                         unlocked
                       </p>
@@ -820,7 +820,7 @@ export default function DashboardPage() {
                   transition={{ delay: 0.3 }}
                   className="space-y-3"
                 >
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                     {country.description}
                   </p>
                   <div className="glass p-4 rounded-lg text-black dark:text-white">
