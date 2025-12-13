@@ -304,7 +304,7 @@ export default function DashboardPage() {
                   <div className="text-2xl font-bold text-gradient">
                     {mockUser.totalStamps}/48
                   </div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                  <div className="text-xs text-black dark:text-white">
                     Stamps Collected
                   </div>
                 </div>
@@ -312,7 +312,7 @@ export default function DashboardPage() {
 
               {/* Countries Progress */}
               <div className="space-y-2 flex-1 min-h-0 flex flex-col">
-                <h3 className="font-semibold text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2 shrink-0">
+                <h3 className="font-semibold text-xs text-black dark:text-white uppercase tracking-wide flex items-center gap-2 shrink-0">
                   <MapPin className="w-3 h-3" />
                   Your Progress
                 </h3>
@@ -352,7 +352,7 @@ export default function DashboardPage() {
                                     transition={{ duration: 1, delay: 0.1 }}
                                   />
                                 </div>
-                                <span className="text-[10px] text-gray-600 dark:text-gray-400 w-6 text-right shrink-0">
+                                <span className="text-[10px] text-black dark:text-white w-6 text-right shrink-0">
                                   {c.progress}%
                                 </span>
                               </div>
@@ -425,7 +425,7 @@ export default function DashboardPage() {
                   <div className="text-3xl font-bold text-gradient">
                     {mockUser.totalStamps}/48
                   </div>
-                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                  <div className="text-xs text-black dark:text-white">
                     Stamps Collected
                   </div>
                 </div>
@@ -433,7 +433,7 @@ export default function DashboardPage() {
 
               {/* Countries Progress */}
               <div className="space-y-3">
-                <h3 className="font-semibold text-sm text-gray-600 dark:text-gray-400 uppercase tracking-wide flex items-center gap-2">
+                <h3 className="font-semibold text-sm text-black dark:text-white uppercase tracking-wide flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
                   Your Progress
                 </h3>
@@ -473,7 +473,7 @@ export default function DashboardPage() {
                                     transition={{ duration: 1, delay: 0.1 }}
                                   />
                                 </div>
-                                <span className="text-xs text-gray-600 dark:text-gray-400 w-8 text-right shrink-0">
+                                <span className="text-xs text-black dark:text-white w-8 text-right shrink-0">
                                   {c.progress}%
                                 </span>
                               </div>
@@ -537,7 +537,7 @@ export default function DashboardPage() {
                 <h3 className="font-bold text-base md:text-lg truncate text-black dark:text-white">
                   Explore Asia
                 </h3>
-                <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-xs md:text-sm text-black dark:text-white">
                   Click on any country pin to begin your cultural journey
                 </p>
               </div>
@@ -791,7 +791,7 @@ export default function DashboardPage() {
                     </motion.div>
                     <div>
                       <h2 className="text-3xl font-bold text-black dark:text-white">{country.name}</h2>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-sm text-black dark:text-white">
                         {country.unlockedTopics}/{country.totalTopics} topics
                         unlocked
                       </p>
@@ -820,14 +820,14 @@ export default function DashboardPage() {
                   transition={{ delay: 0.3 }}
                   className="space-y-3"
                 >
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <p className="text-black dark:text-white leading-relaxed">
                     {country.description}
                   </p>
                   <div className="glass p-4 rounded-lg text-black dark:text-white">
                     <div className="text-sm font-semibold text-primary mb-1">
                       💡 Fun Fact
                     </div>
-                    <p className="text-sm text-gray-700 dark:text-gray-300">{country.funFact}</p>
+                    <p className="text-sm text-black dark:text-white">{country.funFact}</p>
                   </div>
                 </motion.div>
 
@@ -856,7 +856,7 @@ export default function DashboardPage() {
                             <div className="font-semibold text-sm text-black dark:text-white">
                               {stamp.topicName}
                             </div>
-                            <div className="text-xs text-gray-600 dark:text-gray-400">
+                            <div className="text-xs text-black dark:text-white">
                               {new Date(stamp.date).toLocaleDateString()}
                             </div>
                           </div>
@@ -920,10 +920,10 @@ export default function DashboardPage() {
                       )}
                     </motion.div>
                     <div>
-                      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      <h2 className="text-2xl font-bold text-black dark:text-white">
                         {country.name}
                       </h2>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-black dark:text-white">
                         {country.unlockedTopics}/{country.totalTopics} topics
                         unlocked
                       </p>
@@ -933,7 +933,7 @@ export default function DashboardPage() {
                     onClick={handleBackToMap}
                     className="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   >
-                    <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                    <X className="w-5 h-5 text-black dark:text-white" />
                   </button>
                 </div>
 
@@ -942,14 +942,14 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="space-y-3">
-                  <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                  <p className="text-sm text-black dark:text-white leading-relaxed">
                     {country.description}
                   </p>
                   <div className="bg-primary/10 dark:bg-primary/20 p-3 rounded-lg border border-primary/20">
                     <div className="text-sm font-semibold text-primary mb-1">
                       💡 Fun Fact
                     </div>
-                    <p className="text-xs text-gray-700 dark:text-gray-200">
+                    <p className="text-xs text-black dark:text-white">
                       {country.funFact}
                     </p>
                   </div>
@@ -957,7 +957,7 @@ export default function DashboardPage() {
 
                 {userStamps.length > 0 && (
                   <div className="space-y-2">
-                    <h3 className="font-semibold text-sm flex items-center gap-2 text-gray-900 dark:text-white">
+                    <h3 className="font-semibold text-sm flex items-center gap-2 text-black dark:text-white">
                       <span>Your Stamps</span>
                       <span className="text-xl">🐾</span>
                     </h3>
@@ -969,7 +969,7 @@ export default function DashboardPage() {
                         >
                           <span className="text-xl">{stamp.icon}</span>
                           <div>
-                            <div className="font-semibold text-xs text-gray-900 dark:text-white">
+                            <div className="font-semibold text-xs text-black dark:text-white">
                               {stamp.topicName}
                             </div>
                           </div>

@@ -118,7 +118,14 @@ export default function ProfilePage() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -30, scale: 0.9 }}
                   transition={{ type: "spring", damping: 20, stiffness: 300 }}
-                  className={`fixed ${isWindows ? 'top-20 md:top-20' : 'top-4 md:top-4'} left-1/2 -translate-x-1/2 z-50 glass-strong px-4 md:px-6 py-3 md:py-4 rounded-2xl shadow-2xl flex items-center gap-3 md:gap-4 border border-primary/20 max-w-[90vw] md:max-w-md`}
+                  className={`fixed left-1/2 -translate-x-1/2 z-50 
+        bg-white/20 dark:bg-black/30 
+        backdrop-blur-2xl backdrop-saturate-150
+        px-4 md:px-6 py-3 md:py-4 
+        rounded-2xl shadow-2xl flex items-center gap-3 md:gap-4 
+        border border-white/30 dark:border-white/10 
+        max-w-[90vw] md:max-w-md 
+        ${isWindows ? "top-20" : "top-4"}`}
                 >
                   <motion.img 
                     src={mockUser.image} 
@@ -128,8 +135,8 @@ export default function ProfilePage() {
                     transition={{ duration: 3, repeat: Infinity }}
                   />
                   <div className="min-w-0">
-                    <h3 className="font-bold text-base md:text-lg truncate">Profile Picture</h3>
-                    <p className="text-xs md:text-sm text-muted-foreground">Upload and customize your avatar</p>
+                    <h3 className="font-bold text-base md:text-lg truncate text-black dark:text-white">Profile Picture</h3>
+                    <p className="text-xs md:text-sm text-black dark:text-white">Upload and customize your avatar</p>
                   </div>
                   <button
                     onClick={() => setShowToast(false)}
@@ -171,7 +178,7 @@ export default function ProfilePage() {
 
               <div className="space-y-2">
                 <h2 className="text-2xl font-bold">{mockUser.name}</h2>
-                <p className="text-muted-foreground">{mockUser.email}</p>
+                <p className="text-black dark:text-white">{mockUser.email}</p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -188,7 +195,7 @@ export default function ProfilePage() {
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="glass px-6 py-3 rounded-xl font-semibold text-muted-foreground"
+                    className="glass px-6 py-3 rounded-xl font-semibold text-black dark:text-white"
                   >
                     Back to Dashboard
                   </motion.button>
