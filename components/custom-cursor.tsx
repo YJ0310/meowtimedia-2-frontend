@@ -6,6 +6,8 @@ export default function CustomCursor() {
   const [isVisible, setIsVisible] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const cursorRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number | null>(null);
+  const positionRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     // Check for touch device on mount
@@ -14,11 +16,22 @@ export default function CustomCursor() {
       return;
     }
 
-    const updateMousePosition = (e: MouseEvent) => {
+    const updateCursorPosition = () => {
       if (cursorRef.current) {
-        // Use transform for real-time positioning without React re-renders
-        cursorRef.current.style.transform = `translate(${e.clientX - 8}px, ${e.clientY - 8}px)`;
+        cursorRef.current.style.transform = `translate(${positionRef.current.x - 8}px, ${positionRef.current.y - 8}px)`;
       }
+      rafRef.current = null;
+    };
+
+    const handlePointerMove = (e: PointerEvent | MouseEvent) => {
+      // Store position immediately
+      positionRef.current = { x: e.clientX, y: e.clientY };
+      
+      // Use requestAnimationFrame for smooth updates
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(updateCursorPosition);
+      }
+      
       if (!isVisible) setIsVisible(true);
     };
 
@@ -30,15 +43,20 @@ export default function CustomCursor() {
       setIsVisible(true);
     };
 
-    // Use passive listeners for better performance
-    window.addEventListener("mousemove", updateMousePosition, { passive: true });
+    // Use pointermove for better compatibility with drag operations
+    window.addEventListener("pointermove", handlePointerMove, { passive: true, capture: true });
+    window.addEventListener("mousemove", handlePointerMove, { passive: true, capture: true });
     document.addEventListener("mouseleave", handleMouseLeave);
     document.addEventListener("mouseenter", handleMouseEnter);
 
     return () => {
-      window.removeEventListener("mousemove", updateMousePosition);
+      window.removeEventListener("pointermove", handlePointerMove, { capture: true });
+      window.removeEventListener("mousemove", handlePointerMove, { capture: true });
       document.removeEventListener("mouseleave", handleMouseLeave);
       document.removeEventListener("mouseenter", handleMouseEnter);
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
     };
   }, [isVisible]);
 
