@@ -6,8 +6,15 @@ import { motion } from "framer-motion";
 export default function CustomCursor() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
 
   useEffect(() => {
+    // Check for touch device on mount
+    if ("ontouchstart" in window) {
+      setIsTouchDevice(true);
+      return;
+    }
+
     const updateMousePosition = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
       setIsVisible(true);
@@ -33,7 +40,7 @@ export default function CustomCursor() {
   }, []);
 
   // Hide on touch devices
-  if (typeof window !== "undefined" && "ontouchstart" in window) {
+  if (isTouchDevice) {
     return null;
   }
 
