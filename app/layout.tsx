@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/navbar";
+import CustomCursor from "@/components/custom-cursor";
 
 export const metadata: Metadata = {
   title: "Meowtimap - Your Journey Through Asian Culture",
@@ -61,6 +62,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
+        <CustomCursor />
         <Navbar />
         <main className="pt-16 md:pt-16 pb-24 md:pb-0">
           {children}
