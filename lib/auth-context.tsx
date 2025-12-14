@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
 const API_URL = "https://api.meowtimap.smoltako.space";
@@ -18,6 +18,8 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  showAuthToast: boolean;
+  setShowAuthToast: (show: boolean) => void;
   login: () => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
@@ -25,16 +27,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Public routes that don't require authentication
-const PUBLIC_ROUTES = ["/", "/login"];
+// Only landing page is public, all others require auth
+const PUBLIC_ROUTES = ["/"];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAuthToast, setShowAuthToast] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
+    setIsLoading(true);
     try {
       const response = await fetch(`${API_URL}/auth/user`, {
         credentials: "include",
@@ -56,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const login = () => {
     // Redirect to backend Google OAuth
@@ -69,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: "include",
       });
       setUser(null);
-      router.push("/login");
+      router.push("/");
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -78,16 +82,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Check auth on mount
   useEffect(() => {
     checkAuth();
-  }, []);
+  }, [checkAuth]);
 
-  // Protect routes
+  // Protect routes - redirect to landing with toast if not authenticated
   useEffect(() => {
     if (!isLoading) {
       const isPublicRoute = PUBLIC_ROUTES.includes(pathname);
       
       if (!user && !isPublicRoute) {
-        // Redirect to login if not authenticated and trying to access protected route
-        router.push("/login");
+        // Show toast and redirect to landing page
+        setShowAuthToast(true);
+        router.push("/");
       }
     }
   }, [user, isLoading, pathname, router]);
@@ -98,6 +103,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isLoading,
         isAuthenticated: !!user,
+        showAuthToast,
+        setShowAuthToast,
         login,
         logout,
         checkAuth,
