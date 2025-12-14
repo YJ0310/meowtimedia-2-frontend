@@ -43,27 +43,6 @@ export default function ProfilePage() {
     }
   }, [showToast]);
 
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center space-y-4"
-        >
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-          <p className="text-black dark:text-white">Loading profile...</p>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // If no user, show nothing (auth context will redirect)
-  if (!user) {
-    return null;
-  }
-
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -100,6 +79,27 @@ export default function ProfilePage() {
   const handleDragEnd = useCallback(() => {
     setIsDragging(false);
   }, []);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-4"
+        >
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <p className="text-black dark:text-white">Loading profile...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // If no user, show nothing (auth context will redirect)
+  if (!user) {
+    return null;
+  }
 
   const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 3));
   const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.1, 0.5));

@@ -121,27 +121,6 @@ export default function DashboardPage() {
     setIsWindows(navigator.platform.toLowerCase().includes("win"));
   }, []);
 
-  // Show loading while checking auth
-  if (authLoading) {
-    return (
-      <div className="h-screen w-screen fixed inset-0 flex items-center justify-center bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center space-y-4"
-        >
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-          <p className="text-black dark:text-white">Loading dashboard...</p>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // If no user, show nothing (auth context will redirect)
-  if (!user) {
-    return null;
-  }
-
   // Update time every second
   useEffect(() => {
     const timer = setInterval(() => {
@@ -157,6 +136,20 @@ export default function DashboardPage() {
     else if (hour < 17) setGreeting("Good Afternoon");
     else setGreeting("Good Evening");
   }, [currentTime]);
+
+  // Calculate spread positions for comments around a country
+  const getSpreadOffsets = useCallback((count: number): [number, number][] => {
+    // Fixed positions spread around the pin - spread wider to prevent overlap
+    const positions: [number, number][] = [
+      [-18, -12], // top-left (wider spread)
+      [14, -14], // top-right
+      [-20, 4], // middle-left
+      [16, 3], // middle-right
+      [-14, 14], // bottom-left
+      [12, 16], // bottom-right
+    ];
+    return positions.slice(0, count);
+  }, []);
 
   // Random floating comments - only for selectable (unlocked) countries
   useEffect(() => {
@@ -189,20 +182,6 @@ export default function DashboardPage() {
       return () => clearInterval(interval);
     }
   }, [selectedCountry]);
-
-  // Calculate spread positions for comments around a country
-  const getSpreadOffsets = useCallback((count: number): [number, number][] => {
-    // Fixed positions spread around the pin - spread wider to prevent overlap
-    const positions: [number, number][] = [
-      [-18, -12], // top-left (wider spread)
-      [14, -14], // top-right
-      [-20, 4], // middle-left
-      [16, 3], // middle-right
-      [-14, 14], // bottom-left
-      [12, 16], // bottom-right
-    ];
-    return positions.slice(0, count);
-  }, []);
 
   // Selected country comments with spread offsets
   useEffect(() => {
@@ -248,6 +227,27 @@ export default function DashboardPage() {
       document.body.classList.remove("country-card-open");
     };
   }, [selectedCountry]);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="h-screen w-screen fixed inset-0 flex items-center justify-center bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-4"
+        >
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <p className="text-black dark:text-white">Loading dashboard...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // If no user, show nothing (auth context will redirect)
+  if (!user) {
+    return null;
+  }
 
   // Handle country selection with zoom
   const handleCountryClick = (countrySlug: string) => {
