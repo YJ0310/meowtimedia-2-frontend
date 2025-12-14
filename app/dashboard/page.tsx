@@ -290,9 +290,9 @@ export default function DashboardPage() {
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className="hidden md:block fixed left-6 top-24 bottom-6 w-80 bg-white/10 dark:bg-black/30 backdrop-blur-xl border border-white/20 dark:border-white/10 shadow-2xl z-40 rounded-3xl overflow-hidden"
           >
-            <div className="p-5 space-y-4 h-full overflow-y-auto scrollbar-hide">
+            <div className="p-5 h-full flex flex-col">
               {/* Close button */}
-              <div className="flex justify-end -mt-2 -mr-2">
+              <div className="flex justify-end -mt-2 -mr-2 shrink-0">
                 <button
                   onClick={() => setSidebarExpanded(false)}
                   className="p-2 hover:bg-white/20 rounded-full transition-colors"
@@ -301,7 +301,7 @@ export default function DashboardPage() {
                 </button>
               </div>
               {/* Time & Greeting */}
-              <div className="text-center space-y-2">
+              <div className="text-center space-y-2 shrink-0">
                 <div className="flex items-center justify-center gap-2 text-primary">
                   <Clock className="w-4 h-4" />
                   <div className="text-sm font-mono">
@@ -314,7 +314,7 @@ export default function DashboardPage() {
               </div>
 
               {/* User Profile */}
-              <div className="text-center space-y-2">
+              <div className="text-center space-y-2 shrink-0 py-4">
                 <Link href="/profile">
                   <motion.img
                     whileHover={{ scale: 1.05, rotate: 5 }}
@@ -333,13 +333,13 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Countries Progress */}
-              <div className="space-y-2 flex-1 min-h-0 flex flex-col">
-                <h3 className="font-semibold text-xs text-black dark:text-white uppercase tracking-wide flex items-center gap-2 shrink-0">
+              {/* Countries Progress - Scrollable */}
+              <div className="flex-1 min-h-0 flex flex-col">
+                <h3 className="font-semibold text-xs text-black dark:text-white uppercase tracking-wide flex items-center gap-2 shrink-0 mb-2">
                   <MapPin className="w-3 h-3" />
                   Your Progress
                 </h3>
-                <div className="space-y-1.5 overflow-y-auto scrollbar-hide flex-1 pr-1">
+                <div className="flex-1 overflow-y-auto scrollbar-hide space-y-1.5 pr-1">
                   {countries
                     .filter((c) => c.isUnlocked)
                     .map((c) => {

@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
+import { X } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -20,36 +20,23 @@ interface ToastContainerProps {
   onRemove: (id: string) => void;
 }
 
-const typeStyles: Record<ToastType, { border: string; bg: string; icon: React.ReactNode }> = {
-  success: {
-    border: 'border-green-500/30',
-    bg: 'bg-green-500/20',
-    icon: <CheckCircle className="w-5 h-5 text-green-500" />,
-  },
-  error: {
-    border: 'border-red-500/30',
-    bg: 'bg-red-500/20',
-    icon: <AlertCircle className="w-5 h-5 text-red-500" />,
-  },
-  warning: {
-    border: 'border-amber-500/30',
-    bg: 'bg-amber-500/20',
-    icon: <AlertTriangle className="w-5 h-5 text-amber-500" />,
-  },
-  info: {
-    border: 'border-blue-500/30',
-    bg: 'bg-blue-500/20',
-    icon: <Info className="w-5 h-5 text-blue-500" />,
-  },
+// Type-based border colors (subtle accent)
+const typeBorderColors: Record<ToastType, string> = {
+  success: 'border-green-500/30',
+  error: 'border-red-500/30',
+  warning: 'border-amber-500/30',
+  info: 'border-blue-500/30',
+};
+
+// Default icons per type
+const defaultIcons: Record<ToastType, string> = {
+  success: '✓',
+  error: '✗',
+  warning: '⚠',
+  info: 'ℹ',
 };
 
 function Toast({ toast, onRemove }: { toast: ToastProps; onRemove: (id: string) => void }) {
-  const [isWindows, setIsWindows] = useState(false);
-
-  useEffect(() => {
-    setIsWindows(navigator.platform.toLowerCase().includes('win'));
-  }, []);
-
   useEffect(() => {
     if (toast.duration !== 0) {
       const timer = setTimeout(() => onRemove(toast.id), toast.duration || 5000);
@@ -57,7 +44,8 @@ function Toast({ toast, onRemove }: { toast: ToastProps; onRemove: (id: string) 
     }
   }, [toast.id, toast.duration, onRemove]);
 
-  const style = typeStyles[toast.type];
+  const borderColor = typeBorderColors[toast.type];
+  const icon = toast.icon || defaultIcons[toast.type];
 
   return (
     <motion.div
@@ -72,18 +60,16 @@ function Toast({ toast, onRemove }: { toast: ToastProps; onRemove: (id: string) 
         rounded-2xl shadow-2xl flex items-center gap-3 md:gap-4 
         border border-white/30 dark:border-white/10 
         max-w-[90vw] md:max-w-md
-        ${style.border}
+        ${borderColor}
       `}
     >
-      <div className={`w-10 h-10 rounded-full ${style.bg} flex items-center justify-center shrink-0`}>
-        {toast.icon ? <span className="text-xl">{toast.icon}</span> : style.icon}
-      </div>
       <div className="min-w-0 flex-1">
         <h3 className="font-bold text-base md:text-lg truncate text-black dark:text-white">
+          {icon && <span className="mr-2">{icon}</span>}
           {toast.title}
         </h3>
         {toast.message && (
-          <p className="text-xs md:text-sm text-black dark:text-white opacity-80">
+          <p className="text-xs md:text-sm text-black dark:text-white">
             {toast.message}
           </p>
         )}
@@ -106,7 +92,7 @@ export function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
   }, []);
 
   return (
-    <div className={`fixed left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2 ${isWindows ? 'top-4' : 'top-12'}`}>
+    <div className={`fixed left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 ${isWindows ? 'top-20' : 'top-4'}`}>
       <AnimatePresence>
         {toasts.map((toast) => (
           <Toast key={toast.id} toast={toast} onRemove={onRemove} />
@@ -120,19 +106,19 @@ export function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
 export function useToast() {
   const [toasts, setToasts] = useState<ToastProps[]>([]);
 
-  const addToast = (toast: Omit<ToastProps, 'id'>) => {
+  const addToast = useCallback((toast: Omit<ToastProps, 'id'>) => {
     const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     setToasts((prev) => [...prev, { ...toast, id }]);
     return id;
-  };
+  }, []);
 
-  const removeToast = (id: string) => {
+  const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
+  }, []);
 
-  const clearToasts = () => {
+  const clearToasts = useCallback(() => {
     setToasts([]);
-  };
+  }, []);
 
   return {
     toasts,
@@ -140,13 +126,13 @@ export function useToast() {
     removeToast,
     clearToasts,
     // Convenience methods
-    success: (title: string, message?: string, icon?: string) =>
-      addToast({ type: 'success', title, message, icon }),
-    error: (title: string, message?: string, icon?: string) =>
-      addToast({ type: 'error', title, message, icon }),
-    warning: (title: string, message?: string, icon?: string) =>
-      addToast({ type: 'warning', title, message, icon }),
-    info: (title: string, message?: string, icon?: string) =>
-      addToast({ type: 'info', title, message, icon }),
+    success: useCallback((title: string, message?: string, icon?: string) =>
+      addToast({ type: 'success', title, message, icon }), [addToast]),
+    error: useCallback((title: string, message?: string, icon?: string) =>
+      addToast({ type: 'error', title, message, icon }), [addToast]),
+    warning: useCallback((title: string, message?: string, icon?: string) =>
+      addToast({ type: 'warning', title, message, icon }), [addToast]),
+    info: useCallback((title: string, message?: string, icon?: string) =>
+      addToast({ type: 'info', title, message, icon }), [addToast]),
   };
 }
