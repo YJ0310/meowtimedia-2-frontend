@@ -2,10 +2,12 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { mockUser, stamps, countries } from '@/lib/mock-data';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { stamps, countries } from '@/lib/mock-data';
+import { useAuth } from '@/lib/auth-context';
 
 export default function PassportPage() {
+  const { user, isLoading: authLoading } = useAuth();
   const [currentPage, setCurrentPage] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
@@ -35,6 +37,27 @@ export default function PassportPage() {
     const timer = setTimeout(() => setShowToast(false), 2000);
     return () => clearTimeout(timer);
   }, [currentPage]);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-4"
+        >
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <p className="text-black dark:text-white">Loading passport...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // If no user, show nothing (auth context will redirect)
+  if (!user) {
+    return null;
+  }
 
   const nextPage = () => {
     if (currentPage < totalPages - 1 && !isFlipping) {
@@ -83,7 +106,7 @@ export default function PassportPage() {
           </div>
           <div className="h-px w-20 md:w-32 bg-neutral-dark mx-auto" />
           <h1 className="text-2xl md:text-4xl font-bold text-gray-800">
-            {mockUser.name}
+            {user.displayName}
           </h1>
           <p className="text-sm md:text-base text-neutral-dark">Cultural Explorer</p>
         </div>
@@ -303,7 +326,7 @@ export default function PassportPage() {
                       </div>
                       <div className="h-px w-20 bg-neutral-dark mx-auto my-3" />
                       <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100">
-                        {mockUser.name}
+                        {user.displayName}
                       </h1>
                       <p className="text-neutral-dark dark:text-gray-400">Cultural Explorer</p>
                     </motion.div>
@@ -312,8 +335,8 @@ export default function PassportPage() {
                       <div className="text-xs text-neutral-dark">Stamps Collected</div>
                     </div>
                     <img
-                      src={mockUser.image}
-                      alt={mockUser.name}
+                      src={user.avatar}
+                      alt={user.displayName}
                       className="w-24 h-24 rounded-full mx-auto border-4 border-primary shadow-xl"
                     />
                   </div>

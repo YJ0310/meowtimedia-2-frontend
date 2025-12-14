@@ -4,15 +4,17 @@ import { use, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Check, X } from 'lucide-react';
+import { ArrowLeft, Check, X, Loader2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { countries, topics, lessons } from '@/lib/mock-data';
+import { useAuth } from '@/lib/auth-context';
 
 export default function LessonPage({ 
   params 
 }: { 
   params: Promise<{ countrySlug: string; topicSlug: string }> 
 }) {
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const resolvedParams = use(params);
   const [quizStarted, setQuizStarted] = useState(false);
@@ -26,6 +28,27 @@ export default function LessonPage({
   const lesson = lessons[lessonKey];
   const country = countries.find(c => c.slug === resolvedParams.countrySlug);
   const topic = topics.find(t => t.countrySlug === resolvedParams.countrySlug && t.slug === resolvedParams.topicSlug);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-4"
+        >
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <p className="text-black dark:text-white">Loading lesson...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // If no user, show nothing (auth context will redirect)
+  if (!user) {
+    return null;
+  }
 
   if (!lesson || !country || !topic) {
     return (

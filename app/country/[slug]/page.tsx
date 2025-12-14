@@ -3,19 +3,42 @@
 import { use, useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowLeft, Lock } from 'lucide-react';
+import { ArrowLeft, Lock, Loader2 } from 'lucide-react';
 import { countries, topics, stamps } from '@/lib/mock-data';
 import ProgressCircle from '@/components/progress-circle';
 import TopicCard from '@/components/topic-card';
 import StampBadge from '@/components/stamp-badge';
+import { useAuth } from '@/lib/auth-context';
 
 export default function CountryPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { user, isLoading: authLoading } = useAuth();
   const resolvedParams = use(params);
   const [activeTab, setActiveTab] = useState<'learn' | 'progress'>('learn');
   
   const country = countries.find(c => c.slug === resolvedParams.slug);
   const countryTopics = topics.filter(t => t.countrySlug === resolvedParams.slug);
   const countryStamps = stamps.filter(s => s.countrySlug === resolvedParams.slug);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-soft">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-4"
+        >
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <p className="text-black dark:text-white">Loading...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // If no user, show nothing (auth context will redirect)
+  if (!user) {
+    return null;
+  }
 
   if (!country) {
     return (

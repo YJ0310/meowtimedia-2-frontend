@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Moon, Sun, Book } from 'lucide-react';
-import { mockUser } from '@/lib/mock-data';
+import { useAuth } from '@/lib/auth-context';
 
 export default function Navbar() {
+  const { user, isAuthenticated } = useAuth();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
@@ -64,11 +65,20 @@ export default function Navbar() {
               </button>
 
               <Link href="/profile" className="flex items-center gap-2 group">
-                <img 
-                  src={mockUser.image} 
-                  alt={mockUser.name}
-                  className="w-9 h-9 rounded-full border-2 border-primary/50 group-hover:border-primary transition-colors"
-                />
+                {isAuthenticated && user ? (
+                  <img 
+                    src={user.avatar} 
+                    alt={user.displayName}
+                    className="w-9 h-9 rounded-full border-2 border-primary/50 group-hover:border-primary transition-colors"
+                  />
+                ) : (
+                  <Link 
+                    href="/login"
+                    className="px-4 py-2 rounded-full bg-primary text-white font-medium hover:bg-primary/90 transition-colors"
+                  >
+                    Sign In
+                  </Link>
+                )}
               </Link>
             </div>
           </div>
@@ -113,11 +123,17 @@ export default function Navbar() {
             href="/profile" 
             className="rounded-full border-2 border-primary active:scale-95 transition-transform flex items-center justify-center overflow-hidden"
           >
-            <img 
-              src={mockUser.image} 
-              alt={mockUser.name}
-              className="w-10 h-10 rounded-full object-cover"
-            />
+            {isAuthenticated && user ? (
+              <img 
+                src={user.avatar} 
+                alt={user.displayName}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-primary text-sm font-bold">?</span>
+              </div>
+            )}
           </Link>
         </div>
       </nav>

@@ -2,12 +2,13 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Upload, Check, X, ZoomIn, ZoomOut, RotateCw, Save } from 'lucide-react';
+import { Camera, Upload, Check, X, ZoomIn, ZoomOut, RotateCw, Save, LogOut, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { mockUser } from '@/lib/mock-data';
+import { useAuth } from '@/lib/auth-context';
 
 export default function ProfilePage() {
-  const [image, setImage] = useState<string>(mockUser.image);
+  const { user, isLoading: authLoading, logout } = useAuth();
+  const [image, setImage] = useState<string>('');
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [zoom, setZoom] = useState(1);
@@ -22,6 +23,13 @@ export default function ProfilePage() {
   const [showToast, setShowToast] = useState(true);
   const [isWindows, setIsWindows] = useState(false);
 
+  // Set image from user's Google avatar
+  useEffect(() => {
+    if (user?.avatar) {
+      setImage(user.avatar);
+    }
+  }, [user]);
+
   // Detect OS for toast positioning
   useEffect(() => {
     setIsWindows(navigator.platform.toLowerCase().includes('win'));
@@ -34,6 +42,27 @@ export default function ProfilePage() {
       return () => clearTimeout(timer);
     }
   }, [showToast]);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-4"
+        >
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <p className="text-black dark:text-white">Loading profile...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // If no user, show nothing (auth context will redirect)
+  if (!user) {
+    return null;
+  }
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -128,8 +157,8 @@ export default function ProfilePage() {
         ${isWindows ? "top-20" : "top-4"}`}
                 >
                   <motion.img 
-                    src={mockUser.image} 
-                    alt={mockUser.name}
+                    src={user.avatar} 
+                    alt={user.displayName}
                     className="w-12 h-12 md:w-14 md:h-14 rounded-full border-3 border-primary shadow-lg shrink-0"
                     animate={{ rotate: [0, 5, -5, 0] }}
                     transition={{ duration: 3, repeat: Infinity }}
@@ -177,8 +206,8 @@ export default function ProfilePage() {
               </motion.div>
 
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold">{mockUser.name}</h2>
-                <p className="text-black dark:text-white">{mockUser.email}</p>
+                <h2 className="text-2xl font-bold">{user.displayName}</h2>
+                <p className="text-black dark:text-white">{user.email}</p>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -191,16 +220,26 @@ export default function ProfilePage() {
                   <Upload className="w-5 h-5" />
                   Upload New Photo
                 </motion.button>
-                <Link href="/dashboard">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="glass px-6 py-3 rounded-xl font-semibold text-black dark:text-white"
-                  >
-                    Back to Dashboard
-                  </motion.button>
-                </Link>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={logout}
+                  className="glass px-6 py-3 rounded-xl font-semibold text-red-500 flex items-center justify-center gap-2"
+                >
+                  <LogOut className="w-5 h-5" />
+                  Sign Out
+                </motion.button>
               </div>
+
+              <Link href="/dashboard">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="glass px-6 py-3 rounded-xl font-semibold text-black dark:text-white w-full"
+                >
+                  Back to Dashboard
+                </motion.button>
+              </Link>
             </div>
           )}
 

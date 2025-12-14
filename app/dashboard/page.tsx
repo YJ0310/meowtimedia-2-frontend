@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { X, ArrowRight, Clock, MapPin } from "lucide-react";
+import { X, ArrowRight, Clock, MapPin, Loader2 } from "lucide-react";
 import {
   ComposableMap,
   Geographies,
@@ -11,8 +11,9 @@ import {
   Marker,
   ZoomableGroup,
 } from "react-simple-maps";
-import { countries, mockUser, stamps } from "@/lib/mock-data";
+import { countries, stamps } from "@/lib/mock-data";
 import ProgressCircle from "@/components/progress-circle";
+import { useAuth } from "@/lib/auth-context";
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json";
 
@@ -88,6 +89,7 @@ const countryComments = {
 };
 
 export default function DashboardPage() {
+  const { user, isLoading: authLoading } = useAuth();
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -118,6 +120,27 @@ export default function DashboardPage() {
   useEffect(() => {
     setIsWindows(navigator.platform.toLowerCase().includes("win"));
   }, []);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="h-screen w-screen fixed inset-0 flex items-center justify-center bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-4"
+        >
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+          <p className="text-black dark:text-white">Loading dashboard...</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // If no user, show nothing (auth context will redirect)
+  if (!user) {
+    return null;
+  }
 
   // Update time every second
   useEffect(() => {
@@ -286,7 +309,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <h2 className="text-xl font-semibold">
-                  {greeting}, {mockUser.name}!
+                  {greeting}, {user.displayName?.split(' ')[0] || 'Explorer'}!
                 </h2>
               </div>
 
@@ -295,14 +318,14 @@ export default function DashboardPage() {
                 <Link href="/profile">
                   <motion.img
                     whileHover={{ scale: 1.05, rotate: 5 }}
-                    src={mockUser.image}
-                    alt={mockUser.name}
+                    src={user.avatar}
+                    alt={user.displayName}
                     className="w-20 h-20 rounded-full mx-auto border-4 border-primary shadow-xl cursor-pointer"
                   />
                 </Link>
                 <div className="glass p-2 rounded-lg text-black dark:text-white">
                   <div className="text-2xl font-bold text-gradient">
-                    {mockUser.totalStamps}/48
+                    12/48
                   </div>
                   <div className="text-xs text-black dark:text-white">
                     Stamps Collected
@@ -409,7 +432,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <h2 className="text-xl font-semibold">
-                  {greeting}, {mockUser.name}!
+                  {greeting}, {user.displayName?.split(' ')[0] || 'Explorer'}!
                 </h2>
               </div>
 
@@ -417,13 +440,13 @@ export default function DashboardPage() {
               <div className="text-center space-y-3">
                 <motion.img
                   whileHover={{ scale: 1.05, rotate: 5 }}
-                  src={mockUser.image}
-                  alt={mockUser.name}
+                  src={user.avatar}
+                  alt={user.displayName}
                   className="w-24 h-24 rounded-full mx-auto border-4 border-primary shadow-xl"
                 />
                 <div className="glass p-3 rounded-lg text-black dark:text-white">
                   <div className="text-3xl font-bold text-gradient">
-                    {mockUser.totalStamps}/48
+                    12/48
                   </div>
                   <div className="text-xs text-black dark:text-white">
                     Stamps Collected
