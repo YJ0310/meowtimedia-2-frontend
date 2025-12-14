@@ -3,27 +3,23 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Loader2, X } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { ToastContainer, useToast } from '@/components/toast';
 
 export default function Home() {
   const router = useRouter();
   const { login, isAuthenticated, showAuthToast, setShowAuthToast } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [isWindows, setIsWindows] = useState(false);
+  const { toasts, removeToast, warning } = useToast();
 
-  // Detect OS for toast positioning
-  useEffect(() => {
-    setIsWindows(navigator.platform.toLowerCase().includes('win'));
-  }, []);
-
-  // Auto-hide auth toast after 5 seconds
+  // Show auth toast when triggered
   useEffect(() => {
     if (showAuthToast) {
-      const timer = setTimeout(() => setShowAuthToast(false), 5000);
-      return () => clearTimeout(timer);
+      warning('Login Required', 'Please sign in to access this feature', '🔐');
+      setShowAuthToast(false);
     }
-  }, [showAuthToast, setShowAuthToast]);
+  }, [showAuthToast, setShowAuthToast, warning]);
 
   // If already authenticated, redirect to dashboard
   useEffect(() => {
@@ -87,33 +83,8 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Auth Required Toast */}
-      <AnimatePresence>
-        {showAuthToast && (
-          <motion.div
-            initial={{ opacity: 0, y: -50, x: '-50%' }}
-            animate={{ opacity: 1, y: 0, x: '-50%' }}
-            exit={{ opacity: 0, y: -50, x: '-50%' }}
-            className={`fixed left-1/2 z-[200] ${isWindows ? 'top-4' : 'top-12'}`}
-          >
-            <div className="glass-strong rounded-xl px-6 py-4 shadow-2xl border border-amber-500/30 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
-                <span className="text-xl">🔐</span>
-              </div>
-              <div>
-                <p className="font-semibold text-black dark:text-white">Login Required</p>
-                <p className="text-sm text-muted-foreground">Please sign in to access this feature</p>
-              </div>
-              <button
-                onClick={() => setShowAuthToast(false)}
-                className="ml-2 p-1 hover:bg-muted rounded-lg transition-colors"
-              >
-                <X className="w-4 h-4 text-muted-foreground" />
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
 
       <div className="min-h-screen relative overflow-hidden">
       {/* Animated Background */}
