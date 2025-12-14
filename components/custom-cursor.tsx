@@ -46,10 +46,9 @@ export default function CustomCursor() {
         opacity: isVisible ? 1 : 0,
       }}
       transition={{
-        type: "spring",
-        stiffness: 500,
-        damping: 28,
-        mass: 0.5,
+        x: { duration: 0 },
+        y: { duration: 0 },
+        opacity: { duration: 0.15 },
       }}
     >
       <img
