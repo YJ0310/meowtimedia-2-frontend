@@ -12,8 +12,8 @@ import {
   ZoomableGroup,
 } from "react-simple-maps";
 import { countries, stamps } from "@/lib/mock-data";
-import ProgressCircle from "@/components/progress-circle";
 import { useAuth } from "@/lib/auth-context";
+import { ToastContainer, useToast } from "@/components/toast";
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json";
 
@@ -106,20 +106,14 @@ export default function DashboardPage() {
   const [selectedCountryComments, setSelectedCountryComments] = useState<
     Array<{ id: number; text: string; offset: [number, number] }>
   >([]);
-  const [showToast, setShowToast] = useState(true);
+  const { toasts, removeToast, info } = useToast();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [greeting, setGreeting] = useState("");
-  const [isWindows, setIsWindows] = useState(false);
 
   const country = selectedCountry
     ? countries.find((c) => c.slug === selectedCountry)
     : null;
   const userStamps = stamps.filter((s) => s.countrySlug === selectedCountry);
-
-  // Detect OS for toast positioning
-  useEffect(() => {
-    setIsWindows(navigator.platform.toLowerCase().includes("win"));
-  }, []);
 
   // Update time every second
   useEffect(() => {
@@ -208,13 +202,10 @@ export default function DashboardPage() {
     }
   }, [selectedCountry, getSpreadOffsets]);
 
-  // Auto-hide toast after 4 seconds
+  // Show welcome toast on load
   useEffect(() => {
-    if (showToast) {
-      const timer = setTimeout(() => setShowToast(false), 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [showToast]);
+    info('Explore Asia', 'Click on any country pin to begin your cultural journey', '🗺️');
+  }, []);
 
   // Toggle body class to hide mobile dock when country card is shown
   useEffect(() => {
@@ -537,43 +528,11 @@ export default function DashboardPage() {
         </svg>
       </button>
 
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+
       {/* Full-screen Map Area */}
       <div className="absolute inset-0">
-        {/* Profile Toast Notification - Position based on OS */}
-        <AnimatePresence>
-          {showToast && !selectedCountry && (
-            <motion.div
-              initial={{ opacity: 0, y: -50, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -30, scale: 0.9 }}
-              transition={{ type: "spring", damping: 20, stiffness: 300 }}
-              className={`fixed left-1/2 -translate-x-1/2 z-50 
-        bg-white/20 dark:bg-black/30 
-        backdrop-blur-2xl backdrop-saturate-150
-        px-4 md:px-6 py-3 md:py-4 
-        rounded-2xl shadow-2xl flex items-center gap-3 md:gap-4 
-        border border-white/30 dark:border-white/10 
-        max-w-[90vw] md:max-w-md 
-        ${isWindows ? "top-20" : "top-4"}`}
-            >
-              <div className="min-w-0">
-                <h3 className="font-bold text-base md:text-lg truncate text-black dark:text-white">
-                  Explore Asia
-                </h3>
-                <p className="text-xs md:text-sm text-black dark:text-white">
-                  Click on any country pin to begin your cultural journey
-                </p>
-              </div>
-              <button
-                onClick={() => setShowToast(false)}
-                className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors shrink-0"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Map Container - Full Screen */}
         <div className="w-full h-full">
           <ComposableMap
@@ -832,26 +791,32 @@ export default function DashboardPage() {
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.2 }}
-                  className="flex justify-center"
+                  className="space-y-2"
                 >
-                  <ProgressCircle progress={country.progress} />
+                  <div className="flex items-center justify-between text-sm text-black dark:text-white">
+                    <span>Progress</span>
+                    <span className="font-bold">{country.progress}%</span>
+                  </div>
+                  <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-linear-to-r from-primary to-secondary"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${country.progress}%` }}
+                      transition={{ duration: 1, delay: 0.3 }}
+                    />
+                  </div>
                 </motion.div>
 
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.3 }}
-                  className="space-y-3"
+                  className="glass p-4 rounded-lg text-black dark:text-white"
                 >
-                  <p className="text-black dark:text-white leading-relaxed">
-                    {country.description}
-                  </p>
-                  <div className="glass p-4 rounded-lg text-black dark:text-white">
-                    <div className="text-sm font-semibold text-primary mb-1">
-                      💡 Fun Fact
-                    </div>
-                    <p className="text-sm text-black dark:text-white">{country.funFact}</p>
+                  <div className="text-sm font-semibold text-primary mb-1">
+                    💡 Fun Fact
                   </div>
+                  <p className="text-sm text-black dark:text-white">{country.funFact}</p>
                 </motion.div>
 
                 {userStamps.length > 0 && (
@@ -960,22 +925,28 @@ export default function DashboardPage() {
                   </button>
                 </div>
 
-                <div className="flex justify-center">
-                  <ProgressCircle progress={country.progress} />
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-black dark:text-white">
+                    <span>Progress</span>
+                    <span className="font-bold">{country.progress}%</span>
+                  </div>
+                  <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <motion.div
+                      className="h-full bg-linear-to-r from-primary to-secondary"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${country.progress}%` }}
+                      transition={{ duration: 1, delay: 0.2 }}
+                    />
+                  </div>
                 </div>
 
-                <div className="space-y-3">
-                  <p className="text-sm text-black dark:text-white leading-relaxed">
-                    {country.description}
-                  </p>
-                  <div className="bg-primary/10 dark:bg-primary/20 p-3 rounded-lg border border-primary/20">
-                    <div className="text-sm font-semibold text-primary mb-1">
-                      💡 Fun Fact
-                    </div>
-                    <p className="text-xs text-black dark:text-white">
-                      {country.funFact}
-                    </p>
+                <div className="bg-primary/10 dark:bg-primary/20 p-3 rounded-lg border border-primary/20">
+                  <div className="text-sm font-semibold text-primary mb-1">
+                    💡 Fun Fact
                   </div>
+                  <p className="text-xs text-black dark:text-white">
+                    {country.funFact}
+                  </p>
                 </div>
 
                 {userStamps.length > 0 && (

@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from '
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { stamps, countries } from '@/lib/mock-data';
 import { useAuth } from '@/lib/auth-context';
+import { ToastContainer, useToast } from '@/components/toast';
 
 export default function PassportPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -12,10 +13,11 @@ export default function PassportPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
   const [flipDirection, setFlipDirection] = useState<'left' | 'right'>('right');
-  const [showToast, setShowToast] = useState(true);
+  const { toasts, removeToast, info } = useToast();
   const totalPages = Math.ceil((stamps.length + 4) / 4); // 4 stamps per page spread
   const dragX = useMotionValue(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const totalMobilePages = 1 + stamps.length + (48 - stamps.length);
 
   // Detect mobile
   useEffect(() => {
@@ -25,17 +27,16 @@ export default function PassportPage() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Auto-hide toast after 3 seconds
+  // Show toast on initial load
   useEffect(() => {
-    const timer = setTimeout(() => setShowToast(false), 3000);
-    return () => clearTimeout(timer);
+    info('My Passport', `Page 1 of ${isMobile ? totalMobilePages : totalPages}`, '🐾');
   }, []);
 
-  // Show toast briefly when page changes
+  // Show toast when page changes
   useEffect(() => {
-    setShowToast(true);
-    const timer = setTimeout(() => setShowToast(false), 2000);
-    return () => clearTimeout(timer);
+    if (currentPage > 0) {
+      info('My Passport', `Page ${currentPage + 1} of ${isMobile ? totalMobilePages : totalPages}`, '🐾');
+    }
   }, [currentPage]);
 
   // Show loading while checking auth
@@ -445,28 +446,10 @@ export default function PassportPage() {
     );
   };
 
-  // Calculate total mobile pages (cover + stamps + empty slots)
-  const totalMobilePages = 1 + stamps.length + (48 - stamps.length);
-
   return (
     <div className="h-screen bg-gradient-soft flex flex-col overflow-hidden">
-      {/* Toast for Title and Page Counter */}
-      <AnimatePresence>
-        {showToast && (
-          <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            className="fixed top-20 left-1/2 -translate-x-1/2 z-50"
-          >
-            <div className="frosted px-6 py-3 rounded-full shadow-2xl">
-              <p className="text-sm md:text-base font-semibold">
-                🐾 My Passport • {isMobile ? `Page ${currentPage + 1} of ${totalMobilePages}` : `Page ${currentPage + 1} of ${totalPages}`}
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
 
       <div className="flex-1 flex flex-col items-center justify-center p-2 md:p-4 max-w-7xl mx-auto w-full">
 
