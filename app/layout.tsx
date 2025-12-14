@@ -11,14 +11,14 @@ export const metadata: Metadata = {
   authors: [{ name: "Meowtimap" }],
   creator: "Meowtimap",
   publisher: "Meowtimap",
-  metadataBase: new URL('https://frontend1.meowtimedia-test.smoltako.space'),
+  metadataBase: new URL('https://meowtimap.smoltako.space'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: "Meowtimap - Your Journey Through Asian Culture",
     description: "Collect cultures. Earn stamps. Fall in love with Asia.",
-    url: 'https://frontend1.meowtimedia-test.smoltako.space',
+    url: 'https://meowtimap.smoltako.space',
     siteName: 'Meowtimap',
     images: [
       {
