@@ -83,7 +83,7 @@ export default function ProfilePage() {
   // Show loading while checking auth
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-soft dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -136,7 +136,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="fixed inset-0 bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 px-4">
+    <div className="fixed inset-0 bg-gradient-soft dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 px-4">
       <div className="py-10 max-w-2xl mx-auto">
         {/* Header */}
         {/* Profile Toast Notification */}
@@ -363,7 +363,7 @@ export default function ProfilePage() {
                     whileTap={{ scale: 0.98 }}
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="bg-linear-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-xl disabled:opacity-50"
+                    className="bg-gradient-primary text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-xl disabled:opacity-50"
                   >
                     {isSaving ? (
                       <>

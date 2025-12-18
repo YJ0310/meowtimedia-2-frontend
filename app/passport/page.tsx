@@ -42,7 +42,7 @@ export default function PassportPage() {
   // Show loading while checking auth
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-soft dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -310,7 +310,7 @@ export default function PassportPage() {
               }}
             >
               {/* Page Edge Effect */}
-              <div className="absolute left-0 top-0 bottom-0 w-3 bg-linear-to-r from-gray-300/50 to-transparent dark:from-gray-700/50" />
+              <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-gray-300/50 to-transparent dark:from-gray-700/50" />
               
               {/* Page Content */}
               <div className="p-6">
@@ -480,14 +480,14 @@ export default function PassportPage() {
                       <div className="relative bg-white dark:bg-gray-900 rounded-l-3xl shadow-2xl overflow-hidden">
                         {pageContent.left}
                         {/* Page binding effect */}
-                        <div className="absolute right-0 top-0 bottom-0 w-8 bg-linear-to-r from-transparent to-gray-900/10" />
+                        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-gray-900/10" />
                       </div>
 
                       {/* Right Page */}
                       <div className="relative bg-white dark:bg-gray-900 rounded-r-3xl shadow-2xl overflow-hidden">
                         {pageContent.right}
                         {/* Page binding effect */}
-                        <div className="absolute left-0 top-0 bottom-0 w-8 bg-linear-to-l from-transparent to-gray-900/10" />
+                        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-l from-transparent to-gray-900/10" />
                       </div>
                     </div>
                   </motion.div>
