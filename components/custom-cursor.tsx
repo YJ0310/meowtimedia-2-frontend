@@ -1,64 +1,81 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 export default function CustomCursor() {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isInViewport, setIsInViewport] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
   const cursorRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number | null>(null);
-  const positionRef = useRef({ x: 0, y: 0 });
+  const positionRef = useRef({ x: -100, y: -100 });
+
+  // Direct DOM manipulation for zero-lag cursor movement
+  const updateCursor = useCallback((x: number, y: number) => {
+    positionRef.current = { x, y };
+    if (cursorRef.current) {
+      cursorRef.current.style.transform = `translate(${x - 8}px, ${y - 8}px)`;
+    }
+  }, []);
 
   useEffect(() => {
     // Check for touch device on mount
-    if ("ontouchstart" in window) {
+    if ("ontouchstart" in window || navigator.maxTouchPoints > 0) {
       setIsTouchDevice(true);
       return;
     }
 
-    const updateCursorPosition = () => {
-      if (cursorRef.current) {
-        cursorRef.current.style.transform = `translate(${positionRef.current.x - 8}px, ${positionRef.current.y - 8}px)`;
-      }
-      rafRef.current = null;
+    const handleMouseMove = (e: MouseEvent) => {
+      updateCursor(e.clientX, e.clientY);
+      if (!isInViewport) setIsInViewport(true);
     };
 
-    const handlePointerMove = (e: PointerEvent | MouseEvent) => {
-      // Store position immediately
-      positionRef.current = { x: e.clientX, y: e.clientY };
-      
-      // Use requestAnimationFrame for smooth updates
-      if (!rafRef.current) {
-        rafRef.current = requestAnimationFrame(updateCursorPosition);
+    const handleMouseLeave = (e: MouseEvent) => {
+      // Only hide if actually leaving the document
+      if (e.relatedTarget === null || 
+          (e.clientY <= 0 || e.clientX <= 0 || 
+           e.clientX >= window.innerWidth || e.clientY >= window.innerHeight)) {
+        setIsInViewport(false);
+        // Move cursor off-screen
+        updateCursor(-100, -100);
       }
-      
-      if (!isVisible) setIsVisible(true);
-    };
-
-    const handleMouseLeave = () => {
-      setIsVisible(false);
     };
 
     const handleMouseEnter = () => {
-      setIsVisible(true);
+      setIsInViewport(true);
     };
 
-    // Use pointermove for better compatibility with drag operations
-    window.addEventListener("pointermove", handlePointerMove, { passive: true, capture: true });
-    window.addEventListener("mousemove", handlePointerMove, { passive: true, capture: true });
-    document.addEventListener("mouseleave", handleMouseLeave);
-    document.addEventListener("mouseenter", handleMouseEnter);
-
-    return () => {
-      window.removeEventListener("pointermove", handlePointerMove, { capture: true });
-      window.removeEventListener("mousemove", handlePointerMove, { capture: true });
-      document.removeEventListener("mouseleave", handleMouseLeave);
-      document.removeEventListener("mouseenter", handleMouseEnter);
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsInViewport(false);
+        updateCursor(-100, -100);
       }
     };
-  }, [isVisible]);
+
+    const handleWindowBlur = () => {
+      setIsInViewport(false);
+      updateCursor(-100, -100);
+    };
+
+    const handleWindowFocus = () => {
+      // Don't auto-show, wait for mouse move
+    };
+
+    // Add all event listeners
+    document.addEventListener("mousemove", handleMouseMove, { passive: true });
+    document.addEventListener("mouseleave", handleMouseLeave);
+    document.addEventListener("mouseenter", handleMouseEnter);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleWindowBlur);
+    window.addEventListener("focus", handleWindowFocus);
+
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseleave", handleMouseLeave);
+      document.removeEventListener("mouseenter", handleMouseEnter);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleWindowBlur);
+      window.removeEventListener("focus", handleWindowFocus);
+    };
+  }, [isInViewport, updateCursor]);
 
   // Hide on touch devices
   if (isTouchDevice) {
@@ -68,10 +85,10 @@ export default function CustomCursor() {
   return (
     <div
       ref={cursorRef}
-      className="pointer-events-none fixed top-0 left-0 z-[9999] will-change-transform"
+      className="pointer-events-none fixed top-0 left-0 z-[9999]"
       style={{
-        opacity: isVisible ? 1 : 0,
-        transition: "opacity 0.15s ease",
+        opacity: isInViewport ? 1 : 0,
+        transform: `translate(${positionRef.current.x - 8}px, ${positionRef.current.y - 8}px)`,
       }}
     >
       <img
