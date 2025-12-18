@@ -360,7 +360,7 @@ export default function DashboardPage() {
                               <div className="flex items-center gap-1 mt-0.5">
                                 <div className="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                                   <motion.div
-                                    className="h-full bg-gradient-to-r from-primary to-secondary"
+                                    className="h-full bg-linear-to-r from-primary to-secondary"
                                     initial={{ width: 0 }}
                                     animate={{ width: `${c.progress}%` }}
                                     transition={{ duration: 1, delay: 0.1 }}
@@ -481,7 +481,7 @@ export default function DashboardPage() {
                               <div className="flex items-center gap-2 mt-1">
                                 <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shrink-0">
                                   <motion.div
-                                    className="h-full bg-gradient-to-r from-primary to-secondary"
+                                    className="h-full bg-linear-to-r from-primary to-secondary"
                                     initial={{ width: 0 }}
                                     animate={{ width: `${c.progress}%` }}
                                     transition={{ duration: 1, delay: 0.1 }}
@@ -799,7 +799,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <motion.div
-                      className="h-full bg-gradient-to-r from-primary to-secondary"
+                      className="h-full bg-linear-to-r from-primary to-secondary"
                       initial={{ width: 0 }}
                       animate={{ width: `${country.progress}%` }}
                       transition={{ duration: 1, delay: 0.3 }}
@@ -863,7 +863,7 @@ export default function DashboardPage() {
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full bg-gradient-to-r from-primary to-secondary text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transition-shadow"
+                      className="w-full bg-linear-to-r from-primary to-secondary text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transition-shadow"
                     >
                       Explore {country.name}
                       <ArrowRight className="w-5 h-5" />
@@ -932,7 +932,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <motion.div
-                      className="h-full bg-gradient-to-r from-primary to-secondary"
+                      className="h-full bg-linear-to-r from-primary to-secondary"
                       initial={{ width: 0 }}
                       animate={{ width: `${country.progress}%` }}
                       transition={{ duration: 1, delay: 0.2 }}
@@ -976,7 +976,7 @@ export default function DashboardPage() {
                 <Link href={`/country/${country.slug}`}>
                   <motion.button
                     whileTap={{ scale: 0.98 }}
-                    className="w-full bg-gradient-to-r from-primary to-secondary text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-xl"
+                    className="w-full bg-linear-to-r from-primary to-secondary text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-xl"
                   >
                     Explore {country.name}
                     <ArrowRight className="w-5 h-5" />

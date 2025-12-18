@@ -363,7 +363,7 @@ export default function ProfilePage() {
                     whileTap={{ scale: 0.98 }}
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="bg-gradient-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-xl disabled:opacity-50"
+                    className="bg-linear-to-r from-primary to-secondary text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 shadow-xl disabled:opacity-50"
                   >
                     {isSaving ? (
                       <>
