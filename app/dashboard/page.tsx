@@ -976,7 +976,7 @@ export default function DashboardPage() {
                 <Link href={`/country/${country.slug}`}>
                   <motion.button
                     whileTap={{ scale: 0.98 }}
-                    className="w-full bg-linear-to-r from-primary to-secondary text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-xl"
+                    className="w-full bg-linear-to-r from-primary to-secondary py-4 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-xl"
                   >
                     Explore {country.name}
                     <ArrowRight className="w-5 h-5" />
