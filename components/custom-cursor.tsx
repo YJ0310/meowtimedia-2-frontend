@@ -23,9 +23,20 @@ export default function CustomCursor() {
       return;
     }
 
+    const handlePointerMove = (e: PointerEvent) => {
+      updateCursor(e.clientX, e.clientY);
+      if (!isInViewport) setIsInViewport(true);
+    };
+
     const handleMouseMove = (e: MouseEvent) => {
       updateCursor(e.clientX, e.clientY);
       if (!isInViewport) setIsInViewport(true);
+    };
+
+    const handleDrag = (e: DragEvent) => {
+      if (e.clientX !== 0 && e.clientY !== 0) {
+        updateCursor(e.clientX, e.clientY);
+      }
     };
 
     const handleMouseLeave = (e: MouseEvent) => {
@@ -34,7 +45,6 @@ export default function CustomCursor() {
           (e.clientY <= 0 || e.clientX <= 0 || 
            e.clientX >= window.innerWidth || e.clientY >= window.innerHeight)) {
         setIsInViewport(false);
-        // Move cursor off-screen
         updateCursor(-100, -100);
       }
     };
@@ -55,25 +65,25 @@ export default function CustomCursor() {
       updateCursor(-100, -100);
     };
 
-    const handleWindowFocus = () => {
-      // Don't auto-show, wait for mouse move
-    };
-
-    // Add all event listeners
+    // Add all event listeners - use pointer events for drag support
+    document.addEventListener("pointermove", handlePointerMove, { passive: true });
     document.addEventListener("mousemove", handleMouseMove, { passive: true });
+    document.addEventListener("drag", handleDrag, { passive: true });
+    document.addEventListener("dragover", handleDrag, { passive: true });
     document.addEventListener("mouseleave", handleMouseLeave);
     document.addEventListener("mouseenter", handleMouseEnter);
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("blur", handleWindowBlur);
-    window.addEventListener("focus", handleWindowFocus);
 
     return () => {
+      document.removeEventListener("pointermove", handlePointerMove);
       document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("drag", handleDrag);
+      document.removeEventListener("dragover", handleDrag);
       document.removeEventListener("mouseleave", handleMouseLeave);
       document.removeEventListener("mouseenter", handleMouseEnter);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("blur", handleWindowBlur);
-      window.removeEventListener("focus", handleWindowFocus);
     };
   }, [isInViewport, updateCursor]);
 
