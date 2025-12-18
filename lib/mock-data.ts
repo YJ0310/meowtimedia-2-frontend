@@ -1,4 +1,4 @@
-import { User, Country, Topic, Stamp, Lesson } from './types';
+import { User, Country, Topic, Stamp, Lesson, ContentItem, QuizData } from './types';
 
 export const mockUser: User = {
   name: "Aldof Hitler",
@@ -435,3 +435,118 @@ export const lessons: { [key: string]: Lesson } = {
     ]
   }
 };
+
+// Content data for countries (festivals, food, funfacts)
+export const countryContent: ContentItem[] = [
+  // Japan Festivals
+  { id: 'jp-fest-1', countrySlug: 'japan', type: 'festival', title: 'Hanami (Cherry Blossom Festival)', content: 'Hanami is the beloved Japanese tradition of enjoying the beauty of cherry blossoms. Every spring, millions gather in parks for picnics under sakura trees, celebrating renewal and the fleeting nature of life.', image: 'https://images.unsplash.com/photo-1522383225653-ed111181a951?w=800' },
+  { id: 'jp-fest-2', countrySlug: 'japan', type: 'festival', title: 'Gion Matsuri', content: 'Held in Kyoto throughout July, Gion Matsuri is one of Japan\'s most famous festivals featuring massive decorated floats (yamaboko) parading through streets, traditional music, and vibrant night markets.', image: 'https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800' },
+  { id: 'jp-fest-3', countrySlug: 'japan', type: 'festival', title: 'Obon Festival', content: 'Obon is a Buddhist event honoring ancestral spirits. Families clean graves, perform Bon Odori dances, and float paper lanterns on rivers to guide spirits back to the afterlife.', image: 'https://images.unsplash.com/photo-1492571350019-22de08371fd3?w=800' },
+  
+  // Japan Food
+  { id: 'jp-food-1', countrySlug: 'japan', type: 'food', title: 'Ramen', content: 'Japanese ramen features Chinese-style wheat noodles in rich broth - from creamy tonkotsu (pork bone) to soy-based shoyu. Each region has unique styles, with toppings like chashu pork, soft-boiled eggs, and nori.', image: 'https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=800' },
+  { id: 'jp-food-2', countrySlug: 'japan', type: 'food', title: 'Tempura', content: 'Introduced by Portuguese missionaries in the 16th century, tempura involves lightly battering and frying vegetables and seafood. The secret is a crispy, not greasy, coating achieved through ice-cold batter.', image: 'https://images.unsplash.com/photo-1581781870027-04212e231e96?w=800' },
+  { id: 'jp-food-3', countrySlug: 'japan', type: 'food', title: 'Wagyu Beef', content: 'Wagyu literally means "Japanese cow." These cattle are raised with special care, sometimes including beer and massages. The intense marbling creates a melt-in-your-mouth texture unlike any other beef.', image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=800' },
+  
+  // Japan Fun Facts
+  { id: 'jp-fact-1', countrySlug: 'japan', type: 'funfact', title: 'Vending Machine Paradise', content: 'Japan has over 5.5 million vending machines - one for every 23 people! You can buy everything from hot ramen and fresh eggs to umbrellas and even cars.', image: 'https://images.unsplash.com/photo-1549210328-65cb9e70b9c2?w=800' },
+  { id: 'jp-fact-2', countrySlug: 'japan', type: 'funfact', title: 'No Tipping Culture', content: 'Tipping is not customary in Japan and can even be considered rude. Good service is simply expected as part of the job, not something to be rewarded with extra money.', image: 'https://images.unsplash.com/photo-1528164344705-47542687000d?w=800' },
+
+  // South Korea Festivals
+  { id: 'kr-fest-1', countrySlug: 'south-korea', type: 'festival', title: 'Seollal (Lunar New Year)', content: 'Korea\'s most important holiday where families gather, perform ancestral rites (charye), play folk games, and eat tteokguk (rice cake soup) to symbolically gain another year of age.', image: 'https://images.unsplash.com/photo-1548115184-bc6544d06a58?w=800' },
+  { id: 'kr-fest-2', countrySlug: 'south-korea', type: 'festival', title: 'Chuseok (Harvest Festival)', content: 'Often called "Korean Thanksgiving," families reunite to share food, visit ancestral graves, and give thanks for the harvest. Traditional foods include songpyeon (rice cakes) and jeon (pancakes).', image: 'https://images.unsplash.com/photo-1580130732478-4e339fb6836f?w=800' },
+  { id: 'kr-fest-3', countrySlug: 'south-korea', type: 'festival', title: 'Boryeong Mud Festival', content: 'Every July, the coastal city of Boryeong transforms into a massive mud playground! Millions come to wrestle in mud, slide down mud slides, and enjoy mud-based beauty treatments.', image: 'https://images.unsplash.com/photo-1518611507436-f9221403cca2?w=800' },
+  
+  // South Korea Food
+  { id: 'kr-food-1', countrySlug: 'south-korea', type: 'food', title: 'Bibimbap', content: 'This iconic dish means "mixed rice" - a bowl of warm rice topped with sautéed vegetables, gochujang (chili paste), a fried egg, and often sliced meat. Mix it all together for harmony of flavors!', image: 'https://images.unsplash.com/photo-1553163147-622ab57be1c7?w=800' },
+  { id: 'kr-food-2', countrySlug: 'south-korea', type: 'food', title: 'Korean Fried Chicken', content: 'Double-fried for extra crispiness and coated in sweet-spicy sauces, Korean fried chicken (chikin) has taken the world by storm. Best enjoyed with beer (chimaek) while watching K-dramas!', image: 'https://images.unsplash.com/photo-1575932444877-5106bee2a599?w=800' },
+  
+  // South Korea Fun Facts
+  { id: 'kr-fact-1', countrySlug: 'south-korea', type: 'funfact', title: 'Age System', content: 'Koreans use a unique age system where you\'re 1 year old at birth and everyone ages up on New Year\'s Day. You could be up to 2 years "older" in Korean age than in Western age!', image: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=800' },
+  { id: 'kr-fact-2', countrySlug: 'south-korea', type: 'funfact', title: 'Number 4 Superstition', content: 'The number 4 sounds like "death" in Korean (and Chinese). Many buildings skip the 4th floor, labeling it "F" instead. You\'ll often see 1, 2, 3, F, 5 in elevators!', image: 'https://images.unsplash.com/photo-1538485399081-7191377e8241?w=800' },
+
+  // Thailand Festivals
+  { id: 'th-fest-1', countrySlug: 'thailand', type: 'festival', title: 'Loy Krathong', content: 'On the full moon of the 12th lunar month, Thais release floating baskets (krathong) decorated with candles, incense, and flowers onto rivers to pay respect to the water goddess and let go of grudges.', image: 'https://images.unsplash.com/photo-1573843981267-be1999ff37cd?w=800' },
+  { id: 'th-fest-2', countrySlug: 'thailand', type: 'festival', title: 'Yi Peng Lantern Festival', content: 'Coinciding with Loy Krathong in Chiang Mai, thousands of paper lanterns (khom loi) are released into the night sky, creating a breathtaking sea of floating lights symbolizing letting go of misfortune.', image: 'https://images.unsplash.com/photo-1541348263662-e068662d82af?w=800' },
+  
+  // Thailand Food
+  { id: 'th-food-1', countrySlug: 'thailand', type: 'food', title: 'Pad Thai', content: 'Thailand\'s most famous noodle dish features stir-fried rice noodles with eggs, tofu, shrimp, peanuts, and tamarind sauce. Created in the 1930s as part of a nation-building campaign to promote Thai identity.', image: 'https://images.unsplash.com/photo-1559314809-0d155014e29e?w=800' },
+  { id: 'th-food-2', countrySlug: 'thailand', type: 'food', title: 'Tom Yum Goong', content: 'This hot and sour shrimp soup is a flavor explosion of lemongrass, galangal, kaffir lime leaves, chili, and fish sauce. It\'s considered one of the world\'s best soups and was nominated for UNESCO recognition.', image: 'https://images.unsplash.com/photo-1548943487-a2e4e43b4853?w=800' },
+  { id: 'th-food-3', countrySlug: 'thailand', type: 'food', title: 'Mango Sticky Rice', content: 'Thailand\'s beloved dessert pairs sweet glutinous rice cooked in coconut milk with ripe mango slices. Best enjoyed during mango season (April-June) from street vendors.', image: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800' },
+  
+  // Thailand Fun Facts
+  { id: 'th-fact-1', countrySlug: 'thailand', type: 'funfact', title: 'Never Colonized', content: 'Thailand is the only Southeast Asian country never colonized by European powers. The name "Thailand" means "Land of the Free" - a source of great national pride.', image: 'https://images.unsplash.com/photo-1528181304800-259b08848526?w=800' },
+
+  // Indonesia Festivals
+  { id: 'id-fest-1', countrySlug: 'indonesia', type: 'festival', title: 'Nyepi (Day of Silence)', content: 'Bali\'s Hindu New Year is unlike any other - the entire island shuts down for 24 hours. No lights, no work, no travel, no entertainment. Even the airport closes! It\'s a day for self-reflection.', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=800' },
+  { id: 'id-fest-2', countrySlug: 'indonesia', type: 'festival', title: 'Galungan', content: 'This Balinese festival celebrates the victory of dharma (good) over adharma (evil). Homes and temples are decorated with penjor - tall bamboo poles with offerings. Ancestors are believed to visit for 10 days.', image: 'https://images.unsplash.com/photo-1555400038-63f5ba517a47?w=800' },
+  
+  // Indonesia Food
+  { id: 'id-food-1', countrySlug: 'indonesia', type: 'food', title: 'Rendang', content: 'Voted the world\'s most delicious food by CNN, this West Sumatran dish features beef slow-cooked in coconut milk and spices for hours until the sauce is absorbed. Originally created for preservation and celebrations.', image: 'https://images.unsplash.com/photo-1562565652-a0d8f0c59eb4?w=800' },
+  { id: 'id-food-2', countrySlug: 'indonesia', type: 'food', title: 'Satay', content: 'Marinated meat skewers grilled over charcoal and served with peanut sauce. Each region has variations - Madura satay uses sweeter sauce while Padang satay features spicier curry-based sauce.', image: 'https://images.unsplash.com/photo-1529563021893-cc83c992d75d?w=800' },
+  
+  // Indonesia Fun Facts
+  { id: 'id-fact-1', countrySlug: 'indonesia', type: 'funfact', title: 'Largest Archipelago', content: 'Indonesia spans over 17,000 islands across 5,000 km - wider than the continental United States! Only about 6,000 are inhabited, home to 270+ million people speaking 700+ languages.', image: 'https://images.unsplash.com/photo-1518548419970-58e3b4079ab2?w=800' },
+
+  // Malaysia Festivals
+  { id: 'my-fest-1', countrySlug: 'malaysia', type: 'festival', title: 'Thaipusam', content: 'Hindu devotees honor Lord Murugan through acts of devotion including body piercing with hooks and skewers. The procession to Batu Caves near KL draws over a million participants annually.', image: 'https://images.unsplash.com/photo-1580889272861-b66f10d1d91f?w=800' },
+  { id: 'my-fest-2', countrySlug: 'malaysia', type: 'festival', title: 'Hari Raya Aidilfitri', content: 'The biggest celebration for Malaysia\'s Muslim majority marks the end of Ramadan. Families gather for open houses serving ketupat (rice cakes), rendang, and sweets. "Maaf Zahir dan Batin" (forgiveness) is exchanged.', image: 'https://images.unsplash.com/photo-1590091355806-7798e8e63bd6?w=800' },
+  
+  // Malaysia Food
+  { id: 'my-food-1', countrySlug: 'malaysia', type: 'food', title: 'Char Kway Teow', content: 'Smoky stir-fried flat rice noodles with prawns, cockles, Chinese sausage, eggs, and bean sprouts. The "wok hei" (breath of the wok) from high heat is essential for authentic flavor.', image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=800' },
+  { id: 'my-food-2', countrySlug: 'malaysia', type: 'food', title: 'Roti Canai', content: 'Flaky, crispy flatbread from Indian-Muslim origin, typically served with dhal curry. Watching the roti maker flip and stretch the dough is entertainment in itself! Best for breakfast.', image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800' },
+  
+  // Malaysia Fun Facts
+  { id: 'my-fact-1', countrySlug: 'malaysia', type: 'funfact', title: 'Oldest Rainforest', content: 'Taman Negara in Malaysia is one of the world\'s oldest rainforests at 130 million years old - older than the Amazon and Congo! It houses incredible biodiversity including tigers and elephants.', image: 'https://images.unsplash.com/photo-1588392382834-a891154bca4d?w=800' },
+];
+
+// Quiz data for countries
+export const countryQuizzes: QuizData[] = [
+  {
+    countrySlug: 'japan',
+    highestScore: 8,
+    totalQuestions: 10,
+    questions: [
+      { question: 'What is the capital of Japan?', options: ['Osaka', 'Kyoto', 'Tokyo', 'Hiroshima'], correctAnswer: 2 },
+      { question: 'What does "kawaii" mean?', options: ['Strong', 'Cute', 'Fast', 'Smart'], correctAnswer: 1 },
+      { question: 'Which mountain is Japan\'s highest?', options: ['Mt. Aso', 'Mt. Fuji', 'Mt. Koya', 'Mt. Tate'], correctAnswer: 1 },
+      { question: 'What is origami?', options: ['Paper folding', 'Flower arranging', 'Sword fighting', 'Tea ceremony'], correctAnswer: 0 },
+      { question: 'What is the cherry blossom called in Japanese?', options: ['Momiji', 'Sakura', 'Ume', 'Fuji'], correctAnswer: 1 },
+    ]
+  },
+  {
+    countrySlug: 'south-korea',
+    highestScore: 6,
+    totalQuestions: 10,
+    questions: [
+      { question: 'What is the capital of South Korea?', options: ['Busan', 'Seoul', 'Incheon', 'Daegu'], correctAnswer: 1 },
+      { question: 'What is kimchi?', options: ['Rice dish', 'Fermented vegetables', 'Grilled meat', 'Noodle soup'], correctAnswer: 1 },
+      { question: 'What is the Korean alphabet called?', options: ['Kanji', 'Hangul', 'Hiragana', 'Mandarin'], correctAnswer: 1 },
+    ]
+  },
+  {
+    countrySlug: 'thailand',
+    highestScore: 0,
+    totalQuestions: 10,
+    questions: [
+      { question: 'What is the capital of Thailand?', options: ['Chiang Mai', 'Phuket', 'Bangkok', 'Pattaya'], correctAnswer: 2 },
+      { question: 'What does "Sawadee" mean?', options: ['Thank you', 'Hello', 'Goodbye', 'Sorry'], correctAnswer: 1 },
+    ]
+  },
+  {
+    countrySlug: 'indonesia',
+    highestScore: 4,
+    totalQuestions: 10,
+    questions: [
+      { question: 'What is the capital of Indonesia?', options: ['Bali', 'Jakarta', 'Surabaya', 'Yogyakarta'], correctAnswer: 1 },
+    ]
+  },
+  {
+    countrySlug: 'malaysia',
+    highestScore: 7,
+    totalQuestions: 10,
+    questions: [
+      { question: 'What is Malaysia\'s national dish?', options: ['Pad Thai', 'Nasi Lemak', 'Pho', 'Sushi'], correctAnswer: 1 },
+    ]
+  },
+];

@@ -59,3 +59,19 @@ export interface QuizQuestion {
   options: string[];
   correctAnswer: number;
 }
+
+export interface ContentItem {
+  id: string;
+  countrySlug: string;
+  type: 'festival' | 'food' | 'funfact';
+  title: string;
+  content: string;
+  image: string;
+}
+
+export interface QuizData {
+  countrySlug: string;
+  highestScore: number;
+  totalQuestions: number;
+  questions: QuizQuestion[];
+}

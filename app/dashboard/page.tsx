@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { X, ArrowRight, Clock, MapPin, Loader2 } from "lucide-react";
+import { X, ArrowRight, Clock, MapPin } from "lucide-react";
 import {
   ComposableMap,
   Geographies,
@@ -14,6 +14,7 @@ import {
 import { countries, stamps } from "@/lib/mock-data";
 import { useAuth } from "@/lib/auth-context";
 import { ToastContainer, useToast } from "@/components/toast";
+import GlobalLoading from "@/components/global-loading";
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json";
 
@@ -222,16 +223,11 @@ export default function DashboardPage() {
   // Show loading while checking auth
   if (authLoading) {
     return (
-      <div className="h-screen w-screen fixed inset-0 flex items-center justify-center bg-gradient-soft dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center space-y-4"
-        >
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-          <p className="text-black dark:text-white">Loading dashboard...</p>
-        </motion.div>
-      </div>
+      <GlobalLoading 
+        isLoading={true} 
+        title="Loading Dashboard" 
+        subtitle="Preparing your adventure..." 
+      />
     );
   }
 
