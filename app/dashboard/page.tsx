@@ -263,7 +263,7 @@ export default function DashboardPage() {
 
   return (
     <div className="h-screen w-screen fixed inset-0 overflow-hidden bg-gradient-soft dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Mobile Menu Overlay */>
+      {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-30 md:hidden"
