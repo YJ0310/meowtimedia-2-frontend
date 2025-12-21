@@ -122,67 +122,74 @@ export default function PassportPage() {
     </div>
   );
 
-  const renderStampPage = (pageStamps: typeof stamps) => (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3 p-3 md:p-4 h-full">
-      {pageStamps.map((stamp, index) => (
-        <motion.div
-          key={stamp.id}
-          initial={{ opacity: 0, rotate: -5, scale: 0.8 }}
-          animate={{ opacity: 1, rotate: 0, scale: 1 }}
-          transition={{ delay: index * 0.1 }}
-          className="relative"
-        >
-          {/* Stamp Card */}
-          <div className="glass-strong p-2 md:p-3 rounded-xl border-2 md:border-3 border-dashed border-primary/30 relative overflow-hidden min-h-[120px] md:min-h-[140px]">
-            {/* Stamp Image */}
+  const renderStampPage = (pageStamps: typeof stamps, isRightPage: boolean = false) => (
+    <div className="relative w-full h-full p-4 md:p-6">
+      {/* Passport page background texture */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="w-full h-full" style={{
+          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(0,0,0,0.03) 20px, rgba(0,0,0,0.03) 21px)',
+        }} />
+      </div>
+      
+      {/* Stamps scattered on the page */}
+      {pageStamps.map((stamp, index) => {
+        // Random positioning and rotation for realistic stamp look
+        const positions = [
+          { top: '5%', left: '5%', rotate: -8 },
+          { top: '8%', left: '50%', rotate: 12 },
+          { top: '45%', left: '10%', rotate: -5 },
+          { top: '48%', left: '55%', rotate: 8 },
+        ];
+        const pos = positions[index % 4];
+        
+        return (
+          <motion.div
+            key={stamp.id}
+            initial={{ opacity: 0, scale: 0, rotate: pos.rotate - 20 }}
+            animate={{ opacity: 1, scale: 1, rotate: pos.rotate }}
+            transition={{ 
+              delay: index * 0.15, 
+              type: "spring", 
+              stiffness: 200,
+              damping: 15
+            }}
+            className="absolute w-[42%] md:w-[40%] aspect-square"
+            style={{ 
+              top: pos.top, 
+              left: pos.left,
+              filter: 'drop-shadow(2px 3px 4px rgba(0,0,0,0.25))'
+            }}
+          >
             {stamp.stampImage ? (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <motion.img 
-                  src={stamp.stampImage}
-                  alt={`${stamp.countryName} stamp`}
-                  className="w-full h-full object-contain p-2 opacity-90"
-                  initial={{ rotate: -10, scale: 0 }}
-                  animate={{ rotate: Math.random() * 10 - 5, scale: 1 }}
-                  transition={{ delay: index * 0.1 + 0.2, type: "spring", stiffness: 200 }}
-                  style={{ filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.3))' }}
-                />
-              </div>
+              <img 
+                src={stamp.stampImage}
+                alt={`${stamp.countryName} stamp`}
+                className="w-full h-full object-contain"
+                style={{ 
+                  opacity: 0.92,
+                }}
+              />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center opacity-20">
-                <span className="text-4xl md:text-6xl">{stamp.icon}</span>
-              </div>
-            )}
-            
-            {/* Content overlay at bottom */}
-            <div className="relative z-10 flex flex-col justify-end h-full min-h-[100px] md:min-h-[120px]">
-              <div className="bg-white/80 dark:bg-black/60 backdrop-blur-sm rounded-lg p-1.5 md:p-2">
-                <h3 className="font-bold text-[10px] md:text-xs leading-tight line-clamp-1">{stamp.topicName}</h3>
-                <p className="text-[8px] md:text-[9px] text-muted-foreground">{stamp.countryName}</p>
-                <div className="font-mono text-[7px] md:text-[8px] text-muted-foreground mt-0.5">
-                  {new Date(stamp.date).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: '2-digit',
-                    year: 'numeric'
-                  })}
+              /* Fallback stamp design */
+              <div className="w-full h-full flex items-center justify-center">
+                <div 
+                  className="w-[90%] h-[90%] rounded-full border-4 border-red-600/70 flex items-center justify-center"
+                  style={{ 
+                    background: 'radial-gradient(circle, rgba(220,38,38,0.1) 0%, transparent 70%)'
+                  }}
+                >
+                  <span className="text-4xl md:text-5xl">{stamp.icon}</span>
                 </div>
               </div>
-            </div>
-          </div>
-        </motion.div>
-      ))}
+            )}
+          </motion.div>
+        );
+      })}
       
-      {/* Empty Slots */}
-      {[...Array(Math.max(0, 4 - pageStamps.length))].map((_, index) => (
-        <div
-          key={`empty-${index}`}
-          className="glass p-2 md:p-3 rounded-xl border-2 md:border-3 border-dashed border-gray-300 dark:border-gray-700 opacity-30 min-h-[120px] md:min-h-[140px]"
-        >
-          <div className="h-full flex flex-col items-center justify-center text-center space-y-1">
-            <div className="text-xl md:text-2xl opacity-50">🔒</div>
-            <p className="text-[9px] md:text-[10px] text-muted-foreground">Awaiting Adventure</p>
-          </div>
-        </div>
-      ))}
+      {/* Page number */}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-[10px] text-gray-400 font-mono">
+        {isRightPage ? currentPage * 2 + 2 : currentPage * 2 + 1}
+      </div>
     </div>
   );
 
@@ -191,7 +198,7 @@ export default function PassportPage() {
       // First page spread: cover + first stamps
       return {
         left: renderCover(),
-        right: renderStampPage(visibleStamps.slice(0, 4))
+        right: renderStampPage(visibleStamps.slice(0, 4), true)
       };
     }
     
@@ -200,8 +207,8 @@ export default function PassportPage() {
     const rightStamps = visibleStamps.slice(startIndex + 4, startIndex + 8);
     
     return {
-      left: renderStampPage(leftStamps),
-      right: renderStampPage(rightStamps)
+      left: renderStampPage(leftStamps, false),
+      right: renderStampPage(rightStamps, true)
     };
   };
 
@@ -255,14 +262,20 @@ export default function PassportPage() {
                 stiffness: 300,
                 damping: 30
               }}
-              className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden"
+              className="relative rounded-2xl shadow-2xl overflow-hidden"
               style={{ 
                 transformStyle: 'preserve-3d',
-                minHeight: '500px'
+                minHeight: '500px',
+                backgroundColor: '#f5f0e8'
               }}
             >
               {/* Page Edge Effect */}
-              <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-gray-300/50 to-transparent dark:from-gray-700/50" />
+              <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-gray-400/30 to-transparent" />
+              
+              {/* Passport paper texture */}
+              <div className="absolute inset-0 opacity-30 pointer-events-none" style={{
+                backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")'
+              }} />
               
               {/* Page Content */}
               <div className="p-6">
@@ -284,7 +297,7 @@ export default function PassportPage() {
                       <p className="text-neutral-dark dark:text-gray-400">Cultural Explorer</p>
                     </motion.div>
                     <div className="glass p-4 rounded-xl inline-block">
-                      <div className="text-3xl font-bold text-gradient">{stamps.length}/48</div>
+                      <div className="text-3xl font-bold text-gradient">{visibleStamps.length}/48</div>
                       <div className="text-xs text-neutral-dark">Stamps Collected</div>
                     </div>
                     <img
@@ -297,59 +310,41 @@ export default function PassportPage() {
                 
                 {currentContent.type === 'stamp' && currentContent.stamp && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="space-y-4"
+                    initial={{ opacity: 0, scale: 0, rotate: -15 }}
+                    animate={{ opacity: 1, scale: 1, rotate: Math.random() * 16 - 8 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                    className="flex items-center justify-center min-h-[400px]"
                   >
-                    <div className="glass-strong p-6 rounded-xl border-4 border-dashed border-primary/30 relative overflow-hidden min-h-[300px]">
-                      {/* Stamp Image */}
-                      {currentContent.stamp.stampImage ? (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <motion.img 
-                            src={currentContent.stamp.stampImage}
-                            alt={`${currentContent.stamp.countryName} stamp`}
-                            className="w-full h-full object-contain p-4"
-                            initial={{ rotate: -10, scale: 0 }}
-                            animate={{ rotate: Math.random() * 10 - 5, scale: 1 }}
-                            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                            style={{ filter: 'drop-shadow(3px 3px 6px rgba(0,0,0,0.4))' }}
-                          />
-                        </div>
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center opacity-20">
-                          <span className="text-9xl">{currentContent.stamp.icon}</span>
-                        </div>
-                      )}
-                      
-                      {/* Content overlay at bottom */}
-                      <div className="relative z-10 flex flex-col justify-end h-full min-h-[280px]">
-                        <div className="bg-white/90 dark:bg-black/70 backdrop-blur-sm rounded-lg p-3">
-                          <h3 className="font-bold text-xl leading-tight">{currentContent.stamp.topicName}</h3>
-                          <p className="text-muted-foreground">{currentContent.stamp.countryName}</p>
-                          <div className="font-mono text-sm text-muted-foreground mt-1">
-                            {new Date(currentContent.stamp.date).toLocaleDateString('en-US', {
-                              month: 'long',
-                              day: '2-digit',
-                              year: 'numeric'
-                            })}
-                          </div>
-                        </div>
+                    {/* Stamp only - no frame */}
+                    {currentContent.stamp.stampImage ? (
+                      <img 
+                        src={currentContent.stamp.stampImage}
+                        alt={`${currentContent.stamp.countryName} stamp`}
+                        className="w-[80%] max-w-[280px] aspect-square object-contain"
+                        style={{ 
+                          filter: 'drop-shadow(3px 4px 6px rgba(0,0,0,0.35))',
+                          opacity: 0.92
+                        }}
+                      />
+                    ) : (
+                      <div 
+                        className="w-[70%] max-w-[240px] aspect-square rounded-full border-4 border-red-600/70 flex items-center justify-center"
+                        style={{ 
+                          background: 'radial-gradient(circle, rgba(220,38,38,0.15) 0%, transparent 70%)',
+                          filter: 'drop-shadow(2px 3px 5px rgba(0,0,0,0.3))'
+                        }}
+                      >
+                        <span className="text-7xl">{currentContent.stamp.icon}</span>
                       </div>
-                    </div>
-                    
-                    {/* Page number */}
-                    <div className="text-center text-muted-foreground text-sm">
-                      Stamp {currentContent.index + 1} of {visibleStamps.length}
-                    </div>
+                    )}
                   </motion.div>
                 )}
                 
                 {currentContent.type === 'empty' && (
-                  <div className="glass p-8 rounded-xl border-4 border-dashed border-gray-300 dark:border-gray-700 opacity-50 min-h-[350px] flex flex-col items-center justify-center">
+                  <div className="min-h-[400px] flex flex-col items-center justify-center opacity-30">
                     <div className="text-6xl opacity-50 mb-4">🔒</div>
-                    <p className="text-muted-foreground text-center">
-                      Empty Slot<br/>
-                      <span className="text-xs">Complete lessons to earn stamps!</span>
+                    <p className="text-muted-foreground text-center text-sm">
+                      Empty Page
                     </p>
                   </div>
                 )}
@@ -410,17 +405,25 @@ export default function PassportPage() {
                   >
                     <div className="grid grid-cols-2 gap-0 h-full">
                       {/* Left Page */}
-                      <div className="relative bg-white dark:bg-gray-900 rounded-l-3xl shadow-2xl overflow-hidden">
+                      <div className="relative rounded-l-3xl shadow-2xl overflow-hidden" style={{ backgroundColor: '#f5f0e8' }}>
+                        {/* Passport paper texture */}
+                        <div className="absolute inset-0 opacity-30" style={{
+                          backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")'
+                        }} />
                         {pageContent.left}
                         {/* Page binding effect */}
-                        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-gray-900/10" />
+                        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-r from-transparent to-gray-900/15" />
                       </div>
 
                       {/* Right Page */}
-                      <div className="relative bg-white dark:bg-gray-900 rounded-r-3xl shadow-2xl overflow-hidden">
+                      <div className="relative rounded-r-3xl shadow-2xl overflow-hidden" style={{ backgroundColor: '#f5f0e8' }}>
+                        {/* Passport paper texture */}
+                        <div className="absolute inset-0 opacity-30" style={{
+                          backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 100 100\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'noise\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.8\' numOctaves=\'4\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23noise)\'/%3E%3C/svg%3E")'
+                        }} />
                         {pageContent.right}
                         {/* Page binding effect */}
-                        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-l from-transparent to-gray-900/10" />
+                        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-l from-transparent to-gray-900/15" />
                       </div>
                     </div>
                   </motion.div>
