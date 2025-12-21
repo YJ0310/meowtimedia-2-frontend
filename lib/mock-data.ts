@@ -269,18 +269,18 @@ export const topics: Topic[] = [
 ];
 
 export const stamps: Stamp[] = [
-  { id: '1', countrySlug: 'japan', topicSlug: 'sushi-culture', countryName: 'Japan', topicName: 'Sushi Culture', date: '2024-11-15', icon: '🍣' },
-  { id: '2', countrySlug: 'japan', topicSlug: 'festivals', countryName: 'Japan', topicName: 'Traditional Festivals', date: '2024-11-18', icon: '🎌' },
-  { id: '3', countrySlug: 'south-korea', topicSlug: 'k-pop-history', countryName: 'South Korea', topicName: 'K-Pop History', date: '2024-11-20', icon: '🎤' },
-  { id: '4', countrySlug: 'thailand', topicSlug: 'songkran-festival', countryName: 'Thailand', topicName: 'Songkran Festival', date: '2024-11-22', icon: '💦' },
-  { id: '5', countrySlug: 'singapore', topicSlug: 'hawker', countryName: 'Singapore', topicName: 'Hawker Centers', date: '2024-11-23', icon: '🍜' },
-  { id: '6', countrySlug: 'singapore', topicSlug: 'gardens', countryName: 'Singapore', topicName: 'Gardens by the Bay', date: '2024-11-24', icon: '🌳' },
-  { id: '7', countrySlug: 'india', topicSlug: 'taj-mahal', countryName: 'India', topicName: 'Taj Mahal', date: '2024-11-25', icon: '🕌' },
-  { id: '8', countrySlug: 'india', topicSlug: 'holi', countryName: 'India', topicName: 'Holi Festival', date: '2024-11-25', icon: '🎨' },
-  { id: '9', countrySlug: 'malaysia', topicSlug: 'nasi-lemak', countryName: 'Malaysia', topicName: 'Nasi Lemak', date: '2024-11-26', icon: '🍚' },
-  { id: '10', countrySlug: 'china', topicSlug: 'great-wall', countryName: 'China', topicName: 'Great Wall', date: '2024-11-26', icon: '🏯' },
-  { id: '11', countrySlug: 'vietnam', topicSlug: 'pho', countryName: 'Vietnam', topicName: 'Pho Culture', date: '2024-11-27', icon: '🍲' },
-  { id: '12', countrySlug: 'indonesia', topicSlug: 'bali-temples', countryName: 'Indonesia', topicName: 'Bali Temples', date: '2024-11-27', icon: '🛕' }
+  { id: '1', countrySlug: 'japan', topicSlug: 'sushi-culture', countryName: 'Japan', topicName: 'Sushi Culture', date: '2024-11-15', icon: '🍣', stampImage: '/stamp/japan.png', isVisible: false },
+  { id: '2', countrySlug: 'japan', topicSlug: 'festivals', countryName: 'Japan', topicName: 'Traditional Festivals', date: '2024-11-18', icon: '🎌', stampImage: '/stamp/japan.png', isVisible: false },
+  { id: '3', countrySlug: 'south-korea', topicSlug: 'k-pop-history', countryName: 'South Korea', topicName: 'K-Pop History', date: '2024-11-20', icon: '🎤', stampImage: '/stamp/korea.png', isVisible: false },
+  { id: '4', countrySlug: 'thailand', topicSlug: 'songkran-festival', countryName: 'Thailand', topicName: 'Songkran Festival', date: '2024-11-22', icon: '💦', stampImage: '/stamp/thailand.png', isVisible: false },
+  { id: '5', countrySlug: 'singapore', topicSlug: 'hawker', countryName: 'Singapore', topicName: 'Hawker Centers', date: '2024-11-23', icon: '🍜', isVisible: false },
+  { id: '6', countrySlug: 'singapore', topicSlug: 'gardens', countryName: 'Singapore', topicName: 'Gardens by the Bay', date: '2024-11-24', icon: '🌳', isVisible: false },
+  { id: '7', countrySlug: 'india', topicSlug: 'taj-mahal', countryName: 'India', topicName: 'Taj Mahal', date: '2024-11-25', icon: '🕌', isVisible: false },
+  { id: '8', countrySlug: 'india', topicSlug: 'holi', countryName: 'India', topicName: 'Holi Festival', date: '2024-11-25', icon: '🎨', isVisible: false },
+  { id: '9', countrySlug: 'malaysia', topicSlug: 'nasi-lemak', countryName: 'Malaysia', topicName: 'Nasi Lemak', date: '2024-11-26', icon: '🍚', stampImage: '/stamp/malaysia.png', isVisible: false },
+  { id: '10', countrySlug: 'china', topicSlug: 'great-wall', countryName: 'China', topicName: 'Great Wall', date: '2024-11-26', icon: '🏯', isVisible: false },
+  { id: '11', countrySlug: 'vietnam', topicSlug: 'pho', countryName: 'Vietnam', topicName: 'Pho Culture', date: '2024-11-27', icon: '🍲', isVisible: false },
+  { id: '12', countrySlug: 'indonesia', topicSlug: 'bali-temples', countryName: 'Indonesia', topicName: 'Bali Temples', date: '2024-11-27', icon: '🛕', stampImage: '/stamp/indonesia.png', isVisible: false }
 ];
 
 export const lessons: { [key: string]: Lesson } = {

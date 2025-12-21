@@ -37,6 +37,8 @@ export interface Stamp {
   topicName: string;
   date: string;
   icon: string;
+  stampImage?: string; // Path to stamp image in /stamp folder
+  isVisible?: boolean; // Whether the stamp should be shown (conditions to be announced)
 }
 
 export interface Lesson {

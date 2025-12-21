@@ -190,13 +190,13 @@ export default function CountryPage({ params }: { params: Promise<{ slug: string
         </div>
       </motion.aside>
 
-      {/* Mobile Bottom Dock */}
-      <motion.div
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
+      {/* Mobile Side Dock - Upper Left, smaller with fixed ratio */}
+      <motion.aside
+        initial={{ x: -100, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        className="md:hidden fixed left-3 top-20 z-50 flex flex-col"
       >
-        <div className="bg-white/10 dark:bg-black/30 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-2xl p-2 shadow-2xl flex gap-2">
+        <div className="bg-white/10 dark:bg-black/30 backdrop-blur-xl border border-white/20 dark:border-white/10 rounded-xl p-1.5 shadow-2xl">
           {(Object.keys(tabConfig) as TabType[]).map((tab) => {
             const { icon: Icon, color } = tabConfig[tab];
             const isActive = activeTab === tab;
@@ -205,17 +205,17 @@ export default function CountryPage({ params }: { params: Promise<{ slug: string
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 whileTap={{ scale: 0.95 }}
-                className={`relative w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+                className={`relative w-9 h-9 rounded-lg flex items-center justify-center transition-all mb-1 last:mb-0 ${
                   isActive 
-                    ? 'bg-primary/20' 
+                    ? 'bg-primary/20 shadow-lg' 
                     : 'hover:bg-white/10'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-primary' : color}`} />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-primary' : color}`} />
                 {isActive && (
                   <motion.div
                     layoutId="activeMobileTab"
-                    className="absolute inset-0 border-2 border-primary rounded-xl"
+                    className="absolute inset-0 border-2 border-primary rounded-lg"
                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   />
                 )}
@@ -223,10 +223,10 @@ export default function CountryPage({ params }: { params: Promise<{ slug: string
             );
           })}
         </div>
-      </motion.div>
+      </motion.aside>
 
       {/* Main Content */}
-      <div className="md:pl-28 container mx-auto px-4 py-8 pb-32 md:pb-8">
+      <div className="pl-14 md:pl-28 container mx-auto px-4 py-8 pb-8">
         {/* Back Button & Country Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
