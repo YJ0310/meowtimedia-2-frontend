@@ -269,7 +269,7 @@ export const topics: Topic[] = [
 ];
 
 export const stamps: Stamp[] = [
-  { id: '1', countrySlug: 'japan', topicSlug: 'sushi-culture', countryName: 'Japan', topicName: 'Sushi Culture', date: '2024-11-15', icon: '🍣', stampImage: '/stamp/japan.png', isVisible: false },
+  { id: '1', countrySlug: 'japan', topicSlug: 'sushi-culture', countryName: 'Japan', topicName: 'Sushi Culture', date: '2024-11-15', icon: '🍣', stampImage: '/stamp/japan.png', isVisible: true },
   { id: '2', countrySlug: 'japan', topicSlug: 'festivals', countryName: 'Japan', topicName: 'Traditional Festivals', date: '2024-11-18', icon: '🎌', stampImage: '/stamp/japan.png', isVisible: false },
   { id: '3', countrySlug: 'south-korea', topicSlug: 'k-pop-history', countryName: 'South Korea', topicName: 'K-Pop History', date: '2024-11-20', icon: '🎤', stampImage: '/stamp/korea.png', isVisible: false },
   { id: '4', countrySlug: 'thailand', topicSlug: 'songkran-festival', countryName: 'Thailand', topicName: 'Songkran Festival', date: '2024-11-22', icon: '💦', stampImage: '/stamp/thailand.png', isVisible: false },
