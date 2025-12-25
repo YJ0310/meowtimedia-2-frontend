@@ -1,11 +1,34 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence, useMotionValue, PanInfo } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
-import { stamps } from '@/lib/mock-data';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth, CountryProgress } from '@/lib/auth-context';
 import { ToastContainer, useToast } from '@/components/toast';
+
+// Country configuration with stamp images and display names
+const COUNTRY_CONFIG: Record<string, { name: string; stampImage: string; icon: string }> = {
+  'japan': { name: 'Japan', stampImage: '/stamp/japan.png', icon: '🇯🇵' },
+  'south-korea': { name: 'South Korea', stampImage: '/stamp/korea.png', icon: '🇰🇷' },
+  'thailand': { name: 'Thailand', stampImage: '/stamp/thailand.png', icon: '🇹🇭' },
+  'malaysia': { name: 'Malaysia', stampImage: '/stamp/malaysia.png', icon: '🇲🇾' },
+  'indonesia': { name: 'Indonesia', stampImage: '/stamp/indonesia.png', icon: '🇮🇩' },
+  'china': { name: 'China', stampImage: '', icon: '🇨🇳' },
+  'vietnam': { name: 'Vietnam', stampImage: '', icon: '🇻🇳' },
+  'singapore': { name: 'Singapore', stampImage: '', icon: '🇸🇬' },
+  'india': { name: 'India', stampImage: '', icon: '🇮🇳' },
+  'philippines': { name: 'Philippines', stampImage: '', icon: '🇵🇭' },
+};
+
+// Stamp interface for passport display
+interface PassportStamp {
+  id: string;
+  countrySlug: string;
+  countryName: string;
+  stampImage: string;
+  icon: string;
+  collectedAt: string;
+}
 
 export default function PassportPage() {
   const { user, isLoading: authLoading } = useAuth();
@@ -14,12 +37,36 @@ export default function PassportPage() {
   const [isFlipping, setIsFlipping] = useState(false);
   const [flipDirection, setFlipDirection] = useState<'left' | 'right'>('right');
   const { toasts, removeToast, info } = useToast();
-  // Filter visible stamps only
-  const visibleStamps = stamps.filter(s => s.isVisible);
-  const totalPages = Math.ceil((visibleStamps.length + 4) / 4); // 4 stamps per page spread
+  
+  // Generate stamps from user's countriesProgress
+  const collectedStamps = useMemo(() => {
+    if (!user?.countriesProgress) return [];
+    
+    return user.countriesProgress
+      .filter((cp: CountryProgress) => cp.stampCollectedAt)
+      .map((cp: CountryProgress, index: number): PassportStamp => {
+        const config = COUNTRY_CONFIG[cp.countrySlug] || {
+          name: cp.countrySlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+          stampImage: '',
+          icon: '🌍'
+        };
+        return {
+          id: `stamp-${cp.countrySlug}-${index}`,
+          countrySlug: cp.countrySlug,
+          countryName: config.name,
+          stampImage: config.stampImage,
+          icon: config.icon,
+          collectedAt: cp.stampCollectedAt!,
+        };
+      })
+      .sort((a, b) => new Date(a.collectedAt).getTime() - new Date(b.collectedAt).getTime());
+  }, [user?.countriesProgress]);
+
+  const totalStampsCollected = collectedStamps.length;
+  const totalPages = Math.ceil((totalStampsCollected + 4) / 4); // 4 stamps per page spread
   const dragX = useMotionValue(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const totalMobilePages = 1 + visibleStamps.length + (48 - visibleStamps.length);
+  const totalMobilePages = 1 + totalStampsCollected; // Cover + one page per stamp
 
   // Detect mobile
   useEffect(() => {
@@ -31,8 +78,10 @@ export default function PassportPage() {
 
   // Show toast on initial load
   useEffect(() => {
-    info('My Passport', `Page 1 of ${isMobile ? totalMobilePages : totalPages}`, '🐾');
-  }, []);
+    if (!authLoading && user) {
+      info('My Passport', `Page 1 of ${isMobile ? totalMobilePages : totalPages}`, '🐾');
+    }
+  }, [authLoading]);
 
   // Show toast when page changes
   useEffect(() => {
@@ -114,7 +163,7 @@ export default function PassportPage() {
           <p className="text-sm md:text-base text-neutral-dark">Cultural Explorer</p>
         </div>
         <div className="mt-4 md:mt-8 glass p-3 md:p-4 rounded-xl">
-          <div className="text-2xl md:text-3xl font-bold text-gradient">{visibleStamps.length}/48</div>
+          <div className="text-2xl md:text-3xl font-bold text-gradient">{totalStampsCollected}/{Object.keys(COUNTRY_CONFIG).length}</div>
           <div className="text-xs text-neutral-dark">Stamps Collected</div>
         </div>
         <div className="text-4xl md:text-6xl opacity-20 absolute bottom-4 md:bottom-8 right-4 md:right-8">🐾</div>
@@ -122,7 +171,7 @@ export default function PassportPage() {
     </div>
   );
 
-  const renderStampPage = (pageStamps: typeof stamps, isRightPage: boolean = false) => (
+  const renderStampPage = (pageStamps: PassportStamp[], isRightPage: boolean = false) => (
     <div className="relative w-full h-full p-4 md:p-6">
       {/* Passport page background texture */}
       <div className="absolute inset-0 opacity-5">
@@ -198,13 +247,13 @@ export default function PassportPage() {
       // First page spread: cover + first stamps
       return {
         left: renderCover(),
-        right: renderStampPage(visibleStamps.slice(0, 4), true)
+        right: renderStampPage(collectedStamps.slice(0, 4), true)
       };
     }
     
     const startIndex = (pageNum - 1) * 8 + 4;
-    const leftStamps = visibleStamps.slice(startIndex, startIndex + 4);
-    const rightStamps = visibleStamps.slice(startIndex + 4, startIndex + 8);
+    const leftStamps = collectedStamps.slice(startIndex, startIndex + 4);
+    const rightStamps = collectedStamps.slice(startIndex + 4, startIndex + 8);
     
     return {
       left: renderStampPage(leftStamps, false),
@@ -216,13 +265,12 @@ export default function PassportPage() {
 
   // Mobile single page view with flip effect
   const renderMobilePage = () => {
-    const allPages = [
+    const allPages: ({ type: 'cover' } | { type: 'stamp'; stamp: PassportStamp; index: number } | { type: 'empty'; index: number })[] = [
       { type: 'cover' as const },
-      ...visibleStamps.map((stamp, i) => ({ type: 'stamp' as const, stamp, index: i })),
-      ...Array(48 - visibleStamps.length).fill(null).map((_, i) => ({ type: 'empty' as const, index: i }))
+      ...collectedStamps.map((stamp, i) => ({ type: 'stamp' as const, stamp, index: i })),
     ];
 
-    const currentContent = allPages[currentPage];
+    const currentContent = allPages[currentPage] || { type: 'empty', index: 0 };
 
     return (
       <motion.div
@@ -297,7 +345,7 @@ export default function PassportPage() {
                       <p className="text-neutral-dark dark:text-gray-400">Cultural Explorer</p>
                     </motion.div>
                     <div className="glass p-4 rounded-xl inline-block">
-                      <div className="text-3xl font-bold text-gradient">{visibleStamps.length}/48</div>
+                      <div className="text-3xl font-bold text-gradient">{totalStampsCollected}/{Object.keys(COUNTRY_CONFIG).length}</div>
                       <div className="text-xs text-neutral-dark">Stamps Collected</div>
                     </div>
                     <img
