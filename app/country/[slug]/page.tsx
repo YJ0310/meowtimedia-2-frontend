@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowLeft, PartyPopper, UtensilsCrossed, Lightbulb, HelpCircle } from 'lucide-react';
 import { countries } from '@/lib/mock-data';
-import { useAuth } from '@/lib/auth-context';
+import { useAuth, CountryProgress } from '@/lib/auth-context';
 import GlobalLoading from '@/components/global-loading';
 import ContentCard from '@/components/content-card';
 import QuizCard from '@/components/quiz-card';
@@ -76,9 +76,9 @@ export default function CountryPage({ params }: { params: Promise<{ slug: string
         }
 
         // Get user's progress for this country from auth context
-        if (user && (user as any).countriesProgress) {
-          const progress = (user as any).countriesProgress.find(
-            (p: any) => p.countrySlug === resolvedParams.slug
+        if (user?.countriesProgress) {
+          const progress = user.countriesProgress.find(
+            (p: CountryProgress) => p.countrySlug === resolvedParams.slug
           );
           if (progress) {
             setHighestScore(progress.highestScore || 0);

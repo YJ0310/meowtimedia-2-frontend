@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { X, ArrowRight, Clock, MapPin } from "lucide-react";
@@ -11,8 +11,8 @@ import {
   Marker,
   ZoomableGroup,
 } from "react-simple-maps";
-import { countries, stamps } from "@/lib/mock-data";
-import { useAuth } from "@/lib/auth-context";
+import { countries } from "@/lib/mock-data";
+import { useAuth, CountryProgress } from "@/lib/auth-context";
 import { ToastContainer, useToast } from "@/components/toast";
 import GlobalLoading from "@/components/global-loading";
 
@@ -114,7 +114,31 @@ export default function DashboardPage() {
   const country = selectedCountry
     ? countries.find((c) => c.slug === selectedCountry)
     : null;
-  const userStamps = stamps.filter((s) => s.countrySlug === selectedCountry);
+
+  // Calculate country progress from user data
+  const getCountryProgress = useCallback((countrySlug: string): CountryProgress | undefined => {
+    return user?.countriesProgress?.find(cp => cp.countrySlug === countrySlug);
+  }, [user]);
+
+  // Calculate total stamps collected
+  const totalStampsCollected = useMemo(() => {
+    return user?.countriesProgress?.filter(cp => cp.hasStamp).length || 0;
+  }, [user]);
+
+  // Get stamps for selected country
+  const selectedCountryHasStamp = useMemo(() => {
+    if (!selectedCountry) return false;
+    const progress = getCountryProgress(selectedCountry);
+    return progress?.hasStamp || false;
+  }, [selectedCountry, getCountryProgress]);
+
+  // Calculate progress percentage for a country (based on highest quiz score)
+  const calculateProgress = useCallback((countrySlug: string): number => {
+    const progress = getCountryProgress(countrySlug);
+    if (!progress) return 0;
+    // Progress is based on highest score percentage (10 questions = 100%)
+    return Math.round((progress.highestScore / 10) * 100);
+  }, [getCountryProgress]);
 
   // Update time every second
   useEffect(() => {
@@ -312,7 +336,7 @@ export default function DashboardPage() {
                 </Link>
                 <div className="glass p-2 rounded-lg text-black dark:text-white">
                   <div className="text-2xl font-bold text-gradient">
-                    12/48
+                    {totalStampsCollected}/{countries.filter(c => c.isUnlocked).length}
                   </div>
                   <div className="text-xs text-black dark:text-white">
                     Stamps Collected
@@ -330,9 +354,9 @@ export default function DashboardPage() {
                   {countries
                     .filter((c) => c.isUnlocked)
                     .map((c) => {
-                      const countryStamps = stamps.filter(
-                        (s) => s.countrySlug === c.slug
-                      ).length;
+                      const progress = calculateProgress(c.slug);
+                      const countryProgressData = getCountryProgress(c.slug);
+                      const hasStamp = countryProgressData?.hasStamp || false;
                       return (
                         <motion.button
                           key={c.id}
@@ -358,18 +382,18 @@ export default function DashboardPage() {
                                   <motion.div
                                     className="h-full bg-linear-to-r from-primary to-secondary"
                                     initial={{ width: 0 }}
-                                    animate={{ width: `${c.progress}%` }}
+                                    animate={{ width: `${progress}%` }}
                                     transition={{ duration: 1, delay: 0.1 }}
                                   />
                                 </div>
                                 <span className="text-[10px] text-black dark:text-white w-6 text-right shrink-0">
-                                  {c.progress}%
+                                  {progress}%
                                 </span>
                               </div>
                             </div>
-                            {countryStamps > 0 && (
+                            {hasStamp && (
                               <div className="text-[9px] bg-primary/20 text-primary px-1 py-0.5 rounded font-semibold shrink-0">
-                                {countryStamps}🐾
+                                🐾
                               </div>
                             )}
                           </div>
@@ -433,7 +457,7 @@ export default function DashboardPage() {
                 />
                 <div className="glass p-3 rounded-lg text-black dark:text-white">
                   <div className="text-3xl font-bold text-gradient">
-                    12/48
+                    {totalStampsCollected}/{countries.filter(c => c.isUnlocked).length}
                   </div>
                   <div className="text-xs text-black dark:text-white">
                     Stamps Collected
@@ -451,9 +475,9 @@ export default function DashboardPage() {
                   {countries
                     .filter((c) => c.isUnlocked)
                     .map((c) => {
-                      const countryStamps = stamps.filter(
-                        (s) => s.countrySlug === c.slug
-                      ).length;
+                      const progress = calculateProgress(c.slug);
+                      const countryProgressData = getCountryProgress(c.slug);
+                      const hasStamp = countryProgressData?.hasStamp || false;
                       return (
                         <motion.button
                           key={c.id}
@@ -479,18 +503,18 @@ export default function DashboardPage() {
                                   <motion.div
                                     className="h-full bg-linear-to-r from-primary to-secondary"
                                     initial={{ width: 0 }}
-                                    animate={{ width: `${c.progress}%` }}
+                                    animate={{ width: `${progress}%` }}
                                     transition={{ duration: 1, delay: 0.1 }}
                                   />
                                 </div>
                                 <span className="text-xs text-black dark:text-white w-8 text-right shrink-0">
-                                  {c.progress}%
+                                  {progress}%
                                 </span>
                               </div>
                             </div>
-                            {countryStamps > 0 && (
+                            {hasStamp && (
                               <div className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full font-semibold shrink-0">
-                                {countryStamps} 🐾
+                                🐾
                               </div>
                             )}
                           </div>
@@ -791,13 +815,13 @@ export default function DashboardPage() {
                 >
                   <div className="flex items-center justify-between text-sm text-black dark:text-white">
                     <span>Progress</span>
-                    <span className="font-bold">{country.progress}%</span>
+                    <span className="font-bold">{calculateProgress(country.slug)}%</span>
                   </div>
                   <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <motion.div
                       className="h-full bg-linear-to-r from-primary to-secondary"
                       initial={{ width: 0 }}
-                      animate={{ width: `${country.progress}%` }}
+                      animate={{ width: `${calculateProgress(country.slug)}%` }}
                       transition={{ duration: 1, delay: 0.3 }}
                     />
                   </div>
@@ -815,7 +839,7 @@ export default function DashboardPage() {
                   <p className="text-sm text-black dark:text-white">{country.funFact}</p>
                 </motion.div>
 
-                {userStamps.length > 0 && (
+                {selectedCountryHasStamp && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -823,29 +847,19 @@ export default function DashboardPage() {
                     className="space-y-3"
                   >
                     <h3 className="font-semibold flex items-center gap-2">
-                      <span>Your Stamps</span>
+                      <span>Your Stamp</span>
                       <span className="text-2xl">🐾</span>
                     </h3>
-                    <div className="space-y-2">
-                      {userStamps.map((stamp, index) => (
-                        <motion.div
-                          key={stamp.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.5 + index * 0.1 }}
-                          className="glass p-3 rounded-lg flex items-center gap-3 hover:shadow-lg transition-shadow text-black dark:text-white"
-                        >
-                          <span className="text-2xl">{stamp.icon}</span>
-                          <div className="flex-1">
-                            <div className="font-semibold text-sm text-black dark:text-white">
-                              {stamp.topicName}
-                            </div>
-                            <div className="text-xs text-black dark:text-white">
-                              {new Date(stamp.date).toLocaleDateString()}
-                            </div>
-                          </div>
-                        </motion.div>
-                      ))}
+                    <div className="glass p-3 rounded-lg flex items-center gap-3 hover:shadow-lg transition-shadow text-black dark:text-white">
+                      <span className="text-3xl">🏆</span>
+                      <div className="flex-1">
+                        <div className="font-semibold text-sm text-black dark:text-white">
+                          {country.name} Master
+                        </div>
+                        <div className="text-xs text-black dark:text-white">
+                          Quiz completed with 80%+ score!
+                        </div>
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -924,13 +938,13 @@ export default function DashboardPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs text-black dark:text-white">
                     <span>Progress</span>
-                    <span className="font-bold">{country.progress}%</span>
+                    <span className="font-bold">{calculateProgress(country.slug)}%</span>
                   </div>
                   <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                     <motion.div
                       className="h-full bg-linear-to-r from-primary to-secondary"
                       initial={{ width: 0 }}
-                      animate={{ width: `${country.progress}%` }}
+                      animate={{ width: `${calculateProgress(country.slug)}%` }}
                       transition={{ duration: 1, delay: 0.2 }}
                     />
                   </div>
@@ -945,26 +959,23 @@ export default function DashboardPage() {
                   </p>
                 </div>
 
-                {userStamps.length > 0 && (
+                {selectedCountryHasStamp && (
                   <div className="space-y-2">
                     <h3 className="font-semibold text-sm flex items-center gap-2 text-black dark:text-white">
-                      <span>Your Stamps</span>
+                      <span>Your Stamp</span>
                       <span className="text-xl">🐾</span>
                     </h3>
                     <div className="flex gap-2 overflow-x-auto pb-2">
-                      {userStamps.map((stamp) => (
-                        <div
-                          key={stamp.id}
-                          className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg shrink-0 flex items-center gap-2 border border-gray-200 dark:border-gray-700"
-                        >
-                          <span className="text-xl">{stamp.icon}</span>
-                          <div>
-                            <div className="font-semibold text-xs text-black dark:text-white">
-                              {stamp.topicName}
-                            </div>
+                      <div
+                        className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg shrink-0 flex items-center gap-2 border border-gray-200 dark:border-gray-700"
+                      >
+                        <span className="text-xl">🏆</span>
+                        <div>
+                          <div className="font-semibold text-xs text-black dark:text-white">
+                            {country.name} Master
                           </div>
                         </div>
-                      ))}
+                      </div>
                     </div>
                   </div>
                 )}
