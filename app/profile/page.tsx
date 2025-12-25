@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Upload, Check, X, ZoomIn, ZoomOut, RotateCw, Save, LogOut, Loader2 } from 'lucide-react';
+import { Camera, Check, X, ZoomIn, ZoomOut, RotateCw, Save, LogOut, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 
@@ -195,14 +195,6 @@ export default function ProfilePage() {
                   alt="Profile"
                   className="w-48 h-48 md:w-64 md:h-64 rounded-full object-cover border-4 border-primary shadow-2xl mx-auto"
                 />
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute bottom-2 right-2 md:bottom-4 md:right-4 bg-primary text-white p-3 rounded-full shadow-lg"
-                >
-                  <Camera className="w-5 h-5 md:w-6 md:h-6" />
-                </motion.button>
               </motion.div>
 
               <div className="space-y-2">
@@ -211,15 +203,6 @@ export default function ProfilePage() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => fileInputRef.current?.click()}
-                  className="glass px-6 py-3 rounded-xl font-semibold flex items-center justify-center gap-2"
-                >
-                  <Upload className="w-5 h-5" />
-                  Upload New Photo
-                </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}

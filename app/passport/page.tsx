@@ -6,6 +6,9 @@ import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { useAuth, CountryProgress } from '@/lib/auth-context';
 import { ToastContainer, useToast } from '@/components/toast';
 
+// API base URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.meowtimap.smoltako.space';
+
 // Country configuration with stamp images and display names
 const COUNTRY_CONFIG: Record<string, { name: string; stampImage: string; icon: string }> = {
   'japan': { name: 'Japan', stampImage: '/stamp/japan.png', icon: '🇯🇵' },
@@ -36,7 +39,25 @@ export default function PassportPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
   const [flipDirection, setFlipDirection] = useState<'left' | 'right'>('right');
+  const [totalCountries, setTotalCountries] = useState(Object.keys(COUNTRY_CONFIG).length); // Default to config length
   const { toasts, removeToast, info } = useToast();
+
+  // Fetch total countries from backend
+  useEffect(() => {
+    const fetchCountryCount = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/country/count`);
+        const data = await response.json();
+        if (data.success && data.count) {
+          setTotalCountries(data.count);
+        }
+      } catch (error) {
+        console.error('Failed to fetch country count:', error);
+        // Keep default value on error
+      }
+    };
+    fetchCountryCount();
+  }, []);
   
   // Generate stamps from user's countriesProgress
   const collectedStamps = useMemo(() => {
@@ -163,7 +184,7 @@ export default function PassportPage() {
           <p className="text-sm md:text-base text-neutral-dark">Cultural Explorer</p>
         </div>
         <div className="mt-4 md:mt-8 glass p-3 md:p-4 rounded-xl">
-          <div className="text-2xl md:text-3xl font-bold text-gradient">{totalStampsCollected}/{Object.keys(COUNTRY_CONFIG).length}</div>
+          <div className="text-2xl md:text-3xl font-bold text-gradient">{totalStampsCollected}/{totalCountries}</div>
           <div className="text-xs text-neutral-dark">Stamps Collected</div>
         </div>
         <div className="text-4xl md:text-6xl opacity-20 absolute bottom-4 md:bottom-8 right-4 md:right-8">🐾</div>
@@ -345,7 +366,7 @@ export default function PassportPage() {
                       <p className="text-neutral-dark dark:text-gray-400">Cultural Explorer</p>
                     </motion.div>
                     <div className="glass p-4 rounded-xl inline-block">
-                      <div className="text-3xl font-bold text-gradient">{totalStampsCollected}/{Object.keys(COUNTRY_CONFIG).length}</div>
+                      <div className="text-3xl font-bold text-gradient">{totalStampsCollected}/{totalCountries}</div>
                       <div className="text-xs text-neutral-dark">Stamps Collected</div>
                     </div>
                     <img

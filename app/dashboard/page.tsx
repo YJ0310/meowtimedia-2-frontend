@@ -386,7 +386,11 @@ export default function DashboardPage() {
                           onClick={() => handleCountryClick(c.slug)}
                           whileHover={{ scale: 1.01, x: 2 }}
                           whileTap={{ scale: 0.99 }}
-                          className={`w-full glass p-2 rounded-lg text-left transition-all text-black dark:text-white ${
+                          className={`w-full p-2 rounded-lg text-left transition-all ${
+                            hasStamp 
+                              ? "bg-[var(--color-meow-accent)]/20 border border-[var(--color-meow-accent)]/40 text-black dark:text-white"
+                              : "glass text-black dark:text-white"
+                          } ${
                             selectedCountry === c.slug
                               ? "ring-2 ring-primary shadow-lg"
                               : ""
@@ -505,7 +509,11 @@ export default function DashboardPage() {
                           onClick={() => handleCountryClick(c.slug)}
                           whileHover={{ scale: 1.02, x: 4 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`w-full glass p-3 rounded-lg text-left transition-all text-black dark:text-white ${
+                          className={`w-full p-3 rounded-lg text-left transition-all ${
+                            hasStamp 
+                              ? "bg-[var(--color-meow-accent)]/20 border border-[var(--color-meow-accent)]/40 text-black dark:text-white"
+                              : "glass text-black dark:text-white"
+                          } ${
                             selectedCountry === c.slug
                               ? "ring-2 ring-primary shadow-lg"
                               : ""
@@ -798,10 +806,7 @@ export default function DashboardPage() {
                   className="flex items-start justify-between"
                 >
                   <div className="flex items-center gap-3">
-                    <motion.div
-                      animate={{ rotate: [0, 10, -10, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
+                    <div>
                       {country.flag.startsWith("/") ? (
                         <img
                           src={country.flag}
@@ -811,13 +816,9 @@ export default function DashboardPage() {
                       ) : (
                         <span className="text-5xl">{country.flag}</span>
                       )}
-                    </motion.div>
+                    </div>
                     <div>
                       <h2 className="text-3xl font-bold text-black dark:text-white">{country.name}</h2>
-                      <p className="text-sm text-black dark:text-white">
-                        {country.unlockedTopics}/{country.totalTopics} topics
-                        unlocked
-                      </p>
                     </div>
                   </div>
                   <button
@@ -924,10 +925,7 @@ export default function DashboardPage() {
               <div className="px-4 pb-8 space-y-4 overflow-y-auto max-h-[calc(85vh-48px)]">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <motion.div
-                      animate={{ rotate: [0, 10, -10, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
+                    <div>
                       {country.flag.startsWith("/") ? (
                         <img
                           src={country.flag}
@@ -937,15 +935,11 @@ export default function DashboardPage() {
                       ) : (
                         <span className="text-4xl">{country.flag}</span>
                       )}
-                    </motion.div>
+                    </div>
                     <div>
                       <h2 className="text-2xl font-bold text-black dark:text-white">
                         {country.name}
                       </h2>
-                      <p className="text-xs text-black dark:text-white">
-                        {country.unlockedTopics}/{country.totalTopics} topics
-                        unlocked
-                      </p>
                     </div>
                   </div>
                   <button
