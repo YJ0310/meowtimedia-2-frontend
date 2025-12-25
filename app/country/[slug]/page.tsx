@@ -1,16 +1,34 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowLeft, PartyPopper, UtensilsCrossed, Lightbulb, HelpCircle } from 'lucide-react';
-import { countries, countryContent, countryQuizzes } from '@/lib/mock-data';
+import { countries } from '@/lib/mock-data';
 import { useAuth } from '@/lib/auth-context';
 import GlobalLoading from '@/components/global-loading';
 import ContentCard from '@/components/content-card';
 import QuizCard from '@/components/quiz-card';
 
+const API_URL = "https://api.meowtimap.smoltako.space";
+
 type TabType = 'festival' | 'food' | 'funfact' | 'quiz';
+
+interface ContentItem {
+  id: string;
+  countrySlug: string;
+  type: 'festival' | 'food' | 'funfact';
+  title: string;
+  date?: string;
+  content: string;
+  image: string;
+}
+
+interface CountryData {
+  festivals: ContentItem[];
+  foods: ContentItem[];
+  funfacts: ContentItem[];
+}
 
 const tabConfig = {
   festival: { icon: PartyPopper, label: 'Festivals', color: 'text-pink-500' },
@@ -23,18 +41,66 @@ export default function CountryPage({ params }: { params: Promise<{ slug: string
   const { user, isLoading: authLoading } = useAuth();
   const resolvedParams = use(params);
   const [activeTab, setActiveTab] = useState<TabType>('festival');
+  const [countryData, setCountryData] = useState<CountryData | null>(null);
+  const [isDataLoading, setIsDataLoading] = useState(true);
+  const [highestScore, setHighestScore] = useState(0);
+  const [totalQuestions, setTotalQuestions] = useState(10);
   
   const country = countries.find(c => c.slug === resolvedParams.slug);
-  const content = countryContent.filter(c => c.countrySlug === resolvedParams.slug);
-  const quizData = countryQuizzes.find(q => q.countrySlug === resolvedParams.slug);
+
+  // Fetch country content from API
+  useEffect(() => {
+    const fetchCountryData = async () => {
+      if (!resolvedParams.slug) return;
+      
+      setIsDataLoading(true);
+      try {
+        // Fetch content and quiz data in parallel
+        const [contentRes, quizRes] = await Promise.all([
+          fetch(`${API_URL}/country/${resolvedParams.slug}`, { credentials: 'include' }),
+          fetch(`${API_URL}/country/${resolvedParams.slug}/quiz`, { credentials: 'include' }),
+        ]);
+
+        if (contentRes.ok) {
+          const contentData = await contentRes.json();
+          if (contentData.success) {
+            setCountryData(contentData.data);
+          }
+        }
+
+        if (quizRes.ok) {
+          const quizData = await quizRes.json();
+          if (quizData.success) {
+            setTotalQuestions(quizData.totalQuestions || 10);
+          }
+        }
+
+        // Get user's progress for this country from auth context
+        if (user && (user as any).countriesProgress) {
+          const progress = (user as any).countriesProgress.find(
+            (p: any) => p.countrySlug === resolvedParams.slug
+          );
+          if (progress) {
+            setHighestScore(progress.highestScore || 0);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching country data:', error);
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+
+    fetchCountryData();
+  }, [resolvedParams.slug, user]);
 
   // Filter content by type
-  const festivals = content.filter(c => c.type === 'festival');
-  const foods = content.filter(c => c.type === 'food');
-  const funfacts = content.filter(c => c.type === 'funfact');
+  const festivals = countryData?.festivals || [];
+  const foods = countryData?.foods || [];
+  const funfacts = countryData?.funfacts || [];
 
-  // Show loading while checking auth
-  if (authLoading) {
+  // Show loading while checking auth or fetching data
+  if (authLoading || isDataLoading) {
     return (
       <GlobalLoading 
         isLoading={true} 
@@ -138,8 +204,8 @@ export default function CountryPage({ params }: { params: Promise<{ slug: string
           <QuizCard
             countrySlug={country.slug}
             countryName={country.name}
-            highestScore={quizData?.highestScore || 0}
-            totalQuestions={quizData?.totalQuestions || 10}
+            highestScore={highestScore}
+            totalQuestions={totalQuestions}
           />
         );
       default:

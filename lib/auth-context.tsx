@@ -5,6 +5,16 @@ import { useRouter, usePathname } from "next/navigation";
 
 const API_URL = "https://api.meowtimap.smoltako.space";
 
+export interface CountryProgress {
+  countrySlug: string;
+  lastQuizTime?: string;
+  lastQuizScore: number;
+  highestScore: number;
+  totalAttempts: number;
+  stampCollectedAt?: string;
+  hasStamp: boolean;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -12,6 +22,8 @@ export interface User {
   firstName?: string;
   lastName?: string;
   avatar: string;
+  totalStamps?: number;
+  countriesProgress?: CountryProgress[];
 }
 
 interface AuthContextType {
