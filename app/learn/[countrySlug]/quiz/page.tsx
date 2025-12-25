@@ -8,6 +8,7 @@ import { ArrowLeft, Check, X, Loader2, Trophy, RotateCcw, Home } from 'lucide-re
 import confetti from 'canvas-confetti';
 import { countries } from '@/lib/mock-data';
 import { useAuth } from '@/lib/auth-context';
+import GlobalLoading from '@/components/global-loading';
 
 const API_URL = "https://api.meowtimap.smoltako.space";
 const PASS_THRESHOLD = 0.8; // 80% to pass
@@ -196,19 +197,15 @@ export default function QuizPage({
       .finally(() => setIsLoading(false));
   };
 
-  // Show loading while checking auth
-  if (authLoading) {
+  // Loading state - use GlobalLoading with country-specific fun facts
+  if (isLoading || authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-soft">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center space-y-4"
-        >
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-          <p className="text-black dark:text-white">Loading...</p>
-        </motion.div>
-      </div>
+      <GlobalLoading 
+        isLoading={true}
+        title={country ? `${country.name} Quiz` : "Loading Quiz"}
+        subtitle={country ? `Preparing your ${country.name} challenge...` : "Loading..."}
+        countrySlug={resolvedParams.countrySlug}
+      />
     );
   }
 
@@ -226,23 +223,6 @@ export default function QuizPage({
             Return to Dashboard
           </Link>
         </div>
-      </div>
-    );
-  }
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-soft">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center space-y-4"
-        >
-          <Loader2 className="w-12 h-12 animate-spin mx-auto text-primary" />
-          <p className="text-xl text-black dark:text-white">Loading Quiz...</p>
-          <p className="text-muted-foreground">Preparing your {country.name} challenge</p>
-        </motion.div>
       </div>
     );
   }
