@@ -140,6 +140,31 @@ export default function DashboardPage() {
     return Math.round((progress.highestScore / 10) * 100);
   }, [getCountryProgress]);
 
+  // Get sorted unlocked countries: progress DESC, last quiz time DESC, name ASC
+  const sortedCountries = useMemo(() => {
+    return countries
+      .filter((c) => c.isUnlocked)
+      .map((c) => ({
+        ...c,
+        progress: calculateProgress(c.slug),
+        lastQuizTime: getCountryProgress(c.slug)?.lastQuizTime,
+      }))
+      .sort((a, b) => {
+        // First: sort by progress descending
+        if (b.progress !== a.progress) {
+          return b.progress - a.progress;
+        }
+        // Second: sort by last quiz time descending (most recent first)
+        const aTime = a.lastQuizTime ? new Date(a.lastQuizTime).getTime() : 0;
+        const bTime = b.lastQuizTime ? new Date(b.lastQuizTime).getTime() : 0;
+        if (bTime !== aTime) {
+          return bTime - aTime;
+        }
+        // Third: sort by name ascending
+        return a.name.localeCompare(b.name);
+      });
+  }, [calculateProgress, getCountryProgress]);
+
   // Update time every second
   useEffect(() => {
     const timer = setInterval(() => {
@@ -351,10 +376,8 @@ export default function DashboardPage() {
                   Your Progress
                 </h3>
                 <div className="flex-1 overflow-y-auto scrollbar-hide space-y-1.5 pr-1">
-                  {countries
-                    .filter((c) => c.isUnlocked)
-                    .map((c) => {
-                      const progress = calculateProgress(c.slug);
+                  {sortedCountries.map((c) => {
+                      const progress = c.progress;
                       const countryProgressData = getCountryProgress(c.slug);
                       const hasStamp = countryProgressData?.hasStamp || false;
                       return (
@@ -472,10 +495,8 @@ export default function DashboardPage() {
                   Your Progress
                 </h3>
                 <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                  {countries
-                    .filter((c) => c.isUnlocked)
-                    .map((c) => {
-                      const progress = calculateProgress(c.slug);
+                  {sortedCountries.map((c) => {
+                      const progress = c.progress;
                       const countryProgressData = getCountryProgress(c.slug);
                       const hasStamp = countryProgressData?.hasStamp || false;
                       return (

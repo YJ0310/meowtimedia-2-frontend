@@ -39,6 +39,7 @@ export default function QuizPage({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [stampAwarded, setStampAwarded] = useState(false);
+  const [resultsReady, setResultsReady] = useState(false); // New: track when results are ready to show
 
   const country = countries.find(c => c.slug === resolvedParams.countrySlug);
   const totalQuestions = questions.length;
@@ -105,6 +106,7 @@ export default function QuizPage({
       console.error('Failed to submit results:', err);
     } finally {
       setIsSubmitting(false);
+      setResultsReady(true); // Mark results as ready to show
     }
   }, [resolvedParams.countrySlug, totalQuestions, checkAuth]);
 
@@ -181,6 +183,7 @@ export default function QuizPage({
     setScore(0);
     setQuizComplete(false);
     setStampAwarded(false);
+    setResultsReady(false);
     // Re-fetch questions to get new random set
     setIsLoading(true);
     fetch(`${API_URL}/country/${resolvedParams.countrySlug}/quiz`, { credentials: 'include' })
@@ -417,7 +420,22 @@ export default function QuizPage({
             )}
           </motion.div>
         ) : (
-          /* Quiz Complete */
+          /* Quiz Complete - Show loading until results are ready */
+          !resultsReady ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="glass-strong rounded-2xl p-8 md:p-12 text-center space-y-6"
+            >
+              <Loader2 className="w-16 h-16 animate-spin mx-auto text-primary" />
+              <h2 className="text-2xl font-bold text-black dark:text-white">
+                Calculating Results...
+              </h2>
+              <p className="text-muted-foreground">
+                Saving your progress to the cloud
+              </p>
+            </motion.div>
+          ) : (
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -568,6 +586,7 @@ export default function QuizPage({
               </div>
             )}
           </motion.div>
+          )
         )}
       </div>
     </div>
