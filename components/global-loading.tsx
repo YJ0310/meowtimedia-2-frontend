@@ -38,10 +38,10 @@ export default function GlobalLoading({
     return allFacts.length > 0 ? allFacts : globalFunFacts;
   }, [countrySlug]);
 
-  // Randomize initial fact index on mount
+  // Randomize initial fact index on mount and when country changes
   useEffect(() => {
     setCurrentFactIndex(Math.floor(Math.random() * funFacts.length));
-  }, [funFacts.length]);
+  }, [funFacts.length, countrySlug]);
 
   // Rotate fun facts every 3 seconds
   useEffect(() => {
@@ -53,11 +53,6 @@ export default function GlobalLoading({
     
     return () => clearInterval(interval);
   }, [isLoading, funFacts.length]);
-
-  // Reset index when country changes
-  useEffect(() => {
-    setCurrentFactIndex(0);
-  }, [countrySlug]);
 
   return (
     <AnimatePresence>

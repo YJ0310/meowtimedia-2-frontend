@@ -132,8 +132,11 @@ export default function PassportPage() {
     return null;
   }
 
+  // Get max pages based on device type
+  const maxPages = isMobile ? totalMobilePages : totalPages;
+
   const nextPage = () => {
-    if (currentPage < totalPages - 1 && !isFlipping) {
+    if (currentPage < maxPages - 1 && !isFlipping) {
       setFlipDirection('right');
       setIsFlipping(true);
       setTimeout(() => {
@@ -157,7 +160,7 @@ export default function PassportPage() {
   // Handle drag for mobile flip
   const handleDragEnd = (e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const threshold = 50;
-    if (info.offset.x < -threshold && currentPage < totalPages - 1) {
+    if (info.offset.x < -threshold && currentPage < maxPages - 1) {
       nextPage();
     } else if (info.offset.x > threshold && currentPage > 0) {
       prevPage();
