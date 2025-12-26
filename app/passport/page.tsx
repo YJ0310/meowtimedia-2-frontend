@@ -12,7 +12,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.meowtimap.s
 // Country configuration with stamp images and display names
 const COUNTRY_CONFIG: Record<string, { name: string; stampImage: string; icon: string }> = {
   'japan': { name: 'Japan', stampImage: '/stamp/japan.png', icon: '🇯🇵' },
-  'south-korea': { name: 'South Korea', stampImage: '/stamp/korea.png', icon: '🇰🇷' },
+  'south-korea': { name: 'South Korea', stampImage: '/stamp/south-korea.png', icon: '🇰🇷' },
   'thailand': { name: 'Thailand', stampImage: '/stamp/thailand.png', icon: '🇹🇭' },
   'malaysia': { name: 'Malaysia', stampImage: '/stamp/malaysia.png', icon: '🇲🇾' },
   'indonesia': { name: 'Indonesia', stampImage: '/stamp/indonesia.png', icon: '🇮🇩' },
