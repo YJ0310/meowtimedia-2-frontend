@@ -307,7 +307,7 @@ export default function QuizPage({
 
             <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
               <motion.div
-                className="h-full gradient-primary"
+                className={`h-full ${currentQuestion === totalQuestions - 1 && showFeedback ? 'bg-gradient-to-r from-yellow-400 to-amber-500' : 'gradient-primary'}`}
                 initial={{ width: `${(currentQuestion / totalQuestions) * 100}%` }}
                 animate={{ width: `${((currentQuestion + 1) / totalQuestions) * 100}%` }}
                 transition={{ duration: 0.5 }}
