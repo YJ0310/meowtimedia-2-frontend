@@ -447,7 +447,7 @@ export default function DashboardPage() {
                               <div className="flex items-center gap-1 mt-0.5">
                                 <div className="flex-1 h-1 bg-white/20 dark:bg-white/10 rounded-full overflow-hidden">
                                   <motion.div
-                                    className="h-full bg-linear-to-r from-primary to-secondary"
+                                    className={`h-full ${hasStamp ? 'bg-gradient-to-r from-yellow-400 to-amber-500' : 'bg-linear-to-r from-primary to-secondary'}`}
                                     initial={{ width: 0 }}
                                     animate={{ width: `${progress}%` }}
                                     transition={{ duration: 1, delay: 0.1 }}
@@ -587,7 +587,7 @@ export default function DashboardPage() {
                               <div className="flex items-center gap-2 mt-1">
                                 <div className="w-32 h-1.5 bg-white/20 dark:bg-white/10 rounded-full overflow-hidden shrink-0">
                                   <motion.div
-                                    className="h-full bg-linear-to-r from-primary to-secondary"
+                                    className={`h-full ${hasStamp ? 'bg-gradient-to-r from-yellow-400 to-amber-500' : 'bg-linear-to-r from-primary to-secondary'}`}
                                     initial={{ width: 0 }}
                                     animate={{ width: `${progress}%` }}
                                     transition={{ duration: 1, delay: 0.1 }}
