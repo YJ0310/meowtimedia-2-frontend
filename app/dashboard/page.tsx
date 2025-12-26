@@ -418,10 +418,10 @@ export default function DashboardPage() {
                           onClick={() => handleCountryClick(c.slug)}
                           whileHover={{ scale: 1.01, x: 2 }}
                           whileTap={{ scale: 0.99 }}
-                          className={`w-full p-2 rounded-lg text-left transition-all bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/10 text-black dark:text-white ${
+                          className={`w-full p-2 rounded-lg text-left transition-all backdrop-blur-md border text-black dark:text-white ${
                             hasStamp 
-                              ? "ring-1 ring-[var(--color-meow-accent)]/40"
-                              : ""
+                              ? "bg-gradient-to-r from-amber-400/20 to-yellow-500/20 border-amber-400/40 dark:from-amber-400/15 dark:to-yellow-500/15"
+                              : "bg-white/10 dark:bg-black/20 border-white/20 dark:border-white/10"
                           } ${
                             selectedCountry === c.slug
                               ? "ring-2 ring-primary shadow-lg"
@@ -447,13 +447,13 @@ export default function DashboardPage() {
                               <div className="flex items-center gap-1 mt-0.5">
                                 <div className="flex-1 h-1 bg-white/20 dark:bg-white/10 rounded-full overflow-hidden">
                                   <motion.div
-                                    className={`h-full ${hasStamp ? 'bg-gradient-to-r from-amber-400 to-yellow-500' : 'bg-linear-to-r from-primary to-secondary'}`}
+                                    className="h-full bg-linear-to-r from-primary to-secondary"
                                     initial={{ width: 0 }}
                                     animate={{ width: `${progress}%` }}
                                     transition={{ duration: 1, delay: 0.1 }}
                                   />
                                 </div>
-                                <span className={`text-[10px] w-6 text-right shrink-0 ${hasStamp ? 'text-amber-500 font-semibold' : 'text-black dark:text-white'}`}>
+                                <span className="text-[10px] text-black dark:text-white w-6 text-right shrink-0">
                                   {progress}%
                                 </span>
                               </div>
@@ -558,10 +558,10 @@ export default function DashboardPage() {
                           onClick={() => handleCountryClick(c.slug)}
                           whileHover={{ scale: 1.02, x: 4 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`w-full p-3 rounded-lg text-left transition-all bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/10 text-black dark:text-white ${
+                          className={`w-full p-3 rounded-lg text-left transition-all backdrop-blur-md border text-black dark:text-white ${
                             hasStamp 
-                              ? "ring-1 ring-[var(--color-meow-accent)]/40"
-                              : ""
+                              ? "bg-gradient-to-r from-amber-400/20 to-yellow-500/20 border-amber-400/40 dark:from-amber-400/15 dark:to-yellow-500/15"
+                              : "bg-white/10 dark:bg-black/20 border-white/20 dark:border-white/10"
                           } ${
                             selectedCountry === c.slug
                               ? "ring-2 ring-primary shadow-lg"
@@ -587,13 +587,13 @@ export default function DashboardPage() {
                               <div className="flex items-center gap-2 mt-1">
                                 <div className="w-32 h-1.5 bg-white/20 dark:bg-white/10 rounded-full overflow-hidden shrink-0">
                                   <motion.div
-                                    className={`h-full ${hasStamp ? 'bg-gradient-to-r from-amber-400 to-yellow-500' : 'bg-linear-to-r from-primary to-secondary'}`}
+                                    className="h-full bg-linear-to-r from-primary to-secondary"
                                     initial={{ width: 0 }}
                                     animate={{ width: `${progress}%` }}
                                     transition={{ duration: 1, delay: 0.1 }}
                                   />
                                 </div>
-                                <span className={`text-xs w-8 text-right shrink-0 ${hasStamp ? 'text-amber-500 font-semibold' : 'text-black dark:text-white'}`}>
+                                <span className="text-xs text-black dark:text-white w-8 text-right shrink-0">
                                   {progress}%
                                 </span>
                               </div>
