@@ -380,16 +380,17 @@ export default function DashboardPage() {
                       const progress = c.progress;
                       const countryProgressData = getCountryProgress(c.slug);
                       const hasStamp = countryProgressData?.hasStamp || false;
+                      const countryData = countries.find(country => country.slug === c.slug);
                       return (
                         <motion.button
                           key={c.id}
                           onClick={() => handleCountryClick(c.slug)}
                           whileHover={{ scale: 1.01, x: 2 }}
                           whileTap={{ scale: 0.99 }}
-                          className={`w-full p-2 rounded-lg text-left transition-all ${
+                          className={`w-full p-2 rounded-lg text-left transition-all bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/10 text-black dark:text-white ${
                             hasStamp 
-                              ? "bg-[var(--color-meow-accent)]/20 border border-[var(--color-meow-accent)]/40 text-black dark:text-white"
-                              : "glass text-black dark:text-white"
+                              ? "ring-1 ring-[var(--color-meow-accent)]/40"
+                              : ""
                           } ${
                             selectedCountry === c.slug
                               ? "ring-2 ring-primary shadow-lg"
@@ -397,15 +398,23 @@ export default function DashboardPage() {
                           }`}
                         >
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 flex items-center justify-center bg-primary/10 dark:bg-primary/20 rounded-md shrink-0 text-[10px] font-bold text-primary uppercase">
-                              {c.slug.substring(0, 2)}
+                            <div className="w-7 h-7 flex items-center justify-center rounded-md shrink-0 overflow-hidden">
+                              {countryData?.flag?.startsWith('/') ? (
+                                <img 
+                                  src={countryData.flag} 
+                                  alt={c.name} 
+                                  className="w-full h-full object-cover rounded-md"
+                                />
+                              ) : (
+                                <span className="text-lg">{countryData?.flag || c.slug.substring(0, 2).toUpperCase()}</span>
+                              )}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="font-medium text-xs truncate text-black dark:text-white">
                                 {c.name}
                               </div>
                               <div className="flex items-center gap-1 mt-0.5">
-                                <div className="flex-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div className="flex-1 h-1 bg-white/20 dark:bg-white/10 rounded-full overflow-hidden">
                                   <motion.div
                                     className="h-full bg-linear-to-r from-primary to-secondary"
                                     initial={{ width: 0 }}
@@ -419,8 +428,16 @@ export default function DashboardPage() {
                               </div>
                             </div>
                             {hasStamp && (
-                              <div className="text-[9px] bg-primary/20 text-primary px-1 py-0.5 rounded font-semibold shrink-0">
-                                🐾
+                              <div className="w-6 h-6 shrink-0">
+                                <img 
+                                  src={`/stamp/${c.slug}.png`} 
+                                  alt={`${c.name} stamp`}
+                                  className="w-full h-full object-contain"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.parentElement!.innerHTML = '🐾';
+                                  }}
+                                />
                               </div>
                             )}
                           </div>
@@ -503,16 +520,17 @@ export default function DashboardPage() {
                       const progress = c.progress;
                       const countryProgressData = getCountryProgress(c.slug);
                       const hasStamp = countryProgressData?.hasStamp || false;
+                      const countryData = countries.find(country => country.slug === c.slug);
                       return (
                         <motion.button
                           key={c.id}
                           onClick={() => handleCountryClick(c.slug)}
                           whileHover={{ scale: 1.02, x: 4 }}
                           whileTap={{ scale: 0.98 }}
-                          className={`w-full p-3 rounded-lg text-left transition-all ${
+                          className={`w-full p-3 rounded-lg text-left transition-all bg-white/10 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/10 text-black dark:text-white ${
                             hasStamp 
-                              ? "bg-[var(--color-meow-accent)]/20 border border-[var(--color-meow-accent)]/40 text-black dark:text-white"
-                              : "glass text-black dark:text-white"
+                              ? "ring-1 ring-[var(--color-meow-accent)]/40"
+                              : ""
                           } ${
                             selectedCountry === c.slug
                               ? "ring-2 ring-primary shadow-lg"
@@ -520,15 +538,23 @@ export default function DashboardPage() {
                           }`}
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 flex items-center justify-center bg-primary/10 dark:bg-primary/20 rounded-lg text-xs font-bold text-primary uppercase shrink-0">
-                              {c.slug.substring(0, 2)}
+                            <div className="w-8 h-8 flex items-center justify-center rounded-lg shrink-0 overflow-hidden">
+                              {countryData?.flag?.startsWith('/') ? (
+                                <img 
+                                  src={countryData.flag} 
+                                  alt={c.name} 
+                                  className="w-full h-full object-cover rounded-lg"
+                                />
+                              ) : (
+                                <span className="text-xl">{countryData?.flag || c.slug.substring(0, 2).toUpperCase()}</span>
+                              )}
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="font-semibold text-sm truncate text-black dark:text-white">
                                 {c.name}
                               </div>
                               <div className="flex items-center gap-2 mt-1">
-                                <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden shrink-0">
+                                <div className="w-32 h-1.5 bg-white/20 dark:bg-white/10 rounded-full overflow-hidden shrink-0">
                                   <motion.div
                                     className="h-full bg-linear-to-r from-primary to-secondary"
                                     initial={{ width: 0 }}
@@ -542,8 +568,16 @@ export default function DashboardPage() {
                               </div>
                             </div>
                             {hasStamp && (
-                              <div className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full font-semibold shrink-0">
-                                🐾
+                              <div className="w-7 h-7 shrink-0">
+                                <img 
+                                  src={`/stamp/${c.slug}.png`} 
+                                  alt={`${c.name} stamp`}
+                                  className="w-full h-full object-contain"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.parentElement!.innerHTML = '🐾';
+                                  }}
+                                />
                               </div>
                             )}
                           </div>
@@ -872,16 +906,16 @@ export default function DashboardPage() {
                       <span>Your Stamp</span>
                       <span className="text-2xl">🐾</span>
                     </h3>
-                    <div className="glass p-3 rounded-lg flex items-center gap-3 hover:shadow-lg transition-shadow text-black dark:text-white">
-                      <span className="text-3xl">🏆</span>
-                      <div className="flex-1">
-                        <div className="font-semibold text-sm text-black dark:text-white">
-                          {country.name} Master
-                        </div>
-                        <div className="text-xs text-black dark:text-white">
-                          Quiz completed with 80%+ score!
-                        </div>
-                      </div>
+                    <div className="glass p-3 rounded-lg flex items-center justify-center hover:shadow-lg transition-shadow">
+                      <img 
+                        src={`/stamp/${country.slug}.png`} 
+                        alt={`${country.name} stamp`}
+                        className="w-20 h-20 object-contain"
+                        onError={(e) => {
+                          e.currentTarget.src = '';
+                          e.currentTarget.alt = '🐾';
+                        }}
+                      />
                     </div>
                   </motion.div>
                 )}
@@ -980,16 +1014,17 @@ export default function DashboardPage() {
                       <span>Your Stamp</span>
                       <span className="text-xl">🐾</span>
                     </h3>
-                    <div className="flex gap-2 overflow-x-auto pb-2">
-                      <div
-                        className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg shrink-0 flex items-center gap-2 border border-gray-200 dark:border-gray-700"
-                      >
-                        <span className="text-xl">🏆</span>
-                        <div>
-                          <div className="font-semibold text-xs text-black dark:text-white">
-                            {country.name} Master
-                          </div>
-                        </div>
+                    <div className="flex justify-center pb-2">
+                      <div className="bg-white/10 dark:bg-black/20 backdrop-blur-md p-3 rounded-lg border border-white/20 dark:border-white/10">
+                        <img 
+                          src={`/stamp/${country.slug}.png`} 
+                          alt={`${country.name} stamp`}
+                          className="w-16 h-16 object-contain"
+                          onError={(e) => {
+                            e.currentTarget.src = '';
+                            e.currentTarget.alt = '🐾';
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
