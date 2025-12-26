@@ -1095,8 +1095,8 @@ export default function DashboardPage() {
               {tutorialStep === 0 && (
                 <div className="text-center space-y-4">
                   <div className="text-6xl">🎉</div>
-                  <h2 className="text-2xl font-bold text-black dark:text-white">Welcome to Meowtimedia!</h2>
-                  <p className="text-black/80 dark:text-white/80">
+                  <h2 className="text-2xl font-bold text-white dark:text-black">Welcome to Meowtimedia!</h2>
+                  <p className="text-white/80 dark:text-black/80">
                     Let&apos;s take a quick tour to help you get started on your Asian cultural adventure!
                   </p>
                 </div>
@@ -1104,8 +1104,8 @@ export default function DashboardPage() {
               {tutorialStep === 1 && (
                 <div className="text-center space-y-4">
                   <div className="text-6xl">🗺️</div>
-                  <h2 className="text-2xl font-bold text-black dark:text-white">Explore the Map</h2>
-                  <p className="text-black/80 dark:text-white/80">
+                  <h2 className="text-2xl font-bold text-white dark:text-black">Explore the Map</h2>
+                  <p className="text-white/80 dark:text-black/80">
                     Click on any <span className="text-primary font-semibold">country pin</span> on the map to learn about its culture, food, and traditions!
                   </p>
                 </div>
@@ -1113,8 +1113,8 @@ export default function DashboardPage() {
               {tutorialStep === 2 && (
                 <div className="text-center space-y-4">
                   <div className="text-6xl">📚</div>
-                  <h2 className="text-2xl font-bold text-black dark:text-white">Learn & Quiz</h2>
-                  <p className="text-black/80 dark:text-white/80">
+                  <h2 className="text-2xl font-bold text-white dark:text-black">Learn & Quiz</h2>
+                  <p className="text-white/80 dark:text-black/80">
                     Each country has fun facts and topics to explore. Take the <span className="text-primary font-semibold">quiz</span> to test your knowledge!
                   </p>
                 </div>
@@ -1122,8 +1122,8 @@ export default function DashboardPage() {
               {tutorialStep === 3 && (
                 <div className="text-center space-y-4">
                   <div className="text-6xl">🐾</div>
-                  <h2 className="text-2xl font-bold text-black dark:text-white">Collect Stamps!</h2>
-                  <p className="text-black/80 dark:text-white/80">
+                  <h2 className="text-2xl font-bold text-white dark:text-black">Collect Stamps!</h2>
+                  <p className="text-white/80 dark:text-black/80">
                     Score <span className="text-amber-500 font-semibold">80% or higher</span> on a quiz to earn that country&apos;s stamp! Fill your passport with stamps!
                   </p>
                 </div>
@@ -1149,7 +1149,7 @@ export default function DashboardPage() {
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={handleSkipTutorial}
-                  className="flex-1 py-3 rounded-xl border border-white/30 dark:border-white/10 text-black dark:text-white font-medium hover:bg-white/10 transition-colors"
+                  className="flex-1 py-3 rounded-xl border border-white/30 dark:border-white/10 text-white dark:text-black font-medium hover:bg-white/10 transition-colors"
                 >
                   Skip
                 </button>
