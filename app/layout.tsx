@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/navbar";
 import CustomCursor from "@/components/custom-cursor";
 import { AuthProvider } from "@/lib/auth-context";
+import { ReactionsProvider } from "@/lib/reactions-context";
 
 export const metadata: Metadata = {
   title: "Meowtimap - Your Journey Through Asian Culture",
@@ -64,11 +65,13 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
         <AuthProvider>
-          <CustomCursor />
-          <Navbar />
-          <main className="pt-16 md:pt-16 pb-24 md:pb-0">
-            {children}
-          </main>
+          <ReactionsProvider>
+            <CustomCursor />
+            <Navbar />
+            <main className="pt-16 md:pt-16 pb-24 md:pb-0">
+              {children}
+            </main>
+          </ReactionsProvider>
         </AuthProvider>
       </body>
     </html>
