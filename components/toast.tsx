@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { X } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -49,10 +49,21 @@ function Toast({ toast, onRemove }: { toast: ToastProps; onRemove: (id: string) 
 
   return (
     <motion.div
+      layout
+      layoutId={toast.id}
       initial={{ opacity: 0, y: -50, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -30, scale: 0.9 }}
-      transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+      exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
+      transition={{ 
+        type: 'spring', 
+        damping: 25, 
+        stiffness: 350,
+        layout: {
+          type: 'spring',
+          damping: 30,
+          stiffness: 400
+        }
+      }}
       className={`
         bg-white/20 dark:bg-black/30 
         backdrop-blur-2xl backdrop-saturate-150
@@ -93,11 +104,13 @@ export function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
 
   return (
     <div className={`fixed left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 ${isWindows ? 'top-20' : 'top-4'}`}>
-      <AnimatePresence>
-        {toasts.map((toast) => (
-          <Toast key={toast.id} toast={toast} onRemove={onRemove} />
-        ))}
-      </AnimatePresence>
+      <LayoutGroup>
+        <AnimatePresence mode="popLayout">
+          {toasts.map((toast) => (
+            <Toast key={toast.id} toast={toast} onRemove={onRemove} />
+          ))}
+        </AnimatePresence>
+      </LayoutGroup>
     </div>
   );
 }
