@@ -51,6 +51,7 @@ export default function FunFactReactions({
 
   // Fetch reactions
   const fetchReactions = useCallback(async () => {
+    setIsLoading(true);
     try {
       const response = await fetch(`${API_URL}/reactions/${funfactId}`, {
         credentials: "include",
@@ -69,7 +70,11 @@ export default function FunFactReactions({
     }
   }, [funfactId]);
 
+  // Reset and refetch when funfactId changes (country switch)
   useEffect(() => {
+    setReactions({});
+    setUserReaction(null);
+    setShowPicker(false);
     fetchReactions();
   }, [fetchReactions]);
 
@@ -250,8 +255,27 @@ export default function FunFactReactions({
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-1">
-        <div className="w-6 h-6 rounded-full bg-white/10 animate-pulse" />
+      <div className="flex items-center gap-2">
+        {/* Skeleton reaction pills */}
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/10 dark:bg-black/20 border border-white/10 dark:border-white/5"
+          >
+            <div 
+              className="w-4 h-4 rounded-full bg-white/20 dark:bg-white/10 animate-pulse"
+              style={{ animationDelay: `${i * 100}ms` }}
+            />
+            <div 
+              className="w-3 h-3 rounded bg-white/15 dark:bg-white/8 animate-pulse"
+              style={{ animationDelay: `${i * 100 + 50}ms` }}
+            />
+          </div>
+        ))}
+        {/* Skeleton add button */}
+        <div className="w-7 h-7 rounded-full bg-white/10 dark:bg-black/20 border border-white/10 dark:border-white/5 animate-pulse" 
+          style={{ animationDelay: '350ms' }}
+        />
       </div>
     );
   }
