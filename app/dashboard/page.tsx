@@ -15,6 +15,7 @@ import { countries } from "@/lib/mock-data";
 import { useAuth, CountryProgress } from "@/lib/auth-context";
 import { ToastContainer, useToast } from "@/components/toast";
 import GlobalLoading from "@/components/global-loading";
+import FunFactReactions from "@/components/funfact-reactions";
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json";
 
@@ -923,7 +924,11 @@ export default function DashboardPage() {
                   <div className="text-sm font-semibold text-primary mb-1">
                     💡 Fun Fact
                   </div>
-                  <p className="text-sm text-black dark:text-white">{country.funFact}</p>
+                  <p className="text-sm text-black dark:text-white mb-3">{country.funFact}</p>
+                  <FunFactReactions
+                    funfactId={`dashboard-${country.slug}-funfact`}
+                    countrySlug={country.slug}
+                  />
                 </motion.div>
 
                 {selectedCountryHasStamp && (
@@ -1034,9 +1039,14 @@ export default function DashboardPage() {
                   <div className="text-sm font-semibold text-primary mb-1">
                     💡 Fun Fact
                   </div>
-                  <p className="text-xs text-black dark:text-white">
+                  <p className="text-xs text-black dark:text-white mb-2">
                     {country.funFact}
                   </p>
+                  <FunFactReactions
+                    funfactId={`dashboard-${country.slug}-funfact`}
+                    countrySlug={country.slug}
+                    compact
+                  />
                 </div>
 
                 {selectedCountryHasStamp && (
