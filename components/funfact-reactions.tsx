@@ -21,7 +21,8 @@ export default function FunFactReactions({
     isLoading, 
     getReactionsForFunfact, 
     getUserReactionForFunfact, 
-    addReaction 
+    addReaction,
+    hasLoadedOnce
   } = useReactions();
   
   const [showPicker, setShowPicker] = useState(false);
@@ -32,6 +33,9 @@ export default function FunFactReactions({
   // Get reactions from context
   const reactions = getReactionsForFunfact(funfactId);
   const userReaction = getUserReactionForFunfact(funfactId);
+  
+  // Check if we have cached data for this funfact (either reactions exist or user has a reaction)
+  const hasCachedData = Object.keys(reactions).length > 0 || userReaction !== null;
 
   // iOS 26 liquid spring animations
   const springConfig = { stiffness: 400, damping: 30, mass: 0.8 } as const;
@@ -134,8 +138,9 @@ export default function FunFactReactions({
     tap: { scale: 0.9 },
   };
 
-  // Skeleton loading state - visible in both light and dark themes
-  if (isLoading) {
+  // Skeleton loading state - only show if we have no cached data AND haven't loaded yet
+  // This ensures user's own reactions appear immediately without delay
+  if (isLoading && !hasCachedData && !hasLoadedOnce) {
     return (
       <div className="flex items-center gap-2">
         {/* Skeleton reaction pills - fixed visibility for light theme */}

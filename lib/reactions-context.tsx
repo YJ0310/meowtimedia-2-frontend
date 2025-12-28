@@ -38,6 +38,7 @@ interface ReactionsContextType {
   userReactions: UserReactionsState;
   isLoading: boolean;
   lastUpdate: string | null;
+  hasLoadedOnce: boolean;
   getReactionsForFunfact: (funfactId: string) => ReactionsState;
   getUserReactionForFunfact: (funfactId: string) => ReactionType | null;
   addReaction: (funfactId: string, countrySlug: string, reactionType: ReactionType) => Promise<void>;
@@ -55,6 +56,7 @@ export function ReactionsProvider({ children }: { children: ReactNode }) {
   const [userReactions, setUserReactions] = useState<UserReactionsState>({});
   const [isLoading, setIsLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const isPollingRef = useRef(false);
 
@@ -76,6 +78,7 @@ export function ReactionsProvider({ children }: { children: ReactNode }) {
           setReactions(data.reactions || {});
           setUserReactions(data.userReactions || {});
           setLastUpdate(data.lastUpdate || null);
+          setHasLoadedOnce(true);
         }
       }
     } catch (error) {
@@ -223,6 +226,7 @@ export function ReactionsProvider({ children }: { children: ReactNode }) {
         userReactions,
         isLoading,
         lastUpdate,
+        hasLoadedOnce,
         getReactionsForFunfact,
         getUserReactionForFunfact,
         addReaction,
