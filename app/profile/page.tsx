@@ -189,7 +189,7 @@ export default function ProfilePage() {
                 <img
                   src={image}
                   alt="Profile"
-                  className="w-48 h-48 md:w-64 md:h-64 rounded-full object-cover border-4 border-primary shadow-2xl mx-auto"
+                  className="w-24 h-24 md:w-40 md:h-40 rounded-full object-cover border-4 border-primary shadow-2xl mx-auto"
                 />
               </motion.div>
 
