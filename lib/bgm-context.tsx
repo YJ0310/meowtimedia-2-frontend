@@ -69,66 +69,60 @@ export function BGMProvider({ children }: { children: ReactNode }) {
       // If sound is disabled, mark as ready immediately
       if (!soundEnabled) {
         setIsAudioReady(true);
+        setIsInitialized(true);
+        return;
       }
 
-      setIsInitialized(true);
-
-      // Cleanup on unmount
-      return () => {
-        themeAudioRef.current?.pause();
-        quizAudioRef.current?.pause();
-        quizResultAudioRef.current?.pause();
-      };
-    }
-  }, []);
-
-  // Auto-start theme music when initialized and sound is enabled
-  // Mark as ready only after theme music successfully starts playing
-  useEffect(() => {
-    // Skip if sound is disabled - already marked ready in init
-    if (!isSoundEnabled) {
-      return;
-    }
-    
-    if (isInitialized && isSoundEnabled && currentMusic === 'none' && !isAudioReady) {
-      // Auto-play theme music on first user interaction
-      const handleFirstInteraction = () => {
-        if (themeAudioRef.current && isSoundEnabled && currentMusic === 'none') {
-          // Try to play and mark ready only on success
+      // Sound is enabled - try to autoplay immediately
+      // Wait for audio to be ready to play
+      themeAudioRef.current.addEventListener('canplaythrough', () => {
+        if (themeAudioRef.current) {
           themeAudioRef.current.play()
             .then(() => {
               setCurrentMusic('theme');
               setIsAudioReady(true);
             })
             .catch(() => {
-              // Autoplay blocked - still mark as ready so user can continue
-              setIsAudioReady(true);
+              // Autoplay blocked by browser - set up interaction listeners as fallback
+              const handleFirstInteraction = () => {
+                if (themeAudioRef.current && soundEnabled) {
+                  themeAudioRef.current.play()
+                    .then(() => {
+                      setCurrentMusic('theme');
+                      setIsAudioReady(true);
+                    })
+                    .catch(() => {
+                      setIsAudioReady(true);
+                    });
+                }
+                document.removeEventListener('click', handleFirstInteraction);
+                document.removeEventListener('keydown', handleFirstInteraction);
+                document.removeEventListener('touchstart', handleFirstInteraction);
+              };
+
+              document.addEventListener('click', handleFirstInteraction);
+              document.addEventListener('keydown', handleFirstInteraction);
+              document.addEventListener('touchstart', handleFirstInteraction);
             });
         }
-        document.removeEventListener('click', handleFirstInteraction);
-        document.removeEventListener('keydown', handleFirstInteraction);
-        document.removeEventListener('touchstart', handleFirstInteraction);
-      };
+      }, { once: true });
 
-      document.addEventListener('click', handleFirstInteraction);
-      document.addEventListener('keydown', handleFirstInteraction);
-      document.addEventListener('touchstart', handleFirstInteraction);
-      
-      // Fallback: set audio ready after 5 seconds if no interaction
+      // Fallback: set audio ready after 3 seconds if not loaded/played
       const fallbackTimer = setTimeout(() => {
-        if (!isAudioReady) {
-          setIsAudioReady(true);
-        }
-      }, 5000);
+        setIsAudioReady(true);
+      }, 3000);
 
+      setIsInitialized(true);
+
+      // Cleanup on unmount
       return () => {
         clearTimeout(fallbackTimer);
-        document.removeEventListener('click', handleFirstInteraction);
-        document.removeEventListener('keydown', handleFirstInteraction);
-        document.removeEventListener('touchstart', handleFirstInteraction);
+        themeAudioRef.current?.pause();
+        quizAudioRef.current?.pause();
+        quizResultAudioRef.current?.pause();
       };
     }
-  }, [isInitialized, isSoundEnabled, currentMusic]);
+  }, []);
 
   // Handle sound toggle
   useEffect(() => {
