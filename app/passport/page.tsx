@@ -523,7 +523,7 @@ export default function PassportPage() {
   return (
     <div className="h-screen bg-gradient-soft flex flex-col overflow-hidden">
       {/* Toast Container */}
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <ToastContainer toasts={toasts} onRemove={removeToast} hasNavbar={true} />
 
       <div className="flex-1 flex flex-col items-center justify-center p-2 md:p-4 max-w-7xl mx-auto w-full">
         {/* Mobile View - Single Page Flip */}

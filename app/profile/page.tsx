@@ -98,19 +98,12 @@ export default function ProfilePage() {
   // Show loading while checking auth or waiting for audio
   if (authLoading || !isAudioReady) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-soft dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center space-y-4"
-        >
-          <GlobalLoading
-            isLoading={true}
-            title={`Loading Profile`}
-            subtitle="Loading your profile"
-          />
-        </motion.div>
-      </div>
+      <GlobalLoading
+        isLoading={true}
+        title="Loading Profile"
+        subtitle="Loading your profile..."
+        showStartButton={!authLoading}
+      />
     );
   }
 
@@ -172,7 +165,7 @@ export default function ProfilePage() {
         rounded-2xl shadow-2xl flex items-center gap-3 md:gap-4 
         border border-white/30 dark:border-white/10 
         max-w-[90vw] md:max-w-md 
-        top-20`}
+        top-4 md:top-20`}
             >
               <motion.img
                 src={user.avatar}

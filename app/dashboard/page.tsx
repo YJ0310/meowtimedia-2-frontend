@@ -644,7 +644,7 @@ export default function DashboardPage() {
       </button>
 
       {/* Toast Container */}
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <ToastContainer toasts={toasts} onRemove={removeToast} hasNavbar={true} />
 
       {/* Full-screen Map Area */}
       <div className="absolute inset-0">

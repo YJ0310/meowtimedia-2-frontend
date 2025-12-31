@@ -43,7 +43,7 @@ export default function Home() {
       <GlobalLoading isLoading={isLoading} />
 
       {/* Toast Container */}
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
+      <ToastContainer toasts={toasts} onRemove={removeToast} hasNavbar={false} />
 
       <div className="min-h-screen relative overflow-hidden">
       {/* Animated Background */}

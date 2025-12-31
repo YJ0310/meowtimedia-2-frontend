@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { X } from 'lucide-react';
 
@@ -18,6 +18,7 @@ export interface ToastProps {
 interface ToastContainerProps {
   toasts: ToastProps[];
   onRemove: (id: string) => void;
+  hasNavbar?: boolean;
 }
 
 // Type-based border colors (subtle accent)
@@ -95,16 +96,11 @@ function Toast({ toast, onRemove }: { toast: ToastProps; onRemove: (id: string) 
   );
 }
 
-export function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
-  const [isWindows, setIsWindows] = useState(false);
-
-  useEffect(() => {
-    setIsWindows(navigator.platform.toLowerCase().includes('win'));
-  }, []);
-
-  // Always position below navbar (top-20 = 80px which accounts for navbar height + buffer)
+export function ToastContainer({ toasts, onRemove, hasNavbar = false }: ToastContainerProps) {
+  // Position below navbar if present (top-20 = 80px), otherwise at top (top-4)
+  // On mobile, navbar is at bottom so always use top-4
   return (
-    <div className="fixed left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 top-20">
+    <div className={`fixed left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 ${hasNavbar ? 'top-4 md:top-20' : 'top-4'}`}>
       <LayoutGroup>
         <AnimatePresence mode="popLayout">
           {toasts.map((toast) => (

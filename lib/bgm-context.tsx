@@ -22,6 +22,8 @@ interface BGMContextType {
   
   // Audio loading state
   isAudioReady: boolean;
+  isAudioLoaded: boolean;
+  startExperience: () => void;
 }
 
 const BGMContext = createContext<BGMContextType | undefined>(undefined);
@@ -31,6 +33,7 @@ export function BGMProvider({ children }: { children: ReactNode }) {
   const [currentMusic, setCurrentMusic] = useState<MusicType>('none');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isAudioReady, setIsAudioReady] = useState(false);
+  const [isAudioLoaded, setIsAudioLoaded] = useState(false);
   
   // Audio refs - using refs to persist across renders
   const themeAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -42,74 +45,53 @@ export function BGMProvider({ children }: { children: ReactNode }) {
   // Initialize audio elements on client side
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Create audio elements
-      themeAudioRef.current = new Audio('/bgm/theme_music.mp3');
-      themeAudioRef.current.loop = true;
-      themeAudioRef.current.volume = 0.3;
+      // Helper to create audio with iOS-friendly settings
+      const createAudio = (src: string, loop: boolean, volume: number) => {
+        const audio = new Audio(src);
+        audio.loop = loop;
+        audio.volume = volume;
+        audio.preload = 'auto';
+        // iOS Safari requires these attributes
+        audio.setAttribute('playsinline', 'true');
+        audio.setAttribute('webkit-playsinline', 'true');
+        return audio;
+      };
 
-      quizAudioRef.current = new Audio('/bgm/quiz.mp3');
-      quizAudioRef.current.loop = true;
-      quizAudioRef.current.volume = 0.3;
+      // Create audio elements with iOS-friendly settings
+      themeAudioRef.current = createAudio('/bgm/theme_music.mp3', true, 0.3);
+      quizAudioRef.current = createAudio('/bgm/quiz.mp3', true, 0.3);
+      quizResultAudioRef.current = createAudio('/bgm/quiz_result.mp3', true, 0.3);
+      correctSoundRef.current = createAudio('/bgm/quiz_correct.mp3', false, 0.5);
+      wrongSoundRef.current = createAudio('/bgm/quiz_wrong.mp3', false, 0.5);
 
-      quizResultAudioRef.current = new Audio('/bgm/quiz_result.mp3');
-      quizResultAudioRef.current.loop = true;
-      quizResultAudioRef.current.volume = 0.3;
-
-      correctSoundRef.current = new Audio('/bgm/quiz_correct.mp3');
-      correctSoundRef.current.volume = 0.5;
-
-      wrongSoundRef.current = new Audio('/bgm/quiz_wrong.mp3');
-      wrongSoundRef.current.volume = 0.5;
+      // Load all audio files
+      themeAudioRef.current.load();
+      quizAudioRef.current.load();
+      quizResultAudioRef.current.load();
+      correctSoundRef.current.load();
+      wrongSoundRef.current.load();
 
       // Load sound preference from localStorage
       const savedSoundPref = localStorage.getItem('soundEnabled');
       const soundEnabled = savedSoundPref !== null ? savedSoundPref === 'true' : true;
       setIsSoundEnabled(soundEnabled);
       
-      // If sound is disabled, mark as ready immediately
+      // If sound is disabled, mark as ready immediately (no need to wait for audio)
       if (!soundEnabled) {
+        setIsAudioLoaded(true);
         setIsAudioReady(true);
         setIsInitialized(true);
         return;
       }
 
-      // Sound is enabled - try to autoplay immediately
-      // Wait for audio to be ready to play
+      // Sound is enabled - wait for theme audio to be loaded
       themeAudioRef.current.addEventListener('canplaythrough', () => {
-        if (themeAudioRef.current) {
-          themeAudioRef.current.play()
-            .then(() => {
-              setCurrentMusic('theme');
-              setIsAudioReady(true);
-            })
-            .catch(() => {
-              // Autoplay blocked by browser - set up interaction listeners as fallback
-              const handleFirstInteraction = () => {
-                if (themeAudioRef.current && soundEnabled) {
-                  themeAudioRef.current.play()
-                    .then(() => {
-                      setCurrentMusic('theme');
-                      setIsAudioReady(true);
-                    })
-                    .catch(() => {
-                      setIsAudioReady(true);
-                    });
-                }
-                document.removeEventListener('click', handleFirstInteraction);
-                document.removeEventListener('keydown', handleFirstInteraction);
-                document.removeEventListener('touchstart', handleFirstInteraction);
-              };
-
-              document.addEventListener('click', handleFirstInteraction);
-              document.addEventListener('keydown', handleFirstInteraction);
-              document.addEventListener('touchstart', handleFirstInteraction);
-            });
-        }
+        setIsAudioLoaded(true);
       }, { once: true });
 
-      // Fallback: set audio ready after 3 seconds if not loaded/played
+      // Fallback: mark as loaded after 3 seconds
       const fallbackTimer = setTimeout(() => {
-        setIsAudioReady(true);
+        setIsAudioLoaded(true);
       }, 3000);
 
       setIsInitialized(true);
@@ -123,6 +105,26 @@ export function BGMProvider({ children }: { children: ReactNode }) {
       };
     }
   }, []);
+
+  // Start experience - called when user clicks "Start" button
+  // iOS Safari requires audio to be played during a user interaction to unlock it
+  const startExperience = useCallback(() => {
+    if (isSoundEnabled && themeAudioRef.current) {
+      // Play theme music directly - this user interaction unlocks audio on iOS
+      themeAudioRef.current.play()
+        .then(() => {
+          setCurrentMusic('theme');
+          setIsAudioReady(true);
+        })
+        .catch((err) => {
+          console.warn('Audio play failed:', err);
+          // If play fails, still mark as ready
+          setIsAudioReady(true);
+        });
+    } else {
+      setIsAudioReady(true);
+    }
+  }, [isSoundEnabled]);
 
   // Handle sound toggle
   useEffect(() => {
@@ -231,6 +233,8 @@ export function BGMProvider({ children }: { children: ReactNode }) {
         playCorrectSound,
         playWrongSound,
         isAudioReady,
+        isAudioLoaded,
+        startExperience,
       }}
     >
       {children}

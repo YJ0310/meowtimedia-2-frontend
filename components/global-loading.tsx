@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { Loader2, Play } from "lucide-react";
 import { SIMPLE_FUNFACTS, getAllFunFacts } from "@/lib/funfacts-data";
+import { useBGM } from "@/lib/bgm-context";
 
 // Global fun facts for when no country is specified
 const globalFunFacts = [
@@ -18,15 +19,18 @@ interface GlobalLoadingProps {
   title?: string;
   subtitle?: string;
   countrySlug?: string; // Optional: show country-specific fun facts
+  showStartButton?: boolean; // Show start button for initial load
 }
 
 export default function GlobalLoading({ 
   isLoading, 
   title = "Preparing Your Journey",
   subtitle = "Loading your adventure...",
-  countrySlug
+  countrySlug,
+  showStartButton = false
 }: GlobalLoadingProps) {
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
+  const { isAudioLoaded, startExperience, isSoundEnabled } = useBGM();
 
   // Get the appropriate fun facts based on country or use all
   const funFacts = useMemo(() => {
@@ -63,20 +67,48 @@ export default function GlobalLoading({
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center gap-6"
         >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          >
-            <Loader2 className="w-12 h-12 text-primary" />
-          </motion.div>
+          {/* Show loader while audio is loading, then show start button */}
+          {showStartButton && !isAudioLoaded ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            >
+              <Loader2 className="w-12 h-12 text-primary" />
+            </motion.div>
+          ) : showStartButton && isAudioLoaded ? (
+            <motion.button
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={startExperience}
+              className="w-24 h-24 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
+            >
+              <Play className="w-12 h-12 text-white ml-1" fill="white" />
+            </motion.button>
+          ) : (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            >
+              <Loader2 className="w-12 h-12 text-primary" />
+            </motion.div>
+          )}
+          
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="text-center"
           >
-            <h2 className="text-2xl font-bold text-gradient">{title}</h2>
-            <p className="text-muted-foreground mt-2">{subtitle}</p>
+            <h2 className="text-2xl font-bold text-gradient">
+              {showStartButton && isAudioLoaded ? "Welcome to Meowtimap!" : title}
+            </h2>
+            <p className="text-muted-foreground mt-2">
+              {showStartButton && isAudioLoaded 
+                ? (isSoundEnabled ? "Click to start your adventure with music 🎵" : "Click to start your adventure")
+                : subtitle}
+            </p>
           </motion.div>
           
           {/* Fun Fact Display */}
