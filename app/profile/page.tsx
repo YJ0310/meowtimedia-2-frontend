@@ -9,7 +9,7 @@ import { useBGM } from '@/lib/bgm-context';
 
 export default function ProfilePage() {
   const { user, isLoading: authLoading, logout } = useAuth();
-  const { isSoundEnabled, toggleSound } = useBGM();
+  const { isSoundEnabled, toggleSound, isAudioReady } = useBGM();
   const [image, setImage] = useState<string>('');
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -76,8 +76,8 @@ export default function ProfilePage() {
     setIsDragging(false);
   }, []);
 
-  // Show loading while checking auth
-  if (authLoading) {
+  // Show loading while checking auth or waiting for audio
+  if (authLoading || !isAudioReady) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-soft dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <motion.div
@@ -86,7 +86,9 @@ export default function ProfilePage() {
           className="text-center space-y-4"
         >
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
-          <p className="text-black dark:text-white">Loading profile...</p>
+          <p className="text-black dark:text-white">
+            {authLoading ? 'Loading profile...' : 'Preparing music...'}
+          </p>
         </motion.div>
       </div>
     );

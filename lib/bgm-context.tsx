@@ -19,6 +19,9 @@ interface BGMContextType {
   // Sound effects (play over background music)
   playCorrectSound: () => void;
   playWrongSound: () => void;
+  
+  // Audio loading state
+  isAudioReady: boolean;
 }
 
 const BGMContext = createContext<BGMContextType | undefined>(undefined);
@@ -27,6 +30,7 @@ export function BGMProvider({ children }: { children: ReactNode }) {
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
   const [currentMusic, setCurrentMusic] = useState<MusicType>('none');
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isAudioReady, setIsAudioReady] = useState(false);
   
   // Audio refs - using refs to persist across renders
   const themeAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -38,18 +42,31 @@ export function BGMProvider({ children }: { children: ReactNode }) {
   // Initialize audio elements on client side
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      let audioLoadedCount = 0;
+      const totalAudioFiles = 3; // theme, quiz, quiz_result
+      
+      const checkAllAudioReady = () => {
+        audioLoadedCount++;
+        if (audioLoadedCount >= totalAudioFiles) {
+          setIsAudioReady(true);
+        }
+      };
+
       // Create audio elements
       themeAudioRef.current = new Audio('/bgm/theme_music.mp3');
       themeAudioRef.current.loop = true;
       themeAudioRef.current.volume = 0.3;
+      themeAudioRef.current.addEventListener('canplaythrough', checkAllAudioReady, { once: true });
 
       quizAudioRef.current = new Audio('/bgm/quiz.mp3');
       quizAudioRef.current.loop = true;
       quizAudioRef.current.volume = 0.3;
+      quizAudioRef.current.addEventListener('canplaythrough', checkAllAudioReady, { once: true });
 
       quizResultAudioRef.current = new Audio('/bgm/quiz_result.mp3');
       quizResultAudioRef.current.loop = true;
       quizResultAudioRef.current.volume = 0.3;
+      quizResultAudioRef.current.addEventListener('canplaythrough', checkAllAudioReady, { once: true });
 
       correctSoundRef.current = new Audio('/bgm/quiz_correct.mp3');
       correctSoundRef.current.volume = 0.5;
@@ -64,9 +81,15 @@ export function BGMProvider({ children }: { children: ReactNode }) {
       }
 
       setIsInitialized(true);
+      
+      // Fallback: set audio ready after 3 seconds if not loaded
+      const fallbackTimer = setTimeout(() => {
+        setIsAudioReady(true);
+      }, 3000);
 
       // Cleanup on unmount
       return () => {
+        clearTimeout(fallbackTimer);
         themeAudioRef.current?.pause();
         quizAudioRef.current?.pause();
         quizResultAudioRef.current?.pause();
@@ -208,6 +231,7 @@ export function BGMProvider({ children }: { children: ReactNode }) {
         stopMusic,
         playCorrectSound,
         playWrongSound,
+        isAudioReady,
       }}
     >
       {children}
