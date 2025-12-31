@@ -42,31 +42,18 @@ export function BGMProvider({ children }: { children: ReactNode }) {
   // Initialize audio elements on client side
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      let audioLoadedCount = 0;
-      const totalAudioFiles = 3; // theme, quiz, quiz_result
-      
-      const checkAllAudioReady = () => {
-        audioLoadedCount++;
-        if (audioLoadedCount >= totalAudioFiles) {
-          setIsAudioReady(true);
-        }
-      };
-
       // Create audio elements
       themeAudioRef.current = new Audio('/bgm/theme_music.mp3');
       themeAudioRef.current.loop = true;
       themeAudioRef.current.volume = 0.3;
-      themeAudioRef.current.addEventListener('canplaythrough', checkAllAudioReady, { once: true });
 
       quizAudioRef.current = new Audio('/bgm/quiz.mp3');
       quizAudioRef.current.loop = true;
       quizAudioRef.current.volume = 0.3;
-      quizAudioRef.current.addEventListener('canplaythrough', checkAllAudioReady, { once: true });
 
       quizResultAudioRef.current = new Audio('/bgm/quiz_result.mp3');
       quizResultAudioRef.current.loop = true;
       quizResultAudioRef.current.volume = 0.3;
-      quizResultAudioRef.current.addEventListener('canplaythrough', checkAllAudioReady, { once: true });
 
       correctSoundRef.current = new Audio('/bgm/quiz_correct.mp3');
       correctSoundRef.current.volume = 0.5;
@@ -81,15 +68,9 @@ export function BGMProvider({ children }: { children: ReactNode }) {
       }
 
       setIsInitialized(true);
-      
-      // Fallback: set audio ready after 3 seconds if not loaded
-      const fallbackTimer = setTimeout(() => {
-        setIsAudioReady(true);
-      }, 3000);
 
       // Cleanup on unmount
       return () => {
-        clearTimeout(fallbackTimer);
         themeAudioRef.current?.pause();
         quizAudioRef.current?.pause();
         quizResultAudioRef.current?.pause();
@@ -98,15 +79,22 @@ export function BGMProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Auto-start theme music when initialized and sound is enabled
+  // Mark as ready only after theme music successfully starts playing
   useEffect(() => {
     if (isInitialized && isSoundEnabled && currentMusic === 'none') {
       // Auto-play theme music on first user interaction
       const handleFirstInteraction = () => {
         if (themeAudioRef.current && isSoundEnabled && currentMusic === 'none') {
-          themeAudioRef.current.play().catch(() => {
-            // Autoplay may be blocked, that's okay
-          });
-          setCurrentMusic('theme');
+          // Try to play and mark ready only on success
+          themeAudioRef.current.play()
+            .then(() => {
+              setCurrentMusic('theme');
+              setIsAudioReady(true);
+            })
+            .catch(() => {
+              // Autoplay blocked - still mark as ready so user can continue
+              setIsAudioReady(true);
+            });
         }
         document.removeEventListener('click', handleFirstInteraction);
         document.removeEventListener('keydown', handleFirstInteraction);
@@ -116,8 +104,16 @@ export function BGMProvider({ children }: { children: ReactNode }) {
       document.addEventListener('click', handleFirstInteraction);
       document.addEventListener('keydown', handleFirstInteraction);
       document.addEventListener('touchstart', handleFirstInteraction);
+      
+      // Fallback: set audio ready after 5 seconds if no interaction
+      const fallbackTimer = setTimeout(() => {
+        if (!isAudioReady) {
+          setIsAudioReady(true);
+        }
+      }, 5000);
 
       return () => {
+        clearTimeout(fallbackTimer);
         document.removeEventListener('click', handleFirstInteraction);
         document.removeEventListener('keydown', handleFirstInteraction);
         document.removeEventListener('touchstart', handleFirstInteraction);
