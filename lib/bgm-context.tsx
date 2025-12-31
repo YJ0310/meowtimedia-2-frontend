@@ -1,0 +1,224 @@
+'use client';
+
+import { createContext, useContext, useState, useEffect, useRef, ReactNode, useCallback } from 'react';
+
+type MusicType = 'theme' | 'quiz' | 'quiz_result' | 'none';
+
+interface BGMContextType {
+  // Sound settings
+  isSoundEnabled: boolean;
+  toggleSound: () => void;
+  
+  // Music control
+  currentMusic: MusicType;
+  playThemeMusic: () => void;
+  playQuizMusic: () => void;
+  playQuizResultMusic: () => void;
+  stopMusic: () => void;
+  
+  // Sound effects (play over background music)
+  playCorrectSound: () => void;
+  playWrongSound: () => void;
+}
+
+const BGMContext = createContext<BGMContextType | undefined>(undefined);
+
+export function BGMProvider({ children }: { children: ReactNode }) {
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const [currentMusic, setCurrentMusic] = useState<MusicType>('none');
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Audio refs - using refs to persist across renders
+  const themeAudioRef = useRef<HTMLAudioElement | null>(null);
+  const quizAudioRef = useRef<HTMLAudioElement | null>(null);
+  const quizResultAudioRef = useRef<HTMLAudioElement | null>(null);
+  const correctSoundRef = useRef<HTMLAudioElement | null>(null);
+  const wrongSoundRef = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize audio elements on client side
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Create audio elements
+      themeAudioRef.current = new Audio('/bgm/theme_music.mp3');
+      themeAudioRef.current.loop = true;
+      themeAudioRef.current.volume = 0.3;
+
+      quizAudioRef.current = new Audio('/bgm/quiz.mp3');
+      quizAudioRef.current.loop = true;
+      quizAudioRef.current.volume = 0.3;
+
+      quizResultAudioRef.current = new Audio('/bgm/quiz_result.mp3');
+      quizResultAudioRef.current.loop = true;
+      quizResultAudioRef.current.volume = 0.3;
+
+      correctSoundRef.current = new Audio('/bgm/quiz_correct.mp3');
+      correctSoundRef.current.volume = 0.5;
+
+      wrongSoundRef.current = new Audio('/bgm/quiz_wrong.mp3');
+      wrongSoundRef.current.volume = 0.5;
+
+      // Load sound preference from localStorage
+      const savedSoundPref = localStorage.getItem('soundEnabled');
+      if (savedSoundPref !== null) {
+        setIsSoundEnabled(savedSoundPref === 'true');
+      }
+
+      setIsInitialized(true);
+
+      // Cleanup on unmount
+      return () => {
+        themeAudioRef.current?.pause();
+        quizAudioRef.current?.pause();
+        quizResultAudioRef.current?.pause();
+      };
+    }
+  }, []);
+
+  // Auto-start theme music when initialized and sound is enabled
+  useEffect(() => {
+    if (isInitialized && isSoundEnabled && currentMusic === 'none') {
+      // Auto-play theme music on first user interaction
+      const handleFirstInteraction = () => {
+        if (themeAudioRef.current && isSoundEnabled && currentMusic === 'none') {
+          themeAudioRef.current.play().catch(() => {
+            // Autoplay may be blocked, that's okay
+          });
+          setCurrentMusic('theme');
+        }
+        document.removeEventListener('click', handleFirstInteraction);
+        document.removeEventListener('keydown', handleFirstInteraction);
+        document.removeEventListener('touchstart', handleFirstInteraction);
+      };
+
+      document.addEventListener('click', handleFirstInteraction);
+      document.addEventListener('keydown', handleFirstInteraction);
+      document.addEventListener('touchstart', handleFirstInteraction);
+
+      return () => {
+        document.removeEventListener('click', handleFirstInteraction);
+        document.removeEventListener('keydown', handleFirstInteraction);
+        document.removeEventListener('touchstart', handleFirstInteraction);
+      };
+    }
+  }, [isInitialized, isSoundEnabled, currentMusic]);
+
+  // Handle sound toggle
+  useEffect(() => {
+    if (!isInitialized) return;
+
+    if (!isSoundEnabled) {
+      // Pause all music when sound is disabled
+      themeAudioRef.current?.pause();
+      quizAudioRef.current?.pause();
+      quizResultAudioRef.current?.pause();
+    } else {
+      // Resume current music when sound is enabled
+      if (currentMusic === 'theme') {
+        themeAudioRef.current?.play().catch(() => {});
+      } else if (currentMusic === 'quiz') {
+        quizAudioRef.current?.play().catch(() => {});
+      } else if (currentMusic === 'quiz_result') {
+        quizResultAudioRef.current?.play().catch(() => {});
+      }
+    }
+  }, [isSoundEnabled, isInitialized, currentMusic]);
+
+  const toggleSound = useCallback(() => {
+    const newValue = !isSoundEnabled;
+    setIsSoundEnabled(newValue);
+    localStorage.setItem('soundEnabled', String(newValue));
+  }, [isSoundEnabled]);
+
+  const stopAllMusic = useCallback(() => {
+    themeAudioRef.current?.pause();
+    quizAudioRef.current?.pause();
+    quizResultAudioRef.current?.pause();
+    
+    // Reset to beginning
+    if (themeAudioRef.current) themeAudioRef.current.currentTime = 0;
+    if (quizAudioRef.current) quizAudioRef.current.currentTime = 0;
+    if (quizResultAudioRef.current) quizResultAudioRef.current.currentTime = 0;
+  }, []);
+
+  const playThemeMusic = useCallback(() => {
+    if (!isInitialized) return;
+    
+    stopAllMusic();
+    setCurrentMusic('theme');
+    
+    if (isSoundEnabled && themeAudioRef.current) {
+      themeAudioRef.current.play().catch(() => {});
+    }
+  }, [isInitialized, isSoundEnabled, stopAllMusic]);
+
+  const playQuizMusic = useCallback(() => {
+    if (!isInitialized) return;
+    
+    stopAllMusic();
+    setCurrentMusic('quiz');
+    
+    if (isSoundEnabled && quizAudioRef.current) {
+      quizAudioRef.current.play().catch(() => {});
+    }
+  }, [isInitialized, isSoundEnabled, stopAllMusic]);
+
+  const playQuizResultMusic = useCallback(() => {
+    if (!isInitialized) return;
+    
+    stopAllMusic();
+    setCurrentMusic('quiz_result');
+    
+    if (isSoundEnabled && quizResultAudioRef.current) {
+      quizResultAudioRef.current.play().catch(() => {});
+    }
+  }, [isInitialized, isSoundEnabled, stopAllMusic]);
+
+  const stopMusic = useCallback(() => {
+    stopAllMusic();
+    setCurrentMusic('none');
+  }, [stopAllMusic]);
+
+  const playCorrectSound = useCallback(() => {
+    if (!isInitialized || !isSoundEnabled) return;
+    
+    if (correctSoundRef.current) {
+      correctSoundRef.current.currentTime = 0;
+      correctSoundRef.current.play().catch(() => {});
+    }
+  }, [isInitialized, isSoundEnabled]);
+
+  const playWrongSound = useCallback(() => {
+    if (!isInitialized || !isSoundEnabled) return;
+    
+    if (wrongSoundRef.current) {
+      wrongSoundRef.current.currentTime = 0;
+      wrongSoundRef.current.play().catch(() => {});
+    }
+  }, [isInitialized, isSoundEnabled]);
+
+  return (
+    <BGMContext.Provider
+      value={{
+        isSoundEnabled,
+        toggleSound,
+        currentMusic,
+        playThemeMusic,
+        playQuizMusic,
+        playQuizResultMusic,
+        stopMusic,
+        playCorrectSound,
+        playWrongSound,
+      }}
+    >
+      {children}
+    </BGMContext.Provider>
+  );
+}
+
+export function useBGM() {
+  const context = useContext(BGMContext);
+  if (context === undefined) {
+    throw new Error('useBGM must be used within a BGMProvider');
+  }
+  return context;
+}

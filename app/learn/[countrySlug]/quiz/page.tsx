@@ -8,6 +8,7 @@ import { ArrowLeft, Check, X, Loader2, Trophy, RotateCcw, Home } from 'lucide-re
 import confetti from 'canvas-confetti';
 import { countries } from '@/lib/mock-data';
 import { useAuth } from '@/lib/auth-context';
+import { useBGM } from '@/lib/bgm-context';
 import GlobalLoading from '@/components/global-loading';
 
 const API_URL = "https://api.meowtimap.smoltako.space";
@@ -26,6 +27,7 @@ export default function QuizPage({
   params: Promise<{ countrySlug: string }> 
 }) {
   const { user, isLoading: authLoading, checkAuth } = useAuth();
+  const { stopMusic, playQuizMusic, playQuizResultMusic, playThemeMusic, playCorrectSound, playWrongSound } = useBGM();
   const router = useRouter();
   const resolvedParams = use(params);
   
@@ -53,6 +55,9 @@ export default function QuizPage({
         setIsLoading(true);
         setError(null);
         
+        // Stop theme music during loading
+        stopMusic();
+        
         const response = await fetch(`${API_URL}/country/${resolvedParams.countrySlug}/quiz`, {
           credentials: 'include',
         });
@@ -64,11 +69,15 @@ export default function QuizPage({
         const data = await response.json();
         if (data.success && data.questions && data.questions.length > 0) {
           setQuestions(data.questions);
+          // Start quiz music after loading
+          playQuizMusic();
         } else {
           throw new Error('No quiz questions available for this country');
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load quiz');
+        // If error, resume theme music
+        playThemeMusic();
       } finally {
         setIsLoading(false);
       }
@@ -77,12 +86,21 @@ export default function QuizPage({
     if (resolvedParams.countrySlug) {
       fetchQuiz();
     }
-  }, [resolvedParams.countrySlug]);
+    
+    // Cleanup: resume theme music when leaving quiz
+    return () => {
+      playThemeMusic();
+    };
+  }, [resolvedParams.countrySlug, stopMusic, playQuizMusic, playThemeMusic]);
 
   // Submit quiz results to backend
   const submitResults = useCallback(async (finalScore: number) => {
     try {
       setIsSubmitting(true);
+      
+      // Switch to quiz result music
+      playQuizResultMusic();
+      
       const response = await fetch(`${API_URL}/country/${resolvedParams.countrySlug}/update`, {
         method: 'POST',
         headers: {
@@ -109,7 +127,7 @@ export default function QuizPage({
       setIsSubmitting(false);
       setResultsReady(true); // Mark results as ready to show
     }
-  }, [resolvedParams.countrySlug, totalQuestions, checkAuth]);
+  }, [resolvedParams.countrySlug, totalQuestions, checkAuth, playQuizResultMusic]);
 
   // Trigger confetti effect
   const triggerConfetti = useCallback(() => {
@@ -154,6 +172,9 @@ export default function QuizPage({
     
     if (isCorrect) {
       setScore(newScore);
+      playCorrectSound();
+    } else {
+      playWrongSound();
     }
     setShowFeedback(true);
 
@@ -185,6 +206,10 @@ export default function QuizPage({
     setQuizComplete(false);
     setStampAwarded(false);
     setResultsReady(false);
+    
+    // Restart quiz music
+    playQuizMusic();
+    
     // Re-fetch questions to get new random set
     setIsLoading(true);
     fetch(`${API_URL}/country/${resolvedParams.countrySlug}/quiz`, { credentials: 'include' })

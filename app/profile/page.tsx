@@ -2,12 +2,14 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Check, X, ZoomIn, ZoomOut, RotateCw, Save, LogOut, Loader2 } from 'lucide-react';
+import { Camera, Check, X, ZoomIn, ZoomOut, RotateCw, Save, LogOut, Loader2, Volume2, VolumeX } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
+import { useBGM } from '@/lib/bgm-context';
 
 export default function ProfilePage() {
   const { user, isLoading: authLoading, logout } = useAuth();
+  const { isSoundEnabled, toggleSound } = useBGM();
   const [image, setImage] = useState<string>('');
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -21,7 +23,6 @@ export default function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cropAreaRef = useRef<HTMLDivElement>(null);
   const [showToast, setShowToast] = useState(true);
-  const [isWindows, setIsWindows] = useState(false);
 
   // Set image from user's Google avatar
   useEffect(() => {
@@ -29,11 +30,6 @@ export default function ProfilePage() {
       setImage(user.avatar);
     }
   }, [user]);
-
-  // Detect OS for toast positioning
-  useEffect(() => {
-    setIsWindows(navigator.platform.toLowerCase().includes('win'));
-  }, []);
 
   // Auto-hide toast after 4 seconds
   useEffect(() => {
@@ -154,7 +150,7 @@ export default function ProfilePage() {
         rounded-2xl shadow-2xl flex items-center gap-3 md:gap-4 
         border border-white/30 dark:border-white/10 
         max-w-[90vw] md:max-w-md 
-        ${isWindows ? "top-20" : "top-4"}`}
+        top-20`}
                 >
                   <motion.img 
                     src={user.avatar} 
@@ -200,6 +196,43 @@ export default function ProfilePage() {
               <div className="space-y-2">
                 <h2 className="text-2xl font-bold">{user.displayName}</h2>
                 <p className="text-black dark:text-white">{user.email}</p>
+              </div>
+
+              {/* Sound Toggle */}
+              <div className="flex items-center justify-center gap-4 py-4">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={toggleSound}
+                  className={`flex items-center gap-3 px-6 py-3 rounded-xl font-semibold transition-all ${
+                    isSoundEnabled 
+                      ? 'glass bg-primary/10 border border-primary/30' 
+                      : 'glass border border-gray-300 dark:border-gray-600'
+                  }`}
+                >
+                  {isSoundEnabled ? (
+                    <>
+                      <Volume2 className="w-5 h-5 text-primary" />
+                      <span className="text-black dark:text-white">Sound On</span>
+                    </>
+                  ) : (
+                    <>
+                      <VolumeX className="w-5 h-5 text-gray-500" />
+                      <span className="text-gray-500">Sound Off</span>
+                    </>
+                  )}
+                  <div 
+                    className={`w-12 h-6 rounded-full p-1 transition-colors ${
+                      isSoundEnabled ? 'bg-primary' : 'bg-gray-300 dark:bg-gray-600'
+                    }`}
+                  >
+                    <motion.div
+                      className="w-4 h-4 rounded-full bg-white shadow-md"
+                      animate={{ x: isSoundEnabled ? 24 : 0 }}
+                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    />
+                  </div>
+                </motion.button>
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

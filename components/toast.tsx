@@ -102,8 +102,9 @@ export function ToastContainer({ toasts, onRemove }: ToastContainerProps) {
     setIsWindows(navigator.platform.toLowerCase().includes('win'));
   }, []);
 
+  // Always position below navbar (top-20 = 80px which accounts for navbar height + buffer)
   return (
-    <div className={`fixed left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 ${isWindows ? 'top-20' : 'top-4'}`}>
+    <div className="fixed left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 top-20">
       <LayoutGroup>
         <AnimatePresence mode="popLayout">
           {toasts.map((toast) => (
