@@ -63,8 +63,12 @@ export function BGMProvider({ children }: { children: ReactNode }) {
 
       // Load sound preference from localStorage
       const savedSoundPref = localStorage.getItem('soundEnabled');
-      if (savedSoundPref !== null) {
-        setIsSoundEnabled(savedSoundPref === 'true');
+      const soundEnabled = savedSoundPref !== null ? savedSoundPref === 'true' : true;
+      setIsSoundEnabled(soundEnabled);
+      
+      // If sound is disabled, mark as ready immediately
+      if (!soundEnabled) {
+        setIsAudioReady(true);
       }
 
       setIsInitialized(true);
@@ -81,7 +85,12 @@ export function BGMProvider({ children }: { children: ReactNode }) {
   // Auto-start theme music when initialized and sound is enabled
   // Mark as ready only after theme music successfully starts playing
   useEffect(() => {
-    if (isInitialized && isSoundEnabled && currentMusic === 'none') {
+    // Skip if sound is disabled - already marked ready in init
+    if (!isSoundEnabled) {
+      return;
+    }
+    
+    if (isInitialized && isSoundEnabled && currentMusic === 'none' && !isAudioReady) {
       // Auto-play theme music on first user interaction
       const handleFirstInteraction = () => {
         if (themeAudioRef.current && isSoundEnabled && currentMusic === 'none') {
