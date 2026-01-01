@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ArrowLeft, PartyPopper, UtensilsCrossed, Lightbulb, HelpCircle } from 'lucide-react';
 import { countries } from '@/lib/mock-data';
 import { useAuth, CountryProgress } from '@/lib/auth-context';
+import { useBGM } from '@/lib/bgm-context';
 import GlobalLoading from '@/components/global-loading';
 import ContentCard from '@/components/content-card';
 import QuizCard from '@/components/quiz-card';
@@ -39,6 +40,7 @@ const tabConfig = {
 
 export default function CountryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { user, isLoading: authLoading } = useAuth();
+  const { startExperience, isAudioReady } = useBGM();
   const resolvedParams = use(params);
   const [activeTab, setActiveTab] = useState<TabType>('festival');
   const [countryData, setCountryData] = useState<CountryData | null>(null);
@@ -47,6 +49,13 @@ export default function CountryPage({ params }: { params: Promise<{ slug: string
   const [totalQuestions, setTotalQuestions] = useState(10);
   
   const country = countries.find(c => c.slug === resolvedParams.slug);
+
+  // Start music on any click if not already started
+  const handlePageClick = () => {
+    if (!isAudioReady) {
+      startExperience();
+    }
+  };
 
   // Fetch country content from API
   useEffect(() => {
@@ -214,7 +223,7 @@ export default function CountryPage({ params }: { params: Promise<{ slug: string
   };
 
   return (
-    <div className="min-h-screen bg-gradient-soft">
+    <div className="min-h-screen bg-gradient-soft" onClick={handlePageClick}>
       {/* Left Side Dock - Desktop */}
       <motion.aside
         initial={{ x: -100, opacity: 0 }}

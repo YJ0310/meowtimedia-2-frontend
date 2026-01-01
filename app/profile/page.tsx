@@ -22,7 +22,7 @@ import GlobalLoading from "@/components/global-loading";
 
 export default function ProfilePage() {
   const { user, isLoading: authLoading, logout } = useAuth();
-  const { isSoundEnabled, toggleSound, isAudioReady } = useBGM();
+  const { isSoundEnabled, toggleSound, startExperience, isAudioReady } = useBGM();
   const [image, setImage] = useState<string>("");
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -33,6 +33,13 @@ export default function ProfilePage() {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // Start music on any click if not already started
+  const handlePageClick = () => {
+    if (!isAudioReady) {
+      startExperience();
+    }
+  };
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cropAreaRef = useRef<HTMLDivElement>(null);
   const [showToast, setShowToast] = useState(true);
@@ -95,14 +102,13 @@ export default function ProfilePage() {
     setIsDragging(false);
   }, []);
 
-  // Show loading while checking auth or waiting for audio
-  if (authLoading || !isAudioReady) {
+  // Show loading while checking auth
+  if (authLoading) {
     return (
       <GlobalLoading
         isLoading={true}
         title="Loading Profile"
         subtitle="Loading your profile..."
-        showStartButton={!authLoading}
       />
     );
   }
@@ -147,7 +153,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="fixed inset-0 bg-gradient-soft dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 px-4">
+    <div className="fixed inset-0 bg-gradient-soft dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-8 px-4" onClick={handlePageClick}>
       <div className="py-10 max-w-2xl mx-auto">
         {/* Header */}
         {/* Profile Toast Notification */}

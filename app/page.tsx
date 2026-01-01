@@ -5,14 +5,23 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
+import { useBGM } from '@/lib/bgm-context';
 import { ToastContainer, useToast } from '@/components/toast';
 import GlobalLoading from '@/components/global-loading';
 
 export default function Home() {
   const router = useRouter();
   const { login, isAuthenticated, showAuthToast, setShowAuthToast } = useAuth();
+  const { startExperience, isAudioReady } = useBGM();
   const [isLoading, setIsLoading] = useState(false);
   const { toasts, removeToast, warning } = useToast();
+
+  // Start music on any click if not already started
+  const handlePageClick = () => {
+    if (!isAudioReady) {
+      startExperience();
+    }
+  };
 
   // Show auth toast when triggered
   useEffect(() => {
@@ -30,6 +39,9 @@ export default function Home() {
   }, [isAuthenticated, router]);
 
   const handleBeginJourney = () => {
+    // Start music on first user interaction (this unlocks audio on iOS/browsers)
+    startExperience();
+    
     setIsLoading(true);
     // Show loading animation briefly then redirect to Google OAuth
     setTimeout(() => {
@@ -45,7 +57,7 @@ export default function Home() {
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onRemove={removeToast} hasNavbar={false} />
 
-      <div className="min-h-screen relative overflow-hidden">
+      <div className="min-h-screen relative overflow-hidden" onClick={handlePageClick}>
       {/* Animated Background */}
       <div className="fixed inset-0 gradient-soft opacity-40" />
       

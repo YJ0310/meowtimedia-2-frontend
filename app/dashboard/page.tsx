@@ -13,6 +13,7 @@ import {
 } from "react-simple-maps";
 import { countries } from "@/lib/mock-data";
 import { useAuth, CountryProgress } from "@/lib/auth-context";
+import { useBGM } from "@/lib/bgm-context";
 import { ToastContainer, useToast } from "@/components/toast";
 import GlobalLoading from "@/components/global-loading";
 import FunFactReactions from "@/components/funfact-reactions";
@@ -92,6 +93,7 @@ const countryComments = {
 
 export default function DashboardPage() {
   const { user, isLoading: authLoading } = useAuth();
+  const { startExperience, isAudioReady } = useBGM();
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -113,6 +115,13 @@ export default function DashboardPage() {
   const [greeting, setGreeting] = useState("");
   const [showTutorial, setShowTutorial] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
+
+  // Start music on any click if not already started
+  const handlePageClick = () => {
+    if (!isAudioReady) {
+      startExperience();
+    }
+  };
 
   const country = selectedCountry
     ? countries.find((c) => c.slug === selectedCountry)
@@ -339,7 +348,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="h-screen w-screen fixed inset-0 overflow-hidden bg-gradient-soft dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="h-screen w-screen fixed inset-0 overflow-hidden bg-gradient-soft dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900" onClick={handlePageClick}>
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <div

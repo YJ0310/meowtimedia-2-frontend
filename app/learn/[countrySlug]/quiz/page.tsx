@@ -27,9 +27,16 @@ export default function QuizPage({
   params: Promise<{ countrySlug: string }> 
 }) {
   const { user, isLoading: authLoading, checkAuth } = useAuth();
-  const { stopMusic, playQuizMusic, playQuizResultMusic, playThemeMusic, playCorrectSound, playWrongSound } = useBGM();
+  const { stopMusic, playQuizMusic, playQuizResultMusic, playThemeMusic, playCorrectSound, playWrongSound, startExperience, isAudioReady } = useBGM();
   const router = useRouter();
   const resolvedParams = use(params);
+  
+  // Start music on any click if not already started
+  const handlePageClick = () => {
+    if (!isAudioReady) {
+      startExperience();
+    }
+  };
   
   // Quiz state
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
@@ -275,7 +282,7 @@ export default function QuizPage({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-soft">
+    <div className="min-h-screen bg-gradient-soft" onClick={handlePageClick}>
       <div className="container mx-auto px-4 py-8 max-w-2xl">
         {/* Header */}
         <motion.div

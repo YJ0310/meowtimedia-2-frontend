@@ -8,6 +8,7 @@ import { ArrowLeft, Check, X, Loader2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { countries, topics, lessons } from '@/lib/mock-data';
 import { useAuth } from '@/lib/auth-context';
+import { useBGM } from '@/lib/bgm-context';
 
 export default function LessonPage({ 
   params 
@@ -15,6 +16,7 @@ export default function LessonPage({
   params: Promise<{ countrySlug: string; topicSlug: string }> 
 }) {
   const { user, isLoading: authLoading } = useAuth();
+  const { startExperience, isAudioReady } = useBGM();
   const router = useRouter();
   const resolvedParams = use(params);
   const [quizStarted, setQuizStarted] = useState(false);
@@ -23,6 +25,13 @@ export default function LessonPage({
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [quizComplete, setQuizComplete] = useState(false);
+
+  // Start music on any click if not already started
+  const handlePageClick = () => {
+    if (!isAudioReady) {
+      startExperience();
+    }
+  };
 
   const lessonKey = `${resolvedParams.countrySlug}-${resolvedParams.topicSlug}`;
   const lesson = lessons[lessonKey];
@@ -122,7 +131,7 @@ export default function LessonPage({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-soft">
+    <div className="min-h-screen bg-gradient-soft" onClick={handlePageClick}>
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         {/* Header */}
         <motion.div

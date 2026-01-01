@@ -9,6 +9,7 @@ import {
 } from "framer-motion";
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { useAuth, CountryProgress } from "@/lib/auth-context";
+import { useBGM } from "@/lib/bgm-context";
 import { ToastContainer, useToast } from "@/components/toast";
 import GlobalLoading from "@/components/global-loading";
 
@@ -53,6 +54,7 @@ interface PassportStamp {
 
 export default function PassportPage() {
   const { user, isLoading: authLoading } = useAuth();
+  const { startExperience, isAudioReady } = useBGM();
   const [currentPage, setCurrentPage] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
@@ -61,6 +63,13 @@ export default function PassportPage() {
     Object.keys(COUNTRY_CONFIG).length
   ); // Default to config length
   const { toasts, removeToast, info } = useToast();
+
+  // Start music on any click if not already started
+  const handlePageClick = () => {
+    if (!isAudioReady) {
+      startExperience();
+    }
+  };
 
   // Fetch total countries from backend
   useEffect(() => {
@@ -521,7 +530,7 @@ export default function PassportPage() {
   };
 
   return (
-    <div className="h-screen bg-gradient-soft flex flex-col overflow-hidden">
+    <div className="h-screen bg-gradient-soft flex flex-col overflow-hidden" onClick={handlePageClick}>
       {/* Toast Container */}
       <ToastContainer toasts={toasts} onRemove={removeToast} hasNavbar={true} />
 
