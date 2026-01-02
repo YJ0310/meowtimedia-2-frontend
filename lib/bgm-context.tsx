@@ -29,7 +29,7 @@ interface BGMContextType {
 const BGMContext = createContext<BGMContextType | undefined>(undefined);
 
 export function BGMProvider({ children }: { children: ReactNode }) {
-  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(false);
   const [currentMusic, setCurrentMusic] = useState<MusicType>('none');
   const [isInitialized, setIsInitialized] = useState(false);
   const [isAudioReady, setIsAudioReady] = useState(false);
@@ -73,7 +73,7 @@ export function BGMProvider({ children }: { children: ReactNode }) {
 
       // Load sound preference from localStorage
       const savedSoundPref = localStorage.getItem('soundEnabled');
-      const soundEnabled = savedSoundPref !== null ? savedSoundPref === 'true' : true;
+      const soundEnabled = savedSoundPref !== null ? savedSoundPref === 'true' : false;
       setIsSoundEnabled(soundEnabled);
       
       // If sound is disabled, mark as ready immediately (no need to wait for audio)

@@ -17,6 +17,7 @@ import { useBGM } from "@/lib/bgm-context";
 import { ToastContainer, useToast } from "@/components/toast";
 import GlobalLoading from "@/components/global-loading";
 import FunFactReactions from "@/components/funfact-reactions";
+import { Volume2, VolumeX } from "lucide-react";
 
 const geoUrl = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json";
 
@@ -93,7 +94,7 @@ const countryComments = {
 
 export default function DashboardPage() {
   const { user, isLoading: authLoading } = useAuth();
-  const { startExperience, isAudioReady } = useBGM();
+  const { startExperience, isAudioReady, isSoundEnabled, toggleSound } = useBGM();
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -281,13 +282,31 @@ export default function DashboardPage() {
   }, [user, authLoading]);
 
   const handleTutorialNext = () => {
-    if (tutorialStep < 3) {
+    if (tutorialStep < 4) {
       setTutorialStep(tutorialStep + 1);
     } else {
       setShowTutorial(false);
       if (user) {
         localStorage.setItem(`tutorial_seen_${user.id}`, 'true');
       }
+    }
+  };
+
+  const handleEnableSound = () => {
+    if (!isSoundEnabled) {
+      toggleSound();
+    }
+    startExperience();
+    setShowTutorial(false);
+    if (user) {
+      localStorage.setItem(`tutorial_seen_${user.id}`, 'true');
+    }
+  };
+
+  const handleSkipSound = () => {
+    setShowTutorial(false);
+    if (user) {
+      localStorage.setItem(`tutorial_seen_${user.id}`, 'true');
     }
   };
 
@@ -1114,7 +1133,7 @@ export default function DashboardPage() {
               {tutorialStep === 0 && (
                 <div className="text-center space-y-4">
                   <div className="text-6xl">🎉</div>
-                  <h2 className="text-2xl font-bold text-white dark:text-black">Welcome to Meowtimedia!</h2>
+                  <h2 className="text-2xl font-bold text-white dark:text-black">Welcome to Meowtimap!</h2>
                   <p className="text-white/80 dark:text-black/80">
                     Let&apos;s take a quick tour to help you get started on your Asian cultural adventure!
                   </p>
@@ -1143,44 +1162,89 @@ export default function DashboardPage() {
                   <div className="text-6xl">🐾</div>
                   <h2 className="text-2xl font-bold text-white dark:text-black">Collect Stamps!</h2>
                   <p className="text-white/80 dark:text-black/80">
-                    Score <span className="text-amber-500 font-semibold">80% or higher</span> on a quiz to earn that country&apos;s stamp! Fill your passport with stamps!
+                    Score <span className="text-amber-500 font-semibold">80% or higher</span> on a quiz to earn that country&apos;s stamp! View your collection in <span className="text-primary font-semibold">My Passport</span>.
                   </p>
                 </div>
               )}
+              {tutorialStep === 4 && (
+                <div className="text-center space-y-4">
+                  <motion.div 
+                    className="text-6xl"
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                  >
+                    🎵
+                  </motion.div>
+                  <h2 className="text-2xl font-bold text-white dark:text-black">Enable Sound?</h2>
+                  <p className="text-white/80 dark:text-black/80">
+                    Meowtimap has <span className="text-primary font-semibold">beautiful background music</span> and sound effects for a more immersive experience!
+                  </p>
+                  <div className="glass rounded-xl p-4 mt-4">
+                    <p className="text-sm text-white/60 dark:text-black/60">
+                      🔊 Theme music while exploring<br />
+                      🎮 Quiz music & sound effects<br />
+                      🎉 Celebration sounds
+                    </p>
+                  </div>
+                  
+                  {/* Sound choice buttons */}
+                  <div className="flex flex-col gap-3 mt-6">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleEnableSound}
+                      className="w-full py-4 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-bold text-lg shadow-lg flex items-center justify-center gap-3"
+                    >
+                      <Volume2 className="w-6 h-6" />
+                      Yes, Enable Sound! 🎵
+                    </motion.button>
+                    <button
+                      onClick={handleSkipSound}
+                      className="text-white/50 dark:text-black/50 text-sm hover:text-white/70 dark:hover:text-black/70 transition-colors py-2"
+                    >
+                      No thanks, I&apos;ll explore quietly
+                    </button>
+                  </div>
+                </div>
+              )}
 
-              {/* Progress Dots */}
-              <div className="flex justify-center gap-2 mt-6">
-                {[0, 1, 2, 3].map((step) => (
-                  <div
-                    key={step}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      step === tutorialStep
-                        ? 'bg-primary w-6'
-                        : step < tutorialStep
-                        ? 'bg-primary/50'
-                        : 'bg-white/30'
-                    }`}
-                  />
-                ))}
-              </div>
+              {/* Progress Dots - only show for steps 0-3 */}
+              {tutorialStep < 4 && (
+                <div className="flex justify-center gap-2 mt-6">
+                  {[0, 1, 2, 3, 4].map((step) => (
+                    <div
+                      key={step}
+                      className={`w-2 h-2 rounded-full transition-all ${
+                        step === tutorialStep
+                          ? 'bg-primary w-6'
+                          : step < tutorialStep
+                          ? 'bg-primary/50'
+                          : 'bg-white/30'
+                      }`}
+                    />
+                  ))}
+                </div>
+              )}
 
-              {/* Buttons */}
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={handleSkipTutorial}
-                  className="flex-1 py-3 rounded-xl border border-white/30 dark:border-white/10 text-white dark:text-black font-medium hover:bg-white/10 transition-colors"
-                >
-                  Skip
-                </button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={handleTutorialNext}
-                  className="flex-1 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold shadow-lg"
-                >
-                  {tutorialStep === 3 ? "Let's Go!" : 'Next'}
-                </motion.button>
-              </div>
+              {/* Buttons - hide on sound step (step 4) as it has its own buttons */}
+              {tutorialStep < 4 && (
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={handleSkipTutorial}
+                    className="flex-1 py-3 rounded-xl border border-white/30 dark:border-white/10 text-white dark:text-black font-medium hover:bg-white/10 transition-colors"
+                  >
+                    Skip
+                  </button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleTutorialNext}
+                    className="flex-1 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-semibold shadow-lg"
+                  >
+                    Next
+                  </motion.button>
+                </div>
+              )}
             </motion.div>
           </motion.div>
         )}
