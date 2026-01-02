@@ -1127,14 +1127,14 @@ export default function DashboardPage() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white/20 dark:bg-black/40 backdrop-blur-xl border border-white/30 dark:border-white/10 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl"
+              className="bg-white/20 dark:bg-black/40 backdrop-blur-2xl backdrop-saturate-150 border border-white/30 dark:border-white/10 rounded-3xl p-6 md:p-8 max-w-md w-full shadow-2xl"
             >
               {/* Tutorial Steps */}
               {tutorialStep === 0 && (
                 <div className="text-center space-y-4">
                   <div className="text-6xl">🎉</div>
-                  <h2 className="text-2xl font-bold text-white dark:text-black">Welcome to Meowtimap!</h2>
-                  <p className="text-white/80 dark:text-black/80">
+                  <h2 className="text-2xl font-bold text-black dark:text-white">Welcome to Meowtimap!</h2>
+                  <p className="text-black/80 dark:text-white/80">
                     Let&apos;s take a quick tour to help you get started on your Asian cultural adventure!
                   </p>
                 </div>
@@ -1142,8 +1142,8 @@ export default function DashboardPage() {
               {tutorialStep === 1 && (
                 <div className="text-center space-y-4">
                   <div className="text-6xl">🗺️</div>
-                  <h2 className="text-2xl font-bold text-white dark:text-black">Explore the Map</h2>
-                  <p className="text-white/80 dark:text-black/80">
+                  <h2 className="text-2xl font-bold text-black dark:text-white">Explore the Map</h2>
+                  <p className="text-black/80 dark:text-white/80">
                     Click on any <span className="text-primary font-semibold">country pin</span> on the map to learn about its culture, food, and traditions!
                   </p>
                 </div>
@@ -1151,8 +1151,8 @@ export default function DashboardPage() {
               {tutorialStep === 2 && (
                 <div className="text-center space-y-4">
                   <div className="text-6xl">📚</div>
-                  <h2 className="text-2xl font-bold text-white dark:text-black">Learn & Quiz</h2>
-                  <p className="text-white/80 dark:text-black/80">
+                  <h2 className="text-2xl font-bold text-black dark:text-white">Learn & Quiz</h2>
+                  <p className="text-black/80 dark:text-white/80">
                     Each country has fun facts and topics to explore. Take the <span className="text-primary font-semibold">quiz</span> to test your knowledge!
                   </p>
                 </div>
@@ -1160,8 +1160,8 @@ export default function DashboardPage() {
               {tutorialStep === 3 && (
                 <div className="text-center space-y-4">
                   <div className="text-6xl">🐾</div>
-                  <h2 className="text-2xl font-bold text-white dark:text-black">Collect Stamps!</h2>
-                  <p className="text-white/80 dark:text-black/80">
+                  <h2 className="text-2xl font-bold text-black dark:text-white">Collect Stamps!</h2>
+                  <p className="text-black/80 dark:text-white/80">
                     Score <span className="text-amber-500 font-semibold">80% or higher</span> on a quiz to earn that country&apos;s stamp! View your collection in <span className="text-primary font-semibold">My Passport</span>.
                   </p>
                 </div>
@@ -1175,12 +1175,12 @@ export default function DashboardPage() {
                   >
                     🎵
                   </motion.div>
-                  <h2 className="text-2xl font-bold text-white dark:text-black">Enable Sound?</h2>
-                  <p className="text-white/80 dark:text-black/80">
+                  <h2 className="text-2xl font-bold text-black dark:text-white">Enable Sound?</h2>
+                  <p className="text-black/80 dark:text-white/80">
                     Meowtimap has <span className="text-primary font-semibold">beautiful background music</span> and sound effects for a more immersive experience!
                   </p>
-                  <div className="glass rounded-xl p-4 mt-4">
-                    <p className="text-sm text-white/60 dark:text-black/60">
+                  <div className="bg-white/10 dark:bg-black/20 backdrop-blur-xl rounded-xl p-4 mt-4 border border-white/20 dark:border-white/10">
+                    <p className="text-sm text-black/60 dark:text-white/60">
                       🔊 Theme music while exploring<br />
                       🎮 Quiz music & sound effects<br />
                       🎉 Celebration sounds
@@ -1200,7 +1200,7 @@ export default function DashboardPage() {
                     </motion.button>
                     <button
                       onClick={handleSkipSound}
-                      className="text-white/50 dark:text-black/50 text-sm hover:text-white/70 dark:hover:text-black/70 transition-colors py-2"
+                      className="text-black/50 dark:text-white/50 text-sm hover:text-black/70 dark:hover:text-white/70 transition-colors py-2"
                     >
                       No thanks, I&apos;ll explore quietly
                     </button>
@@ -1231,7 +1231,7 @@ export default function DashboardPage() {
                 <div className="flex gap-3 mt-6">
                   <button
                     onClick={handleSkipTutorial}
-                    className="flex-1 py-3 rounded-xl border border-white/30 dark:border-white/10 text-white dark:text-black font-medium hover:bg-white/10 transition-colors"
+                    className="flex-1 py-3 rounded-xl border border-white/30 dark:border-white/10 text-black dark:text-white font-medium hover:bg-white/10 transition-colors"
                   >
                     Skip
                   </button>
