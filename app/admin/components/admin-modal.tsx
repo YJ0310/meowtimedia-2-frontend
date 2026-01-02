@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Infinity, ChevronDown } from "lucide-react";
 import { AdminUser, ModalType } from "../types";
@@ -15,20 +16,24 @@ interface AdminModalProps {
   modalSearchResults: AdminUser[];
   showPresetDropdown: boolean;
   isOwner: boolean;
+  selectedUsers: AdminUser[];
   setModalEmail: (email: string) => void;
   setModalName: (name: string) => void;
   setModalReason: (reason: string) => void;
   setModalPermanent: (permanent: boolean) => void;
   setModalExpiry: (expiry: string) => void;
   setShowPresetDropdown: (show: boolean) => void;
+  setSelectedUsers: (users: AdminUser[]) => void;
   resetModal: () => void;
   handleEmailSearch: (email: string) => void;
   selectUserFromSearch: (user: AdminUser) => void;
+  removeSelectedUser: (userId: string) => void;
   applyDurationPreset: (preset: typeof DURATION_PRESETS[0]) => void;
   handleAddAdmin: () => void;
   handleSuggestCandidate: () => void;
   handleApproveCandidate: () => void;
   handleEditExpiry: () => void;
+  warning: (title: string, message: string) => void;
 }
 
 export default function AdminModal({
@@ -41,20 +46,24 @@ export default function AdminModal({
   modalSearchResults,
   showPresetDropdown,
   isOwner,
+  selectedUsers,
   setModalEmail,
   setModalName,
   setModalReason,
   setModalPermanent,
   setModalExpiry,
   setShowPresetDropdown,
+  setSelectedUsers,
   resetModal,
   handleEmailSearch,
   selectUserFromSearch,
+  removeSelectedUser,
   applyDurationPreset,
   handleAddAdmin,
   handleSuggestCandidate,
   handleApproveCandidate,
   handleEditExpiry,
+  warning,
 }: AdminModalProps) {
   return (
     <AnimatePresence>
@@ -91,8 +100,81 @@ export default function AdminModal({
             </div>
 
             <div className="space-y-4">
-              {/* Email Search (for add/propose, not approve/editExpiry) */}
-              {modalType !== "approve" && modalType !== "editExpiry" && (
+              {/* Multi-Email Selection with Chips (for add, not propose/approve/editExpiry) */}
+              {modalType === "add" && (
+                <div className="relative">
+                  <label className="block text-sm font-semibold mb-2">
+                    Users <span className="text-red-500">*</span> 
+                    <span className="text-xs text-gray-500 ml-2">(Add multiple users like Gmail CC)</span>
+                  </label>
+                  
+                  {/* Selected Users Chips */}
+                  {selectedUsers.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2 p-2 bg-white/30 dark:bg-black/10 rounded-lg">
+                      {selectedUsers.map((user) => (
+                        <div
+                          key={user._id}
+                          className="flex items-center gap-2 bg-primary/20 text-primary px-3 py-1 rounded-full text-sm"
+                        >
+                          {user.avatar && (
+                            <img
+                              src={user.avatar}
+                              alt={user.displayName}
+                              className="w-5 h-5 rounded-full"
+                            />
+                          )}
+                          <span className="font-medium">{user.displayName}</span>
+                          <button
+                            onClick={() => removeSelectedUser(user._id)}
+                            className="hover:bg-primary/30 rounded-full p-0.5"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                    <input
+                      type="email"
+                      placeholder="Search user by email or name..."
+                      value={modalEmail}
+                      onChange={(e) => handleEmailSearch(e.target.value)}
+                      className="w-full p-3 pl-10 rounded-xl bg-white/50 dark:bg-black/20 border border-white/20"
+                    />
+                  </div>
+                  {modalSearchResults.length > 0 && (
+                    <div className="absolute z-10 w-full mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-white/20 max-h-48 overflow-y-auto">
+                      {modalSearchResults.map((u) => (
+                        <button
+                          key={u._id}
+                          onClick={() => selectUserFromSearch(u)}
+                          className="w-full p-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-left flex items-center gap-3"
+                        >
+                          {u.avatar && (
+                            <img
+                              src={u.avatar}
+                              alt={u.displayName}
+                              className="w-8 h-8 rounded-full"
+                            />
+                          )}
+                          <div>
+                            <p className="font-semibold text-sm">
+                              {u.displayName}
+                            </p>
+                            <p className="text-xs text-gray-500">{u.email}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Email Search (for propose, not add/approve/editExpiry) */}
+              {modalType === "propose" && (
                 <div className="relative">
                   <label className="block text-sm font-semibold mb-2">
                     Email <span className="text-red-500">*</span>
@@ -150,19 +232,21 @@ export default function AdminModal({
                 </div>
               )}
 
-              {/* Name (auto-filled) */}
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="Name (auto-filled)"
-                  value={modalName}
-                  readOnly
-                  className="w-full p-3 rounded-xl bg-gray-200 dark:bg-gray-700 border border-white/20 cursor-not-allowed"
-                />
-              </div>
+              {/* Name (auto-filled) - Show for propose, approve, editExpiry */}
+              {modalType !== "add" && (
+                <div>
+                  <label className="block text-sm font-semibold mb-2">
+                    Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Name (auto-filled)"
+                    value={modalName}
+                    readOnly
+                    className="w-full p-3 rounded-xl bg-gray-200 dark:bg-gray-700 border border-white/20 cursor-not-allowed"
+                  />
+                </div>
+              )}
 
               {/* Reason */}
               {modalType !== "editExpiry" && (

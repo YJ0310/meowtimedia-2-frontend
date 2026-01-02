@@ -41,6 +41,7 @@ export default function AdminPage() {
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
   const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
   const [showPresetDropdown, setShowPresetDropdown] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<AdminUser[]>([]); // For bulk add
 
   // Check authentication and permissions
   useEffect(() => {
@@ -179,8 +180,8 @@ export default function AdminPage() {
   };
 
   const handleAddAdmin = async () => {
-    if (!modalEmail || !modalReason) {
-      warning("Missing Fields", "Please fill in email and reason");
+    if (selectedUsers.length === 0) {
+      warning("No Users Selected", "Please select at least one user to add as admin");
       return;
     }
 
@@ -190,12 +191,6 @@ export default function AdminPage() {
     }
 
     try {
-      const targetUser = users.find((u) => u.email === modalEmail);
-      if (!targetUser) {
-        error("Not Found", "User not found");
-        return;
-      }
-
       let expiresIn: number | undefined = undefined;
       if (!modalPermanent && modalExpiry) {
         const expiryDate = new Date(modalExpiry);
@@ -204,11 +199,45 @@ export default function AdminPage() {
         expiresIn = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       }
 
-      await handleUpdateRole(targetUser._id, "admin", expiresIn);
+      // Bulk add admins
+      let successCount = 0;
+      let failCount = 0;
+
+      for (const targetUser of selectedUsers) {
+        try {
+          const res = await fetch(`${API_BASE_URL}/admin/users/${targetUser._id}/role`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ role: "admin", expiresIn }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            successCount++;
+          } else {
+            failCount++;
+          }
+        } catch (err) {
+          failCount++;
+          console.error(`Error adding admin for ${targetUser.email}:`, err);
+        }
+      }
+
+      if (successCount > 0) {
+        success(
+          "Bulk Add Complete", 
+          `Successfully added ${successCount} admin(s)${failCount > 0 ? `, ${failCount} failed` : ""}`
+        );
+      }
+      if (failCount > 0 && successCount === 0) {
+        error("Failed", "Failed to add admins");
+      }
+
       resetModal();
+      fetchUsers();
     } catch (err) {
-      error("Error", "Failed to add admin");
-      console.error("Error adding admin:", err);
+      error("Error", "Failed to add admins");
+      console.error("Error adding admins:", err);
     }
   };
 
@@ -330,6 +359,7 @@ export default function AdminPage() {
     setModalSearchResults([]);
     setSelectedCandidate(null);
     setSelectedAdmin(null);
+    setSelectedUsers([]); // Clear selected users
   };
 
   const handleEmailSearch = (email: string) => {
@@ -347,9 +377,24 @@ export default function AdminPage() {
   };
 
   const selectUserFromSearch = (selectedUser: AdminUser) => {
-    setModalEmail(selectedUser.email);
-    setModalName(selectedUser.displayName);
-    setModalSearchResults([]);
+    if (modalType === "add") {
+      // For bulk add - add to selectedUsers array if not already selected
+      const isAlreadySelected = selectedUsers.some(u => u._id === selectedUser._id);
+      if (!isAlreadySelected) {
+        setSelectedUsers([...selectedUsers, selectedUser]);
+      }
+      setModalEmail(""); // Clear search
+      setModalSearchResults([]);
+    } else {
+      // For propose - single user selection
+      setModalEmail(selectedUser.email);
+      setModalName(selectedUser.displayName);
+      setModalSearchResults([]);
+    }
+  };
+
+  const removeSelectedUser = (userId: string) => {
+    setSelectedUsers(selectedUsers.filter(u => u._id !== userId));
   };
 
   const applyDurationPreset = (preset: typeof DURATION_PRESETS[0]) => {
@@ -444,12 +489,15 @@ export default function AdminPage() {
           modalSearchResults={modalSearchResults}
           showPresetDropdown={showPresetDropdown}
           isOwner={isOwner}
+          selectedUsers={selectedUsers}
           setModalEmail={setModalEmail}
           setModalName={setModalName}
           setModalReason={setModalReason}
           setModalPermanent={setModalPermanent}
           setModalExpiry={setModalExpiry}
           setShowPresetDropdown={setShowPresetDropdown}
+          setSelectedUsers={setSelectedUsers}
+          removeSelectedUser={removeSelectedUser}
           resetModal={resetModal}
           handleEmailSearch={handleEmailSearch}
           selectUserFromSearch={selectUserFromSearch}
@@ -458,6 +506,7 @@ export default function AdminPage() {
           handleSuggestCandidate={handleSuggestCandidate}
           handleApproveCandidate={handleApproveCandidate}
           handleEditExpiry={handleEditExpiry}
+          warning={warning}
         />
 
         {/* Tab Content */}
