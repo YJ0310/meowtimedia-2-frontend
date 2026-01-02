@@ -37,6 +37,10 @@ interface FeedbackSummary {
   avgEaseOfUse: number;
   avgRecommendation: number;
   issues: { _id: string; count: number }[];
+  firstImpression: { _id: string; count: number }[];
+  referral: { _id: string; count: number }[];
+  easeOfUse: { _id: number; count: number }[];
+  recommendation: { _id: number; count: number }[];
 }
 
 interface Candidate {
@@ -78,7 +82,7 @@ export default function AdminPage() {
   }, [user, authLoading, router]);
 
   useEffect(() => {
-    if (user?.role === "owner" && activeTab === "users") {
+    if ((user?.role === "owner" || user?.role === "admin") && activeTab === "users") {
       fetchUsers();
     }
     if (user?.role === "owner" && activeTab === "candidates") {
@@ -202,45 +206,36 @@ export default function AdminPage() {
             <BarChart3 className="w-5 h-5" />
             Dashboard
           </button>
+          {(user.role === "owner" || user.role === "admin") && (
+            <button
+              onClick={() => setActiveTab("users")}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 ${
+                activeTab === "users"
+                  ? "bg-primary text-white shadow-lg"
+                  : "glass hover:bg-white/50 dark:hover:bg-white/10"
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              User Management
+            </button>
+          )}
           {user.role === "owner" && (
-            <>
-              <button
-                onClick={() => setActiveTab("users")}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 ${
-                  activeTab === "users"
-                    ? "bg-primary text-white shadow-lg"
-                    : "glass hover:bg-white/50 dark:hover:bg-white/10"
-                }`}
-              >
-                <Users className="w-5 h-5" />
-                User Management
-              </button>
-              <button
-                onClick={() => setActiveTab("candidates")}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 ${
-                  activeTab === "candidates"
-                    ? "bg-primary text-white shadow-lg"
-                    : "glass hover:bg-white/50 dark:hover:bg-white/10"
-                }`}
-              >
-                <UserPlus className="w-5 h-5" />
-                Candidates
-              </button>
-            </>
+            <button
+              onClick={() => setActiveTab("candidates")}
+              className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 ${
+                activeTab === "candidates"
+                  ? "bg-primary text-white shadow-lg"
+                  : "glass hover:bg-white/50 dark:hover:bg-white/10"
+              }`}
+            >
+              <UserPlus className="w-5 h-5" />
+              Candidates
+            </button>
           )}
         </div>
 
-        {/* Content */}
-        <div className="glass-strong rounded-3xl p-6 sm:p-8 min-h-[500px]">
-          {isLoadingData ? (
-            <div className="flex justify-center items-center h-64">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-            </div>
-          ) : (
-            <>
-              {/* Dashboard Tab */}
-              {activeTab === "dashboard" && summary && (
-                <div className="space-y-8">
+        {activeTab === "dashboard" && summary && (
+          <div className="space-y-8">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="glass p-6 rounded-2xl text-center">
                       <h3 className="text-lg font-semibold mb-2">Total Feedback</h3>
@@ -261,6 +256,92 @@ export default function AdminPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* First Impression */}
+                    <div className="glass p-6 rounded-2xl">
+                      <h3 className="text-xl font-bold mb-4">First Impressions</h3>
+                      <div className="space-y-3">
+                        {summary.firstImpression.map((item) => (
+                          <div key={item._id} className="space-y-1">
+                            <div className="flex justify-between text-sm">
+                              <span className="capitalize">{item._id}</span>
+                              <span className="font-bold">{item.count}</span>
+                            </div>
+                            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-primary" 
+                                style={{ width: `${(item.count / summary.total) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Referral */}
+                    <div className="glass p-6 rounded-2xl">
+                      <h3 className="text-xl font-bold mb-4">Referrals</h3>
+                      <div className="space-y-3">
+                        {summary.referral.map((item) => (
+                          <div key={item._id} className="space-y-1">
+                            <div className="flex justify-between text-sm">
+                              <span>{item._id}</span>
+                              <span className="font-bold">{item.count}</span>
+                            </div>
+                            <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-secondary" 
+                                style={{ width: `${(item.count / summary.total) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Ease of Use Distribution */}
+                    <div className="glass p-6 rounded-2xl">
+                      <h3 className="text-xl font-bold mb-4">Ease of Use (1-5)</h3>
+                      <div className="flex items-end justify-between h-40 gap-2">
+                        {[1, 2, 3, 4, 5].map((rating) => {
+                          const count = summary.easeOfUse.find(i => i._id === rating)?.count || 0;
+                          const percentage = summary.total > 0 ? (count / summary.total) * 100 : 0;
+                          return (
+                            <div key={rating} className="flex-1 flex flex-col items-center gap-2">
+                              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-t-lg relative flex-1">
+                                <div 
+                                  className="absolute bottom-0 left-0 right-0 bg-accent rounded-t-lg transition-all duration-500"
+                                  style={{ height: `${percentage}%` }}
+                                />
+                              </div>
+                              <span className="font-bold">{rating}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Recommendation Distribution */}
+                    <div className="glass p-6 rounded-2xl">
+                      <h3 className="text-xl font-bold mb-4">Recommendation (1-5)</h3>
+                      <div className="flex items-end justify-between h-40 gap-2">
+                        {[1, 2, 3, 4, 5].map((rating) => {
+                          const count = summary.recommendation.find(i => i._id === rating)?.count || 0;
+                          const percentage = summary.total > 0 ? (count / summary.total) * 100 : 0;
+                          return (
+                            <div key={rating} className="flex-1 flex flex-col items-center gap-2">
+                              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-t-lg relative flex-1">
+                                <div 
+                                  className="absolute bottom-0 left-0 right-0 bg-green-500 rounded-t-lg transition-all duration-500"
+                                  style={{ height: `${percentage}%` }}
+                                />
+                              </div>
+                              <span className="font-bold">{rating}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
                     <div className="glass p-6 rounded-2xl">
                       <h3 className="text-xl font-bold mb-4">Reported Issues</h3>
                       <div className="space-y-3">
@@ -431,10 +512,7 @@ export default function AdminPage() {
                   )}
                 </div>
               )}
-            </>
-          )}
         </div>
       </div>
-    </div>
   );
 }
