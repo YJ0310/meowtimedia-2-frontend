@@ -88,34 +88,51 @@ export default function PassportPage() {
     fetchCountryCount();
   }, []);
 
-  // Generate stamps from user's countriesProgress
+  // Generate stamps from user's countriesProgress and feedback
   const collectedStamps = useMemo(() => {
-    if (!user?.countriesProgress) return [];
+    const stamps: PassportStamp[] = [];
 
-    return user.countriesProgress
-      .filter((cp: CountryProgress) => cp.stampCollectedAt)
-      .map((cp: CountryProgress, index: number): PassportStamp => {
-        const config = COUNTRY_CONFIG[cp.countrySlug] || {
-          name: cp.countrySlug
-            .replace(/-/g, " ")
-            .replace(/\b\w/g, (l) => l.toUpperCase()),
-          stampImage: "",
-          icon: "🌍",
-        };
-        return {
-          id: `stamp-${cp.countrySlug}-${index}`,
-          countrySlug: cp.countrySlug,
-          countryName: config.name,
-          stampImage: config.stampImage,
-          icon: config.icon,
-          collectedAt: cp.stampCollectedAt!,
-        };
-      })
-      .sort(
-        (a, b) =>
-          new Date(a.collectedAt).getTime() - new Date(b.collectedAt).getTime()
-      );
-  }, [user?.countriesProgress]);
+    // Add country stamps
+    if (user?.countriesProgress) {
+      user.countriesProgress
+        .filter((cp: CountryProgress) => cp.stampCollectedAt)
+        .forEach((cp: CountryProgress, index: number) => {
+          const config = COUNTRY_CONFIG[cp.countrySlug] || {
+            name: cp.countrySlug
+              .replace(/-/g, " ")
+              .replace(/\b\w/g, (l) => l.toUpperCase()),
+            stampImage: "",
+            icon: "🌍",
+          };
+          stamps.push({
+            id: `stamp-${cp.countrySlug}-${index}`,
+            countrySlug: cp.countrySlug,
+            countryName: config.name,
+            stampImage: config.stampImage,
+            icon: config.icon,
+            collectedAt: cp.stampCollectedAt!,
+          });
+        });
+    }
+
+    // Add feedback stamp if collected
+    if (user?.feedbackStampCollectedAt) {
+      stamps.push({
+        id: "stamp-feedback",
+        countrySlug: "feedback",
+        countryName: "Beta Tester",
+        stampImage: "/stamp/feedback.png",
+        icon: "📝",
+        collectedAt: user.feedbackStampCollectedAt,
+      });
+    }
+
+    // Sort by collection date
+    return stamps.sort(
+      (a, b) =>
+        new Date(a.collectedAt).getTime() - new Date(b.collectedAt).getTime()
+    );
+  }, [user?.countriesProgress, user?.feedbackStampCollectedAt]);
 
   const totalStampsCollected = collectedStamps.length;
   const totalPages = Math.ceil((totalStampsCollected + 4) / 4); // 4 stamps per page spread

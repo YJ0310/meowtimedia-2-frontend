@@ -269,6 +269,16 @@ export default function ProfilePage() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link href="/feedback">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="glass px-6 py-3 rounded-xl font-semibold text-primary flex items-center justify-center gap-2 border border-primary/30"
+                  >
+                    <span className="text-lg">📝</span>
+                    Give Feedback
+                  </motion.button>
+                </Link>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}

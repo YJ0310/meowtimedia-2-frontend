@@ -24,6 +24,7 @@ export interface User {
   avatar: string;
   totalStamps?: number;
   countriesProgress?: CountryProgress[];
+  feedbackStampCollectedAt?: string;
 }
 
 interface AuthContextType {
