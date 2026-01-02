@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useMemo, useCallback } from "react";
+import { motion, AnimatePresence, easeOut } from "framer-motion";
 import {
   ThumbsUp,
   TrendingUp,
@@ -13,11 +13,11 @@ import {
   ChevronRight,
   Mail,
   Calendar,
-  Filter,
-  ChevronDown,
-  Check,
+  Users,
+  BarChart3,
   User,
-  Activity
+  FileText,
+  ChevronDown,
 } from "lucide-react";
 import { DonutChart, RatingHistogram, HorizontalBarChart } from "./charts";
 import { FeedbackSummary, FeedbackResponse, FeedbackSubTab } from "../types";
@@ -28,438 +28,589 @@ import {
   RECOMMEND_EMOJIS,
 } from "../constants";
 
+// --- ANIMATION CONFIGS ---
+const pageTransition = {
+  type: "spring" as const,
+  stiffness: 300,
+  damping: 30,
+};
+
+const pageVariants = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 },
+};
+
+const cardVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.06,
+      duration: 0.4,
+      ease: easeOut,
+    },
+  }),
+};
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+// --- TYPES ---
 interface FeedbackTabProps {
   summary: FeedbackSummary | null;
   responses: FeedbackResponse[];
 }
 
-// --- HELPER FOR CUSTOM DROPDOWN ---
-const CustomSelect = ({ 
-  options, 
-  value, 
-  onChange 
-}: { 
-  options: { value: string; label: string }[]; 
-  value: string; 
-  onChange: (val: string) => void;
-}) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+interface Question {
+  id: string;
+  label: string;
+  shortLabel: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const selectedLabel = options.find(o => o.value === value)?.label;
-
-  return (
-    <div className="relative w-full md:w-64" ref={containerRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between bg-card hover:bg-muted/50 border border-input rounded-xl px-4 py-3 transition-all shadow-sm"
-      >
-        <span className="font-medium text-foreground">{selectedLabel}</span>
-        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-xl overflow-hidden z-50 shadow-xl"
-          >
-            {options.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => {
-                  onChange(opt.value);
-                  setIsOpen(false);
-                }}
-                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/50 transition-colors text-sm"
-              >
-                <span className={opt.value === value ? "text-primary font-semibold" : "text-popover-foreground"}>
-                  {opt.label}
-                </span>
-                {opt.value === value && <Check className="w-4 h-4 text-primary" />}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
+// --- MAIN COMPONENT ---
 export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
-  const [feedbackSubTab, setFeedbackSubTab] = useState<FeedbackSubTab>("summary");
+  const [activeTab, setActiveTab] = useState<FeedbackSubTab>("summary");
   const [selectedResponseIndex, setSelectedResponseIndex] = useState(0);
-  const [selectedQuestion, setSelectedQuestion] = useState<string>("impression");
+  const [selectedQuestionIndex, setSelectedQuestionIndex] = useState(0);
 
-  // --- CHART DATA HELPERS (Updated Colors) ---
-  const getFirstImpressionChartData = useMemo(() => {
+  // Question definitions
+  const questions: Question[] = useMemo(
+    () => [
+      { id: "impression", label: "What was your first impression?", shortLabel: "First Impression", icon: PieChart },
+      { id: "ease", label: "How easy was it to use?", shortLabel: "Ease of Use", icon: ThumbsUp },
+      { id: "issues", label: "Did you encounter any issues?", shortLabel: "Issues", icon: AlertTriangle },
+      { id: "recommend", label: "How likely are you to recommend?", shortLabel: "Recommendation", icon: TrendingUp },
+      { id: "feedback", label: "Any additional feedback?", shortLabel: "Feedback", icon: MessageSquare },
+      { id: "referral", label: "How did you hear about us?", shortLabel: "Referral", icon: Award },
+    ],
+    []
+  );
+
+  // Tab config
+  const tabs = useMemo(
+    () => [
+      { id: "summary" as FeedbackSubTab, label: "Summary", icon: BarChart3 },
+      { id: "question" as FeedbackSubTab, label: "Question", icon: FileText },
+      { id: "individual" as FeedbackSubTab, label: "Individual", icon: User },
+    ],
+    []
+  );
+
+  // Chart data
+  const firstImpressionData = useMemo(() => {
     if (!summary) return [];
-    // Using CSS variable colors for charts would be ideal, but here we fallback to hex codes 
-    // that match the 'meow' theme defined in global css (#a8bedf, #c7d5e8, etc)
-    const THEME_COLORS = ["#a8bedf", "#c7d5e8", "#efe4d4", "#d8c9ba"];
-    
+    const colors = ["#7c3aed", "#a78bfa", "#c4b5fd", "#ddd6fe", "#ede9fe"];
     return summary.firstImpression.map((item, index) => {
-      const option = FIRST_IMPRESSION_OPTIONS.find(o => o.value === item._id);
+      const option = FIRST_IMPRESSION_OPTIONS.find((o) => o.value === item._id);
       return {
         label: option?.label || item._id,
         count: item.count,
-        color: option?.color || THEME_COLORS[index % THEME_COLORS.length]
+        color: option?.color || colors[index % colors.length],
       };
     });
   }, [summary]);
 
-  const getIssuesChartData = useMemo(() => {
+  const issuesData = useMemo(() => {
     if (!summary) return { data: [], max: 0 };
-    const processed = summary.issues.map(item => ({
-      label: ISSUE_OPTIONS.find(o => o.value === item._id)?.label || item._id,
+    const processed = summary.issues.map((item) => ({
+      label: ISSUE_OPTIONS.find((o) => o.value === item._id)?.label || item._id,
       value: item._id,
-      count: item.count
+      count: item.count,
     }));
-    processed.sort((a, b) => {
-      if (a.value === 'none') return -1;
-      if (b.value === 'none') return 1;
-      return b.count - a.count;
-    });
-    const max = Math.max(...processed.map(i => i.count), 1);
-    return { data: processed, max };
+    processed.sort((a, b) => (a.value === "none" ? -1 : b.value === "none" ? 1 : b.count - a.count));
+    return { data: processed, max: Math.max(...processed.map((i) => i.count), 1) };
   }, [summary]);
 
-  const getReferralChartData = useMemo(() => {
+  const referralData = useMemo(() => {
     if (!summary) return { data: [], max: 0 };
-    const processed = summary.referral.map(item => ({
+    const processed = summary.referral.map((item) => ({
       label: item._id,
       value: item._id,
-      count: item.count
+      count: item.count,
     }));
     processed.sort((a, b) => b.count - a.count);
-    const max = Math.max(...processed.map(i => i.count), 1);
-    return { data: processed, max };
+    return { data: processed, max: Math.max(...processed.map((i) => i.count), 1) };
   }, [summary]);
 
-  // --- SUB-COMPONENTS ---
-  const TabButton = ({ id, label }: { id: FeedbackSubTab; label: string }) => (
-    <button
-      onClick={() => setFeedbackSubTab(id)}
-      className={`px-4 py-2 text-sm font-medium rounded-full transition-all border ${
-        feedbackSubTab === id
-          ? "bg-primary text-primary-foreground border-primary shadow-sm"
-          : "bg-transparent text-muted-foreground border-transparent hover:bg-muted/50"
-      }`}
-    >
-      {label}
-    </button>
-  );
+  // Helpers
+  const getAnswerForQuestion = useCallback((response: FeedbackResponse, questionId: string) => {
+    switch (questionId) {
+      case "impression":
+        return response.firstImpression;
+      case "ease":
+        return `${response.easeOfUse} / 5`;
+      case "issues":
+        return (response.issues || []).join(", ") || "None reported";
+      case "recommend":
+        return `${response.recommendation} / 5`;
+      case "feedback":
+        return response.additionalFeedback || null;
+      case "referral":
+        return response.referral || "Direct / Organic";
+      default:
+        return null;
+    }
+  }, []);
 
-  const QuestionCard = ({ title, icon: Icon, children, index }: any) => (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="glass-strong rounded-2xl overflow-hidden"
-    >
-      <div className="p-4 border-b border-border bg-muted/20 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded border border-primary/20">Q{index}</span>
-          <h3 className="font-semibold text-lg text-foreground">{title}</h3>
-        </div>
-        {Icon && <Icon className="w-5 h-5 text-muted-foreground" />}
-      </div>
-      <div className="p-6">
-        {children}
-      </div>
-    </motion.div>
-  );
+  const filteredResponses = useMemo(() => {
+    const current = questions[selectedQuestionIndex];
+    if (current?.id === "feedback") {
+      return responses.filter((r) => r.additionalFeedback);
+    }
+    return responses;
+  }, [responses, selectedQuestionIndex, questions]);
 
   const currentResponse = responses[selectedResponseIndex];
+  const currentQuestion = questions[selectedQuestionIndex];
 
-  const questionOptions = [
-    { value: "impression", label: "1. First Impression" },
-    { value: "ease", label: "2. Ease of Use" },
-    { value: "issues", label: "3. Technical Issues" },
-    { value: "recommend", label: "4. Recommendation" },
-    { value: "feedback", label: "5. Written Feedback" },
-  ];
+  const navigateResponse = useCallback(
+    (direction: "prev" | "next") => {
+      setSelectedResponseIndex((prev) =>
+        direction === "prev" ? Math.max(0, prev - 1) : Math.min(responses.length - 1, prev + 1)
+      );
+    },
+    [responses.length]
+  );
+
+  if (!summary) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-muted-foreground">Loading feedback data...</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-5xl mx-auto min-h-screen pb-20 px-4">
-      
-      {/* --- SUB NAVIGATION --- */}
-      <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl pt-6 pb-4 border-b border-border mb-8 -mx-4 px-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              Feedback Analysis
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Analyzing <span className="text-foreground font-semibold">{summary?.total || 0}</span> total responses
-            </p>
-          </div>
-          <div className="bg-muted/30 p-1 rounded-full flex gap-1 border border-border/50">
-            <TabButton id="summary" label="Summary" />
-            <TabButton id="question" label="By Question" />
-            <TabButton id="individual" label="Individual" />
-          </div>
-        </div>
-      </div>
-
-      <AnimatePresence mode="wait">
-        
-        {/* === SUMMARY VIEW === */}
-        {feedbackSubTab === "summary" && summary && (
-          <motion.div 
-            key="summary"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="space-y-6"
-          >
-            {/* Top Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-               <div className="glass p-6 rounded-2xl relative overflow-hidden group">
-                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <Activity className="w-20 h-20 text-primary" />
-                 </div>
-                 <p className="text-muted-foreground text-sm font-semibold uppercase tracking-wider">Total Responses</p>
-                 <p className="text-4xl font-bold text-primary mt-2">{summary.total}</p>
-               </div>
-               
-               <div className="glass p-6 rounded-2xl relative overflow-hidden group">
-                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <ThumbsUp className="w-20 h-20 text-secondary" />
-                 </div>
-                 <p className="text-muted-foreground text-sm font-semibold uppercase tracking-wider">Avg Ease of Use</p>
-                 <div className="flex items-baseline gap-2 mt-2">
-                   <p className="text-4xl font-bold text-secondary">{summary.avgEaseOfUse.toFixed(1)}</p>
-                   <span className="text-muted-foreground text-lg">/ 5</span>
-                 </div>
-               </div>
-               
-               <div className="glass p-6 rounded-2xl relative overflow-hidden group">
-                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                    <TrendingUp className="w-20 h-20 text-accent" />
-                 </div>
-                 <p className="text-muted-foreground text-sm font-semibold uppercase tracking-wider">Recommendation</p>
-                 <div className="flex items-baseline gap-2 mt-2">
-                   <p className="text-4xl font-bold text-accent-foreground dark:text-accent">{summary.avgRecommendation.toFixed(1)}</p>
-                   <span className="text-muted-foreground text-lg">/ 5</span>
-                 </div>
-               </div>
+    <div className="max-w-4xl mx-auto min-h-screen">
+      {/* --- HEADER --- */}
+      <motion.header
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border"
+      >
+        <div className="px-4 md:px-6 pt-6 pb-4">
+          {/* Title & Stats */}
+          <div className="flex items-start justify-between mb-6">
+            <div>
+              <h1 className="text-xl md:text-2xl font-semibold text-foreground">Feedback Analysis</h1>
+              <p className="text-sm text-muted-foreground mt-1">{summary.total} responses collected</p>
             </div>
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium"
+            >
+              <Users className="w-4 h-4" />
+              {summary.total}
+            </motion.div>
+          </div>
 
-            <QuestionCard index={1} title="First Impressions" icon={PieChart}>
-              <DonutChart data={getFirstImpressionChartData} total={summary.total} />
-            </QuestionCard>
-
-            <QuestionCard index={2} title="Ease of Use" icon={ThumbsUp}>
-              <RatingHistogram data={summary.easeOfUse} total={summary.total} emojiMap={EASE_EMOJIS} />
-            </QuestionCard>
-
-            <QuestionCard index={3} title="Technical Issues Encountered" icon={AlertTriangle}>
-              <HorizontalBarChart 
-                data={getIssuesChartData.data} 
-                total={summary.total} 
-                maxVal={getIssuesChartData.max} 
-                colorMap={ISSUE_OPTIONS} 
-              />
-            </QuestionCard>
-
-            <QuestionCard index={4} title="Likelihood to Recommend" icon={TrendingUp}>
-              <RatingHistogram data={summary.recommendation} total={summary.total} emojiMap={RECOMMEND_EMOJIS} />
-            </QuestionCard>
-
-            <QuestionCard index={5} title="Additional Feedback" icon={MessageSquare}>
-              <div className="max-h-96 overflow-y-auto pr-2 space-y-3">
-                {responses.filter(r => r.additionalFeedback).map((r, i) => (
-                  <div key={i} className="bg-muted/30 p-4 rounded-xl border border-border hover:border-primary/30 transition-all">
-                    <div className="flex items-center gap-3 mb-2">
-                      {r.userId.avatar ? (
-                        <img src={r.userId.avatar} alt="" className="w-6 h-6 rounded-full object-cover ring-2 ring-background" />
-                      ) : (
-                        <div className="w-6 h-6 rounded-full gradient-primary flex items-center justify-center text-[10px] font-bold text-primary-foreground shadow-sm">
-                          {r.userId.displayName?.[0] || "?"}
-                        </div>
-                      )}
-                      <span className="text-xs text-muted-foreground font-medium">{r.userId.displayName}</span>
-                    </div>
-                    <p className="text-foreground text-sm leading-relaxed">"{r.additionalFeedback}"</p>
-                  </div>
-                ))}
-                {responses.filter(r => r.additionalFeedback).length === 0 && (
-                   <div className="text-center py-8 text-muted-foreground italic">No written feedback provided yet.</div>
+          {/* Tab Navigation */}
+          <nav className="relative flex border-b border-transparent -mb-4">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors duration-200 ${
+                  activeTab === tab.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <tab.icon className="w-4 h-4" />
+                <span className="hidden sm:inline">{tab.label}</span>
+                {activeTab === tab.id && (
+                  <motion.div
+                    layoutId="activeTabIndicator"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"
+                    transition={pageTransition}
+                  />
                 )}
-              </div>
-            </QuestionCard>
+              </button>
+            ))}
+          </nav>
+        </div>
+      </motion.header>
 
-            <QuestionCard index={6} title="Referral Leaderboard" icon={Award}>
-              <HorizontalBarChart 
-                data={getReferralChartData.data} 
-                total={summary.total} 
-                maxVal={getReferralChartData.max}
-              />
-            </QuestionCard>
-          </motion.div>
-        )}
-
-        {/* === INDIVIDUAL VIEW === */}
-        {feedbackSubTab === "individual" && responses.length > 0 && (
-          <motion.div
-            key="individual"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="space-y-6"
-          >
-            <div className="glass p-2 rounded-xl flex items-center justify-between sticky top-32 z-20">
-               <button 
-                  onClick={() => setSelectedResponseIndex(Math.max(0, selectedResponseIndex - 1))}
-                  disabled={selectedResponseIndex === 0}
-                  className="p-2 hover:bg-muted rounded-lg disabled:opacity-30 disabled:hover:bg-transparent text-foreground transition-colors"
-               >
-                 <ChevronLeft className="w-5 h-5" />
-               </button>
-               <span className="text-sm font-mono font-medium text-foreground">
-                 {selectedResponseIndex + 1} / {responses.length}
-               </span>
-               <button 
-                  onClick={() => setSelectedResponseIndex(Math.min(responses.length - 1, selectedResponseIndex + 1))}
-                  disabled={selectedResponseIndex === responses.length - 1}
-                  className="p-2 hover:bg-muted rounded-lg disabled:opacity-30 disabled:hover:bg-transparent text-foreground transition-colors"
-               >
-                 <ChevronRight className="w-5 h-5" />
-               </button>
-            </div>
-
-            <div className="glass-strong rounded-2xl overflow-hidden">
-              <div className="p-8 border-b border-border bg-muted/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                 <div className="flex items-center gap-5">
-                    {currentResponse.userId.avatar ? (
-                      <img src={currentResponse.userId.avatar} alt="" className="w-20 h-20 rounded-full border-4 border-background shadow-md object-cover" />
-                    ) : (
-                      <div className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center text-3xl font-bold text-primary-foreground shadow-md">
-                        {currentResponse.userId.displayName?.[0] || "?"}
-                      </div>
-                    )}
-                    <div>
-                      <h2 className="text-2xl font-bold text-foreground">{currentResponse.userId.displayName}</h2>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                        <Mail className="w-3 h-3" />
-                        {currentResponse.userId.email}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(currentResponse.createdAt).toLocaleDateString(undefined, { dateStyle: 'long' })}
-                      </div>
-                    </div>
-                 </div>
-              </div>
-
-              <div className="divide-y divide-border">
+      {/* --- CONTENT --- */}
+      <main className="px-4 md:px-6 py-6 pb-24">
+        <AnimatePresence mode="wait">
+          {/* ========== SUMMARY VIEW ========== */}
+          {activeTab === "summary" && (
+            <motion.div
+              key="summary"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+            >
+              {/* Quick Stats */}
+              <motion.div variants={staggerContainer} initial="initial" animate="animate" className="grid grid-cols-3 gap-3 mb-8">
                 {[
-                  { q: "1. First Impression", a: currentResponse.firstImpression, type: "badge" },
-                  { q: "2. Ease of Use", a: `${currentResponse.easeOfUse} / 5`, type: "rating" },
-                  { q: "3. Issues Encountered", a: (currentResponse.issues || []).join(", ") || "None", type: "text" },
-                  { q: "4. Likelihood to Recommend", a: `${currentResponse.recommendation} / 5`, type: "rating" },
-                  { q: "5. Additional Feedback", a: currentResponse.additionalFeedback || "No answer", type: "long-text" },
-                  { q: "6. Referred By", a: currentResponse.referral || "Organic", type: "text" }
-                ].map((item, i) => (
-                  <div key={i} className="p-6 hover:bg-muted/20 transition-colors">
-                    <p className="text-xs uppercase text-muted-foreground font-bold mb-2 tracking-wide">{item.q}</p>
-                    <div className={`text-lg ${item.type === 'long-text' && !item.a ? 'text-muted-foreground italic' : 'text-foreground'}`}>
-                      {item.type === 'badge' ? (
-                        <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-base font-medium border border-primary/20">
-                          {item.a}
-                        </span>
-                      ) : item.a}
-                    </div>
-                  </div>
+                  { label: "Total", value: summary.total, color: "text-primary", bg: "bg-primary/5" },
+                  { label: "Avg Ease", value: summary.avgEaseOfUse.toFixed(1), color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/5" },
+                  { label: "Avg NPS", value: summary.avgRecommendation.toFixed(1), color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/5" },
+                ].map((stat, i) => (
+                  <motion.div
+                    key={stat.label}
+                    variants={cardVariants}
+                    custom={i}
+                    whileHover={{ y: -2, transition: { duration: 0.2 } }}
+                    className={`${stat.bg} rounded-2xl p-4 md:p-5 border border-border/50`}
+                  >
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">{stat.label}</p>
+                    <p className={`text-2xl md:text-3xl font-bold ${stat.color}`}>{stat.value}</p>
+                  </motion.div>
+                ))}
+              </motion.div>
+
+              {/* Question Cards */}
+              <motion.div variants={staggerContainer} initial="initial" animate="animate" className="space-y-4">
+                <QuestionSummaryCard index={1} question={questions[0].label}>
+                  <DonutChart data={firstImpressionData} total={summary.total} />
+                </QuestionSummaryCard>
+
+                <QuestionSummaryCard index={2} question={questions[1].label}>
+                  <RatingHistogram data={summary.easeOfUse} total={summary.total} emojiMap={EASE_EMOJIS} />
+                </QuestionSummaryCard>
+
+                <QuestionSummaryCard index={3} question={questions[2].label}>
+                  <HorizontalBarChart data={issuesData.data} total={summary.total} maxVal={issuesData.max} colorMap={ISSUE_OPTIONS} />
+                </QuestionSummaryCard>
+
+                <QuestionSummaryCard index={4} question={questions[3].label}>
+                  <RatingHistogram data={summary.recommendation} total={summary.total} emojiMap={RECOMMEND_EMOJIS} />
+                </QuestionSummaryCard>
+
+                <QuestionSummaryCard index={5} question={questions[4].label}>
+                  <FeedbackTextList responses={responses} />
+                </QuestionSummaryCard>
+
+                <QuestionSummaryCard index={6} question={questions[5].label}>
+                  <HorizontalBarChart data={referralData.data} total={summary.total} maxVal={referralData.max} />
+                </QuestionSummaryCard>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* ========== QUESTION VIEW ========== */}
+          {activeTab === "question" && (
+            <motion.div
+              key="question"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+            >
+              {/* Question Selector Pills */}
+              <div className="flex gap-2 overflow-x-auto pb-4 mb-4 -mx-1 px-1 scrollbar-hide">
+                {questions.map((q, i) => (
+                  <motion.button
+                    key={q.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setSelectedQuestionIndex(i)}
+                    className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 border ${
+                      selectedQuestionIndex === i
+                        ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20"
+                        : "bg-card text-muted-foreground border-border hover:border-primary/50 hover:text-foreground"
+                    }`}
+                  >
+                    <span className="w-5 h-5 flex items-center justify-center rounded-full bg-current/10 text-xs font-bold">
+                      {i + 1}
+                    </span>
+                    <span className="hidden sm:inline">{q.shortLabel}</span>
+                  </motion.button>
                 ))}
               </div>
-            </div>
-          </motion.div>
-        )}
 
-        {/* === QUESTION VIEW === */}
-        {feedbackSubTab === "question" && (
-          <motion.div
-            key="question"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="space-y-6"
-          >
-            {/* Custom Dropdown */}
-            <div className="glass-strong p-6 rounded-2xl flex flex-col md:flex-row items-center gap-4 border border-border">
-              <div className="flex items-center gap-2 text-muted-foreground min-w-fit">
-                <Filter className="w-5 h-5" />
-                <span className="font-medium">Filter by question:</span>
-              </div>
-              <CustomSelect 
-                options={questionOptions} 
-                value={selectedQuestion} 
-                onChange={setSelectedQuestion} 
-              />
-            </div>
+              {/* Question Header Card */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-card border border-border rounded-2xl p-5 mb-4"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <currentQuestion.icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">{currentQuestion.label}</h2>
+                    <p className="text-sm text-muted-foreground">{filteredResponses.length} responses</p>
+                  </div>
+                </div>
+              </motion.div>
 
-            {/* Answer List */}
-            <div className="glass-strong rounded-2xl overflow-hidden border border-border">
-               <div className="p-4 bg-muted/20 border-b border-border text-sm text-muted-foreground flex justify-between items-center">
-                 <span>Showing responses for <strong>{questionOptions.find(o => o.value === selectedQuestion)?.label}</strong></span>
-                 <span className="bg-background px-2 py-0.5 rounded-md border border-border text-xs font-mono">{responses.length} total</span>
-               </div>
-               
-               <div className="divide-y divide-border max-h-[600px] overflow-y-auto">
-                 {responses.map((r, i) => {
-                   let answer: any = "";
-                   try {
-                     if (selectedQuestion === "impression") answer = r.firstImpression;
-                     if (selectedQuestion === "ease") answer = `${r.easeOfUse} / 5`;
-                     if (selectedQuestion === "issues") answer = (r.issues || []).join(", ") || "None";
-                     if (selectedQuestion === "recommend") answer = `${r.recommendation} / 5`;
-                     if (selectedQuestion === "feedback") answer = r.additionalFeedback;
-                   } catch (e) {
-                     answer = "Error reading data";
-                   }
-
-                   if (selectedQuestion === "feedback" && !answer) return null;
-
-                   return (
-                     <div key={i} className="p-4 flex items-start gap-4 hover:bg-muted/10 transition-colors group">
-                       <div className="mt-1 flex-shrink-0">
-                         {r.userId.avatar ? (
-                            <img src={r.userId.avatar} className="w-9 h-9 rounded-full object-cover opacity-80 group-hover:opacity-100 transition-opacity ring-1 ring-border" />
-                         ) : (
-                            <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                              {r.userId.displayName?.[0] || "?"}
+              {/* Responses */}
+              <motion.div variants={staggerContainer} initial="initial" animate="animate" className="space-y-2">
+                <AnimatePresence mode="popLayout">
+                  {filteredResponses.length === 0 ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-center py-16 text-muted-foreground"
+                    >
+                      <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                      <p>No responses for this question yet.</p>
+                    </motion.div>
+                  ) : (
+                    filteredResponses.map((response, i) => (
+                      <motion.div
+                        key={response._id || i}
+                        variants={cardVariants}
+                        custom={i}
+                        layout
+                        className="bg-card border border-border rounded-xl p-4 hover:border-primary/30 hover:shadow-sm transition-all duration-200"
+                      >
+                        <div className="flex items-start gap-3">
+                          <UserAvatar user={response.userId} size="sm" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-foreground leading-relaxed">
+                              {getAnswerForQuestion(response, currentQuestion.id) || (
+                                <span className="text-muted-foreground italic">No answer</span>
+                              )}
+                            </p>
+                            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                              <span className="font-medium">{response.userId.displayName}</span>
+                              <span className="opacity-50">•</span>
+                              <span>{new Date(response.createdAt).toLocaleDateString()}</span>
                             </div>
-                         )}
-                       </div>
-                       <div className="flex-grow">
-                         <div className="text-foreground text-base leading-snug">{answer || <span className="text-muted-foreground italic">No answer</span>}</div>
-                         <div className="text-xs text-muted-foreground mt-1.5 flex items-center gap-2">
-                            <span className="font-medium">{r.userId.displayName}</span>
-                            <span>•</span>
-                            <span>{new Date(r.createdAt).toLocaleDateString()}</span>
-                         </div>
-                       </div>
-                     </div>
-                   )
-                 })}
-                 
-                 {selectedQuestion === "feedback" && responses.filter(r => r.additionalFeedback).length === 0 && (
-                   <div className="p-8 text-center text-muted-foreground italic">
-                     No written feedback found for this question.
-                   </div>
-                 )}
-               </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* ========== INDIVIDUAL VIEW ========== */}
+          {activeTab === "individual" && responses.length > 0 && currentResponse && (
+            <motion.div
+              key="individual"
+              variants={pageVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={pageTransition}
+            >
+              {/* Navigator */}
+              <div className="bg-card border border-border rounded-2xl p-3 mb-4 flex items-center justify-between gap-4">
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigateResponse("prev")}
+                  disabled={selectedResponseIndex === 0}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm font-medium"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Previous</span>
+                </motion.button>
+
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <select
+                      value={selectedResponseIndex}
+                      onChange={(e) => setSelectedResponseIndex(Number(e.target.value))}
+                      className="appearance-none bg-muted/50 rounded-lg py-2 pl-3 pr-8 text-sm font-medium text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    >
+                      {responses.map((r, i) => (
+                        <option key={i} value={i}>
+                          {i + 1}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                  </div>
+                  <span className="text-muted-foreground text-sm">of {responses.length}</span>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigateResponse("next")}
+                  disabled={selectedResponseIndex === responses.length - 1}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm font-medium"
+                >
+                  <span className="hidden sm:inline">Next</span>
+                  <ChevronRight className="w-4 h-4" />
+                </motion.button>
+              </div>
+
+              {/* Response Card */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={selectedResponseIndex}
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -30 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  className="bg-card border border-border rounded-2xl overflow-hidden"
+                >
+                  {/* User Header */}
+                  <div className="p-5 md:p-6 border-b border-border bg-muted/20">
+                    <div className="flex items-center gap-4">
+                      <UserAvatar user={currentResponse.userId} size="lg" />
+                      <div className="min-w-0 flex-1">
+                        <h2 className="text-lg md:text-xl font-semibold text-foreground truncate">
+                          {currentResponse.userId.displayName}
+                        </h2>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground mt-1">
+                          <span className="flex items-center gap-1.5 truncate">
+                            <Mail className="w-3.5 h-3.5 flex-shrink-0" />
+                            <span className="truncate">{currentResponse.userId.email}</span>
+                          </span>
+                          <span className="hidden sm:inline opacity-50">•</span>
+                          <span className="flex items-center gap-1.5">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {new Date(currentResponse.createdAt).toLocaleDateString(undefined, { dateStyle: "medium" })}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Answers Grid */}
+                  <div className="divide-y divide-border">
+                    {questions.map((q, i) => {
+                      const answer = getAnswerForQuestion(currentResponse, q.id);
+                      return (
+                        <motion.div
+                          key={q.id}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: i * 0.04 }}
+                          className="p-4 md:p-5 hover:bg-muted/10 transition-colors group"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                              <span className="text-xs font-bold text-primary">{i + 1}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-muted-foreground mb-1">{q.label}</p>
+                              <p className={`text-foreground ${!answer ? "text-muted-foreground italic text-sm" : ""}`}>
+                                {answer || "No answer provided"}
+                              </p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
     </div>
   );
 }
+
+// --- SUBCOMPONENTS ---
+
+const QuestionSummaryCard = ({
+  index,
+  question,
+  children,
+}: {
+  index: number;
+  question: string;
+  children: React.ReactNode;
+}) => (
+  <motion.div
+    variants={cardVariants}
+    custom={index}
+    whileHover={{ y: -2, transition: { duration: 0.2 } }}
+    className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-lg hover:shadow-primary/5 transition-all duration-300"
+  >
+    <div className="p-4 md:p-5 border-b border-border bg-muted/10 flex items-center gap-3">
+      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+        <span className="text-sm font-bold text-primary">{index}</span>
+      </div>
+      <h3 className="font-medium text-foreground">{question}</h3>
+    </div>
+    <div className="p-4 md:p-6">{children}</div>
+  </motion.div>
+);
+
+const UserAvatar = ({
+  user,
+  size = "md",
+}: {
+  user: { avatar?: string; displayName?: string };
+  size?: "sm" | "md" | "lg";
+}) => {
+  const sizeClasses = {
+    sm: "w-9 h-9 text-sm",
+    md: "w-11 h-11 text-base",
+    lg: "w-14 h-14 text-lg",
+  };
+
+  const initial = user.displayName?.[0]?.toUpperCase() || "?";
+
+  if (user.avatar) {
+    return (
+      <motion.img
+        whileHover={{ scale: 1.05 }}
+        src={user.avatar}
+        alt={user.displayName || "User"}
+        className={`${sizeClasses[size]} rounded-full object-cover ring-2 ring-background shadow-sm`}
+      />
+    );
+  }
+
+  return (
+    <motion.div
+      whileHover={{ scale: 1.05 }}
+      className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-primary/20 to-primary/5 text-primary flex items-center justify-center font-bold ring-2 ring-background shadow-sm`}
+    >
+      {initial}
+    </motion.div>
+  );
+};
+
+const FeedbackTextList = ({ responses }: { responses: FeedbackResponse[] }) => {
+  const feedbackResponses = useMemo(() => responses.filter((r) => r.additionalFeedback), [responses]);
+
+  if (feedbackResponses.length === 0) {
+    return (
+      <div className="text-center py-10 text-muted-foreground">
+        <MessageSquare className="w-10 h-10 mx-auto mb-3 opacity-30" />
+        <p className="text-sm">No written feedback provided yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 max-h-[400px] overflow-y-auto">
+      {feedbackResponses.map((r, i) => (
+        <motion.div
+          key={r._id || i}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.03 }}
+          className="bg-muted/30 p-4 rounded-xl border border-border/50 hover:border-primary/30 transition-all duration-200"
+        >
+          <div className="flex items-center gap-2.5 mb-2">
+            <UserAvatar user={r.userId} size="sm" />
+            <span className="text-xs text-muted-foreground font-medium">{r.userId.displayName}</span>
+            <span className="text-xs text-muted-foreground/50">•</span>
+            <span className="text-xs text-muted-foreground">{new Date(r.createdAt).toLocaleDateString()}</span>
+          </div>
+          <p className="text-foreground text-sm leading-relaxed pl-11">"{r.additionalFeedback}"</p>
+        </motion.div>
+      ))}
+    </div>
+  );
+};
