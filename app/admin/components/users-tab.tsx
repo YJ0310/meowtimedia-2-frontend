@@ -387,7 +387,7 @@ const UserCard = ({
     <motion.div
       variants={cardVariants}
       custom={index}
-      layout
+    //   layout
       whileHover={{ x: 4 }}
       onClick={onClick}
       className={`group flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 ${
