@@ -186,7 +186,7 @@ export default function ProfilePage() {
                   Profile Picture
                 </h3>
                 <p className="text-xs md:text-sm text-black dark:text-white">
-                  Upload and customize your avatar
+                  Sry, You can't upload and customize your avatar X(
                 </p>
               </div>
               <button
