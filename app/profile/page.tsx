@@ -303,8 +303,10 @@ export default function ProfilePage() {
                   <LogOut className="w-5 h-5" />
                   Sign Out
                 </motion.button>
+              </div>
 
-                <Link href="/dashboard" className="w-full">
+              <div className="max-w-md mx-auto">
+                <Link href="/dashboard" className="w-full block">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
