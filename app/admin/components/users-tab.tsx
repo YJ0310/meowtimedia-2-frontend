@@ -27,533 +27,318 @@ const pageTransition = {
 } as const;
 
 const cardVariants = {
-  initial: { opacity: 0, y: 12 },
+  initial: { opacity: 0, y: 10 },
   animate: (i: number) => ({
     opacity: 1,
     y: 0,
     transition: {
-      delay: i * 0.03,
+      delay: i * 0.02,
       duration: 0.3,
-      ease: cubicBezier(0.25, 0.46, 0.45, 0.94),
     },
   }),
-  exit: { opacity: 0, y: -8, transition: { duration: 0.2 } },
+  exit: { opacity: 0, x: -10, transition: { duration: 0.2 } },
 };
 
-const staggerContainer = {
-  animate: {
-    transition: {
-      staggerChildren: 0.02,
-      delayChildren: 0.05,
-    },
-  },
-};
-
-// --- TYPES ---
-interface UsersTabProps {
-  users: AdminUser[];
-}
-
-type RoleFilter = "all" | "user" | "admin" | "owner";
-
-interface RoleConfig {
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  color: string;
-  bg: string;
-  border: string;
-  glow: string;
-}
-
-// --- ROLE CONFIGURATIONS ---
-const roleConfigs: Record<string, RoleConfig> = {
+// --- ROLE CONFIGS ---
+const roleConfigs: Record<string, any> = {
   owner: {
     label: "Owner",
     icon: Crown,
-    color: "text-amber-500",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/30",
-    glow: "shadow-amber-500/20",
+    color: "text-amber-600",
+    bg: "bg-amber-50",
+    border: "border-amber-200",
+    glow: "shadow-amber-100",
   },
   admin: {
     label: "Admin",
     icon: Shield,
-    color: "text-violet-500",
-    bg: "bg-violet-500/10",
-    border: "border-violet-500/30",
-    glow: "shadow-violet-500/20",
+    color: "text-violet-600",
+    bg: "bg-violet-50",
+    border: "border-violet-200",
+    glow: "shadow-violet-100",
   },
   user: {
     label: "Member",
-    icon: Users,
-    color: "text-muted-foreground",
-    bg: "bg-muted/50",
-    border: "border-border",
+    icon: UserCheck,
+    color: "text-slate-600",
+    bg: "bg-slate-50",
+    border: "border-slate-200",
     glow: "",
   },
 };
 
-// --- MAIN COMPONENT ---
+interface UsersTabProps {
+  users: AdminUser[];
+}
+
 export default function UsersTab({ users }: UsersTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
 
-  // Filter tabs config
-  const filterTabs: { id: RoleFilter; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: "all", label: "All Members", icon: Users },
-    { id: "owner", label: "Owners", icon: Crown },
-    { id: "admin", label: "Admins", icon: Shield },
-    { id: "user", label: "Members", icon: UserCheck },
-  ];
-
-  // Filtered users
   const filteredUsers = useMemo(() => {
-    let filtered = users;
+    let filtered = users.filter((u) => {
+      const matchesRole = roleFilter === "all" || u.role === roleFilter;
+      const matchesSearch =
+        u.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        u.email.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesRole && matchesSearch;
+    });
 
-    if (roleFilter !== "all") {
-      filtered = filtered.filter((u) => u.role === roleFilter);
-    }
-
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (u) =>
-          u.displayName.toLowerCase().includes(query) ||
-          u.email.toLowerCase().includes(query)
-      );
-    }
-
-    // Sort: owners first, then admins, then users
     return filtered.sort((a, b) => {
-      const order = { owner: 0, admin: 1, user: 2 };
-      return (order[a.role] || 2) - (order[b.role] || 2);
+      const order: any = { owner: 0, admin: 1, user: 2 };
+      return order[a.role] - order[b.role];
     });
   }, [users, searchQuery, roleFilter]);
 
-  // Stats
-  const stats = useMemo(() => ({
-    total: users.length,
-    owners: users.filter((u) => u.role === "owner").length,
-    admins: users.filter((u) => u.role === "admin").length,
-    members: users.filter((u) => u.role === "user").length,
-  }), [users]);
-
-  // Group users by role for display
   const groupedUsers = useMemo(() => {
-    const groups: { role: string; users: AdminUser[] }[] = [];
-    const roleOrder = ["owner", "admin", "user"];
-
-    roleOrder.forEach((role) => {
-      const roleUsers = filteredUsers.filter((u) => u.role === role);
-      if (roleUsers.length > 0) {
-        groups.push({ role, users: roleUsers });
-      }
-    });
-
-    return groups;
+    const roles = ["owner", "admin", "user"];
+    return roles
+      .map((role) => ({
+        role,
+        users: filteredUsers.filter((u) => u.role === role),
+      }))
+      .filter((g) => g.users.length > 0);
   }, [filteredUsers]);
 
-  const clearSearch = useCallback(() => setSearchQuery(""), []);
-
   return (
-    <div className="max-w-6xl mx-auto min-h-screen">
-      {/* --- HEADER --- */}
-      <motion.header
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border"
-      >
-        <div className="px-4 md:px-6 pt-6 pb-4">
-          {/* Title */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Users className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-xl md:text-2xl font-semibold text-foreground">Members</h1>
-                <p className="text-sm text-muted-foreground">{stats.total} total members</p>
-              </div>
-            </div>
-
-            {/* Quick Stats Pills */}
-            <div className="hidden md:flex items-center gap-2">
-              {[
-                { label: "Owners", count: stats.owners, config: roleConfigs.owner },
-                { label: "Admins", count: stats.admins, config: roleConfigs.admin },
-                { label: "Members", count: stats.members, config: roleConfigs.user },
-              ].map((stat) => (
-                <motion.div
-                  key={stat.label}
-                  whileHover={{ scale: 1.02 }}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${stat.config.bg} ${stat.config.color} border ${stat.config.border}`}
-                >
-                  <stat.config.icon className="w-3.5 h-3.5" />
-                  <span>{stat.count}</span>
-                </motion.div>
-              ))}
-            </div>
+    <div className="flex flex-col h-full">
+      {/* Search and Filter Bar - Sticky with Offset for main Header */}
+      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200 px-4 py-4 md:px-6">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div className="relative w-full md:w-96">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search members..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-slate-100 border-none rounded-lg text-sm focus:ring-2 focus:ring-blue-500 transition-all"
+            />
           </div>
 
-          {/* Search & Filter Bar */}
-          <div className="flex flex-col sm:flex-row gap-3">
-            {/* Search Input */}
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search members..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-10 py-2.5 bg-muted/50 border border-border rounded-xl text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all"
-              />
-              <AnimatePresence>
-                {searchQuery && (
-                  <motion.button
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    onClick={clearSearch}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted transition-colors"
-                  >
-                    <X className="w-4 h-4 text-muted-foreground" />
-                  </motion.button>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Role Filter Tabs */}
-            <div className="flex bg-muted/50 rounded-xl p-1 border border-border/50">
-              {filterTabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setRoleFilter(tab.id)}
-                  className={`relative flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg transition-all duration-200 ${
-                    roleFilter === tab.id
-                      ? "text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {roleFilter === tab.id && (
-                    <motion.div
-                      layoutId="activeRoleFilter"
-                      className="absolute inset-0 bg-primary rounded-lg shadow-sm"
-                      transition={pageTransition}
-                    />
-                  )}
-                  <span className="relative flex items-center gap-1.5">
-                    <tab.icon className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">{tab.label}</span>
-                  </span>
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-full md:w-auto overflow-x-auto">
+            {["all", "owner", "admin", "user"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setRoleFilter(tab)}
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                  roleFilter === tab
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-slate-500 hover:text-slate-700"
+                }`}
+              >
+                {tab === "all" ? <Users className="w-3.5 h-3.5" /> : null}
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}s
+              </button>
+            ))}
           </div>
         </div>
-      </motion.header>
+      </div>
 
-      {/* --- CONTENT --- */}
-      <main className="px-4 md:px-6 py-6 pb-24">
-        <div className="flex gap-6">
-          {/* User List - Main Content */}
-          <div className="flex-1 min-w-0">
-            <AnimatePresence mode="wait">
-              {filteredUsers.length === 0 ? (
-                <motion.div
-                  key="empty"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0 }}
-                  className="flex flex-col items-center justify-center py-20 text-center"
-                >
-                  <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4">
-                    <Search className="w-8 h-8 text-muted-foreground/50" />
+      <div className="flex-1 max-w-7xl mx-auto w-full px-4 md:px-6 py-6">
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Main List */}
+          <div className="flex-1 space-y-8">
+            <AnimatePresence mode="popLayout">
+              {groupedUsers.length === 0 ? (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
+                  <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Search className="w-8 h-8 text-slate-300" />
                   </div>
-                  <h3 className="text-lg font-medium text-foreground mb-1">No members found</h3>
-                  <p className="text-sm text-muted-foreground max-w-sm">
-                    {searchQuery
-                      ? `No results for "${searchQuery}". Try a different search.`
-                      : "No members match the current filter."}
-                  </p>
-                  {searchQuery && (
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={clearSearch}
-                      className="mt-4 px-4 py-2 bg-primary/10 text-primary rounded-lg text-sm font-medium hover:bg-primary/20 transition-colors"
-                    >
-                      Clear search
-                    </motion.button>
-                  )}
+                  <p className="text-slate-500">No members found matching your criteria.</p>
                 </motion.div>
               ) : (
-                <motion.div
-                  key="list"
-                  variants={staggerContainer}
-                  initial="initial"
-                  animate="animate"
-                  className="space-y-6"
-                >
-                  {groupedUsers.map((group) => (
-                    <div key={group.role}>
-                      {/* Role Group Header */}
-                      <div className="flex items-center gap-2 mb-3 px-1">
-                        <span className={`text-xs font-semibold uppercase tracking-wider ${roleConfigs[group.role]?.color || "text-muted-foreground"}`}>
-                          {roleConfigs[group.role]?.label || group.role}s — {group.users.length}
-                        </span>
-                        <div className="flex-1 h-px bg-border/50" />
-                      </div>
-
-                      {/* User Cards */}
-                      <div className="space-y-1.5">
-                        {group.users.map((user, i) => (
-                          <UserCard
-                            key={user._id}
-                            user={user}
-                            index={i}
-                            isSelected={selectedUser?._id === user._id}
-                            onClick={() => setSelectedUser(selectedUser?._id === user._id ? null : user)}
-                          />
-                        ))}
-                      </div>
+                groupedUsers.map((group) => (
+                  <div key={group.role} className="space-y-3">
+                    <div className="flex items-center gap-4">
+                      <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                        {group.role}s — {group.users.length}
+                      </h2>
+                      <div className="h-px flex-1 bg-slate-100" />
                     </div>
-                  ))}
-                </motion.div>
+                    <div className="grid gap-2">
+                      {group.users.map((user, i) => (
+                        <UserRow
+                          key={user._id}
+                          user={user}
+                          index={i}
+                          isSelected={selectedUser?._id === user._id}
+                          onClick={() => setSelectedUser(user)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))
               )}
             </AnimatePresence>
           </div>
 
-          {/* User Detail Panel - Sidebar */}
-          <AnimatePresence>
-            {selectedUser && (
-              <motion.aside
-                initial={{ opacity: 0, x: 20, width: 0 }}
-                animate={{ opacity: 1, x: 0, width: 320 }}
-                exit={{ opacity: 0, x: 20, width: 0 }}
-                transition={pageTransition}
-                className="hidden lg:block flex-shrink-0 self-start sticky overflow-hidden"
-              >
-                <UserDetailPanel user={selectedUser} onClose={() => setSelectedUser(null)} />
-              </motion.aside>
-            )}
-          </AnimatePresence>
+          {/* Right Sidebar - Sticky Detail Panel */}
+          <div className="hidden lg:block w-80 shrink-0">
+            <div className="sticky top-24">
+              <AnimatePresence mode="wait">
+                {selectedUser ? (
+                  <motion.div
+                    key={selectedUser._id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 10 }}
+                  >
+                    <UserDetailPanel user={selectedUser} onClose={() => setSelectedUser(null)} />
+                  </motion.div>
+                ) : (
+                  <div className="border-2 border-dashed border-slate-100 rounded-2xl p-8 text-center">
+                    <Users className="w-8 h-8 text-slate-200 mx-auto mb-3" />
+                    <p className="text-sm text-slate-400">Select a member to view details</p>
+                  </div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
         </div>
+      </div>
 
-        {/* Mobile User Detail Modal */}
-        <AnimatePresence>
-          {selectedUser && (
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {selectedUser && (
+          <div className="lg:hidden fixed inset-0 z-50 flex items-end justify-center">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="lg:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
               onClick={() => setSelectedUser(null)}
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="relative w-full max-h-[90vh] bg-white rounded-t-3xl overflow-y-auto"
             >
-              <motion.div
-                initial={{ opacity: 0, y: "100%" }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: "100%" }}
-                transition={pageTransition}
-                className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-auto"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <UserDetailPanel user={selectedUser} onClose={() => setSelectedUser(null)} />
-              </motion.div>
+              <div className="sticky top-0 bg-white border-b border-slate-100 p-4 flex justify-between items-center">
+                <span className="font-semibold">Member Profile</span>
+                <button onClick={() => setSelectedUser(null)} className="p-2 bg-slate-100 rounded-full">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <UserDetailPanel user={selectedUser} onClose={() => setSelectedUser(null)} hideClose />
             </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-// --- USER CARD COMPONENT ---
-const UserCard = ({
-  user,
-  index,
-  isSelected,
-  onClick,
-}: {
-  user: AdminUser;
-  index: number;
-  isSelected: boolean;
-  onClick: () => void;
-}) => {
+// --- SUB-COMPONENTS ---
+
+function UserRow({ user, index, isSelected, onClick }: { user: AdminUser; index: number; isSelected: boolean; onClick: () => void }) {
   const config = roleConfigs[user.role] || roleConfigs.user;
 
   return (
     <motion.div
       variants={cardVariants}
       custom={index}
-      layout
-      whileHover={{ x: 4 }}
+      initial="initial"
+      animate="animate"
+      whileHover={{ scale: 1.005, x: 4 }}
       onClick={onClick}
-      className={`group flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 ${
-        isSelected
-          ? `bg-primary/10 border border-primary/30 ${config.glow} shadow-lg`
-          : "hover:bg-muted/50 border border-transparent"
+      className={`group relative flex items-center gap-4 p-3 rounded-xl cursor-pointer transition-all ${
+        isSelected ? "bg-blue-50 ring-1 ring-blue-200" : "hover:bg-slate-50"
       }`}
     >
-      {/* Avatar */}
-      <div className="relative flex-shrink-0">
-        {user.avatar ? (
-          <img
-            src={user.avatar}
-            alt={user.displayName}
-            className={`w-10 h-10 rounded-full object-cover ring-2 transition-all ${
-              isSelected ? "ring-primary" : "ring-background group-hover:ring-primary/50"
-            }`}
-          />
-        ) : (
-          <div
-            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-              isSelected
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary"
-            }`}
-          >
-            {user.displayName?.[0]?.toUpperCase() || "?"}
-          </div>
-        )}
-        {/* Role indicator dot */}
-        <div
-          className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center ${config.bg} border-2 border-background`}
-        >
+      <div className="relative">
+        <div className={`w-10 h-10 rounded-full overflow-hidden bg-slate-200 border-2 ${isSelected ? 'border-blue-200' : 'border-transparent'}`}>
+          {user.avatar ? (
+            <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-500 font-bold text-xs">
+              {user.displayName.charAt(0)}
+            </div>
+          )}
+        </div>
+        <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white flex items-center justify-center shrink-0 ${config.bg}`}>
           <config.icon className={`w-2.5 h-2.5 ${config.color}`} />
         </div>
       </div>
 
-      {/* User Info */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-foreground truncate">{user.displayName}</span>
-          {user.role === "owner" && (
-            <Crown className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-          )}
-          {user.role === "admin" && (
-            <Shield className="w-3.5 h-3.5 text-violet-500 flex-shrink-0" />
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+        <h4 className={`text-sm font-semibold truncate ${isSelected ? 'text-blue-900' : 'text-slate-900'}`}>
+          {user.displayName}
+        </h4>
+        <p className="text-xs text-slate-500 truncate">{user.email}</p>
       </div>
 
-      {/* Role Badge */}
-      <div
-        className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${config.bg} ${config.color} border ${config.border}`}
-      >
-        {config.label}
+      <div className="flex items-center gap-3">
+        <span className={`hidden sm:block px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${config.bg} ${config.color} ${config.border}`}>
+          {user.role}
+        </span>
+        <ChevronRight className={`w-4 h-4 transition-transform ${isSelected ? 'rotate-90 text-blue-500' : 'text-slate-300'}`} />
       </div>
-
-      {/* Arrow */}
-      <ChevronRight
-        className={`w-4 h-4 text-muted-foreground transition-all ${
-          isSelected ? "rotate-90 text-primary" : "opacity-0 group-hover:opacity-100"
-        }`}
-      />
     </motion.div>
   );
-};
+}
 
-// --- USER DETAIL PANEL ---
-const UserDetailPanel = ({
-  user,
-  onClose,
-}: {
-  user: AdminUser;
-  onClose: () => void;
-}) => {
+function UserDetailPanel({ user, onClose, hideClose = false }: { user: AdminUser; onClose: () => void; hideClose?: boolean }) {
   const config = roleConfigs[user.role] || roleConfigs.user;
 
   return (
-    <div className="bg-card border border-border rounded-2xl shadow-xl">
-      {/* Header with gradient */}
-      <div className={`relative h-20 ${config.bg}`}>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-card" />
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 p-1.5 rounded-full bg-background/50 hover:bg-background/80 transition-colors"
-        >
-          <X className="w-4 h-4 text-foreground" />
-        </button>
+    <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+      <div className={`h-24 ${config.bg} relative`}>
+        {!hideClose && (
+          <button onClick={onClose} className="absolute top-3 right-3 p-1.5 bg-white/50 hover:bg-white rounded-full transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
-
-      {/* Avatar & Name */}
-      <div className="px-5 -mt-10 relative">
-        <div className="relative inline-block">
-          {user.avatar ? (
-            <img
-              src={user.avatar}
-              alt={user.displayName}
-              className={`w-20 h-20 rounded-2xl object-cover border-4 border-card shadow-lg ${config.glow}`}
-            />
-          ) : (
-            <div
-              className={`w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-bold border-4 border-card shadow-lg ${config.bg} ${config.color}`}
-            >
-              {user.displayName?.[0]?.toUpperCase() || "?"}
-            </div>
-          )}
-          <div
-            className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-lg flex items-center justify-center ${config.bg} border-2 border-card shadow-sm`}
-          >
-            <config.icon className={`w-4 h-4 ${config.color}`} />
+      <div className="px-6 pb-6">
+        <div className="relative -mt-12 mb-4">
+          <div className="w-24 h-24 rounded-2xl border-4 border-white bg-slate-200 overflow-hidden shadow-md">
+            {user.avatar ? (
+              <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-slate-400">
+                {user.displayName.charAt(0)}
+              </div>
+            )}
           </div>
         </div>
-      </div>
 
-      {/* User Info */}
-      <div className="p-5 pt-4 space-y-4">
-        <div>
-          <h3 className="text-lg font-semibold text-foreground">{user.displayName}</h3>
-          <p className="text-sm text-muted-foreground">{user.email}</p>
+        <div className="space-y-1 mb-6">
+          <h3 className="text-xl font-bold text-slate-900">{user.displayName}</h3>
+          <p className="text-sm text-slate-500">{user.email}</p>
         </div>
 
-        {/* Role Badge */}
-        <div
-          className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium ${config.bg} ${config.color} border ${config.border}`}
-        >
-          <config.icon className="w-4 h-4" />
-          {config.label}
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${config.bg}`}>
+              <config.icon className={`w-4 h-4 ${config.color}`} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase">Role</p>
+              <p className="text-sm font-semibold text-slate-700 capitalize">{user.role}</p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <DetailItem icon={Hash} label="User ID" value={user._id.slice(-8)} />
+            <DetailItem icon={Calendar} label="Joined Date" value={formatDate(user.createdAt)} />
+            {user.adminExpiresAt && (
+              <DetailItem icon={Clock} label="Access Expires" value={formatDate(user.adminExpiresAt)} color="text-orange-600" />
+            )}
+          </div>
         </div>
 
-        {/* Details List */}
-        <div className="space-y-3 pt-2">
-          <DetailRow icon={Hash} label="User ID" value={user._id.slice(-8)} />
-          <DetailRow icon={Mail} label="Email" value={user.email} truncate />
-          {user.createdAt && (
-            <DetailRow icon={Calendar} label="Joined" value={formatDate(user.createdAt)} />
-          )}
-          {user.adminExpiresAt && user.role === "admin" && (
-            <DetailRow
-              icon={Clock}
-              label="Admin Until"
-              value={formatDate(user.adminExpiresAt)}
-              highlight
-            />
-          )}
-        </div>
-
-        {/* Permissions Section */}
-        {(user.role === "admin" || user.role === "owner") && (
-          <div className="pt-4 border-t border-border">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-              Permissions
-            </p>
+        {(user.role === 'admin' || user.role === 'owner') && (
+          <div className="mt-8 pt-6 border-t border-slate-100">
+            <p className="text-[10px] font-bold text-slate-400 uppercase mb-3">Permissions</p>
             <div className="flex flex-wrap gap-2">
-              {user.role === "owner" && (
-                <>
-                  <PermissionBadge label="Full Access" />
-                  <PermissionBadge label="Manage Admins" />
-                  <PermissionBadge label="Delete Data" />
-                </>
-              )}
-              {user.role === "admin" && (
-                <>
-                  <PermissionBadge label="View Analytics" />
-                  <PermissionBadge label="Manage Users" />
-                </>
+              <span className="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-md border border-blue-100">VIEW_ANALYTICS</span>
+              <span className="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-md border border-blue-100">MANAGE_USERS</span>
+              {user.role === 'owner' && (
+                <span className="px-2 py-1 bg-amber-50 text-amber-700 text-[10px] font-bold rounded-md border border-amber-100">FULL_ACCESS</span>
               )}
             </div>
           </div>
@@ -561,43 +346,16 @@ const UserDetailPanel = ({
       </div>
     </div>
   );
-};
+}
 
-// --- DETAIL ROW ---
-const DetailRow = ({
-  icon: Icon,
-  label,
-  value,
-  truncate,
-  highlight,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-  truncate?: boolean;
-  highlight?: boolean;
-}) => (
-  <div className="flex items-center gap-3">
-    <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
-      <Icon className="w-4 h-4 text-muted-foreground" />
+function DetailItem({ icon: Icon, label, value, color = "text-slate-700" }: any) {
+  return (
+    <div className="flex items-center gap-3">
+      <Icon className="w-4 h-4 text-slate-400" />
+      <div>
+        <p className="text-[10px] text-slate-400 font-medium uppercase leading-none mb-1">{label}</p>
+        <p className={`text-xs font-bold ${color}`}>{value}</p>
+      </div>
     </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p
-        className={`text-sm font-medium ${truncate ? "truncate" : ""} ${
-          highlight ? "text-violet-500" : "text-foreground"
-        }`}
-      >
-        {value}
-      </p>
-    </div>
-  </div>
-);
-
-// --- PERMISSION BADGE ---
-const PermissionBadge = ({ label }: { label: string }) => (
-  <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-muted/50 text-xs text-muted-foreground border border-border">
-    <Star className="w-3 h-3" />
-    {label}
-  </span>
-);
+  );
+}
