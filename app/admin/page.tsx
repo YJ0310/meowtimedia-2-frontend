@@ -184,7 +184,7 @@ export default function AdminPage() {
               Admin Console
             </h1>
             <p className="text-neutral-dark dark:text-gray-400 mt-2">
-              Welcome back, {user.name} ({user.role})
+              Welcome back, {user.displayName} ({user.role})
             </p>
           </div>
         </div>
