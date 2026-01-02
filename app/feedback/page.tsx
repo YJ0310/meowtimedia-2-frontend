@@ -56,6 +56,15 @@ const ISSUE_OPTIONS = [
   { value: "other", label: "Other" },
 ];
 
+// Referral options
+const REFERRAL_OPTIONS = [
+  "Sek Yin Jia",
+  "Foo Jia Qian",
+  "Cheah Chio Yuen",
+  "Errol Tay Lee Han",
+  "Lee Chang Xin",
+];
+
 export default function FeedbackPage() {
   const { user, isLoading: authLoading } = useAuth();
   const { startExperience, isAudioReady } = useBGM();
@@ -69,6 +78,7 @@ export default function FeedbackPage() {
   const [issuesOther, setIssuesOther] = useState("");
   const [recommendation, setRecommendation] = useState<number>(0);
   const [additionalFeedback, setAdditionalFeedback] = useState("");
+  const [referral, setReferral] = useState<string>("");
 
   // UI state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -123,6 +133,7 @@ export default function FeedbackPage() {
     issues.length > 0,
     recommendation > 0,
     true, // Optional step
+    referral,
   ].filter(Boolean).length;
 
   // Submit feedback
@@ -130,7 +141,7 @@ export default function FeedbackPage() {
     setError(null);
 
     // Validate required fields
-    if (!firstImpression || !easeOfUse || !recommendation || issues.length === 0) {
+    if (!firstImpression || !easeOfUse || !recommendation || issues.length === 0 || !referral) {
       setError("Please answer all required questions");
       return;
     }
@@ -153,6 +164,7 @@ export default function FeedbackPage() {
           issuesOther: issues.includes("other") ? issuesOther : undefined,
           recommendation,
           additionalFeedback: additionalFeedback || undefined,
+          referral,
         }),
       });
 
@@ -545,6 +557,41 @@ export default function FeedbackPage() {
           />
         </motion.div>
 
+        {/* Question 6: Referral */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+          className="glass-strong rounded-2xl p-6 mb-8"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <span className="text-2xl">👥</span>
+            <div>
+              <h2 className="text-lg font-bold">Question 6: Who referred you?</h2>
+              <p className="text-sm text-neutral-dark dark:text-gray-400">
+                Please select the person who introduced you to this app.
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {REFERRAL_OPTIONS.map((name) => (
+              <motion.button
+                key={name}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setReferral(name)}
+                className={`p-4 rounded-xl text-center transition-all ${
+                  referral === name
+                    ? "bg-gradient-to-r from-primary/20 to-secondary/20 border-2 border-primary"
+                    : "glass hover:bg-white/50 dark:hover:bg-white/10"
+                }`}
+              >
+                <span className="font-medium">{name}</span>
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+
         {/* Submit Button */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -556,7 +603,7 @@ export default function FeedbackPage() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={handleSubmit}
-            disabled={isSubmitting || completedSteps < 4}
+            disabled={isSubmitting || completedSteps < 5}
             className="bg-gradient-to-r from-primary to-secondary text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 mx-auto"
           >
             {isSubmitting ? (
