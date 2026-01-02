@@ -23,6 +23,12 @@ import {
   List,
   FileText,
   ChevronDown,
+  Mail,
+  UserCheck,
+  UserX,
+  Clock,
+  Infinity,
+  PieChart,
 } from "lucide-react";
 import GlobalLoading from "@/components/global-loading";
 import { motion, AnimatePresence } from "framer-motion";
@@ -30,7 +36,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://api.meowtimap.smoltako.space";
 
-// Import these from your feedback page or create a shared constants file
+// Form constants matching the feedback form
 const FIRST_IMPRESSION_OPTIONS = [
   { value: "learning", label: "Learning about Asian countries and cultures" },
   { value: "planning", label: "Planning a trip to Asia" },
@@ -62,6 +68,14 @@ const RECOMMEND_EMOJIS = [
   { value: 3, emoji: "😐", label: "Not sure" },
   { value: 4, emoji: "👍", label: "Likely" },
   { value: 5, emoji: "💯", label: "Definitely!" },
+];
+
+const REFERRAL_OPTIONS = [
+  "Sek Yin Jia",
+  "Foo Jia Qian",
+  "Cheah Chio Yuen",
+  "Errol Tay Lee Han",
+  "Lee Chang Xin",
 ];
 
 interface AdminUser {
@@ -115,15 +129,13 @@ interface Candidate {
   createdAt: string;
 }
 
-type FeedbackViewMode = "summary" | "byQuestion" | "byResponse";
-type UserSortBy = "name" | "email" | "role" | "date";
-type UserFilterRole = "all" | "owner" | "admin" | "user";
+type TabType = "feedback" | "users" | "manageAdmins";
 
 export default function AdminPage() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
 
-  const [activeTab, setActiveTab] = useState<"feedback" | "users" | "candidates">("feedback");
+  const [activeTab, setActiveTab] = useState<TabType>("feedback");
 
   // Data states
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -133,21 +145,21 @@ export default function AdminPage() {
   const [isLoadingData, setIsLoadingData] = useState(false);
 
   // Feedback view states
-  const [feedbackViewMode, setFeedbackViewMode] = useState<FeedbackViewMode>("summary");
   const [feedbackSearch, setFeedbackSearch] = useState("");
-  const [selectedQuestion, setSelectedQuestion] = useState<string>("all");
 
-  // User filter states  
+  // User management states  
   const [userSearch, setUserSearch] = useState("");
-  const [userSortBy, setUserSortBy] = useState<UserSortBy>("name");
-  const [userFilterRole, setUserFilterRole] = useState<UserFilterRole>("all");
-  const [showFilters, setShowFilters] = useState(false);
 
-  // Suggest candidate form
-  const [suggestName, setSuggestName] = useState("");
-  const [suggestEmail, setSuggestEmail] = useState("");
-  const [suggestReason, setSuggestReason] = useState("");
+  // Add/Propose Admin form states
+  const [showAdminForm, setShowAdminForm] = useState(false);
+  const [adminFormEmail, setAdminFormEmail] = useState("");
+  const [adminFormName, setAdminFormName] = useState("");
+  const [adminFormReason, setAdminFormReason] = useState("");
+  const [adminFormPermanent, setAdminFormPermanent] = useState(false);
+  const [adminFormExpiry, setAdminFormExpiry] = useState("");
+  const [adminFormSearchResults, setAdminFormSearchResults] = useState<AdminUser[]>([]);
 
+  // Check authentication and permissions
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/login");
@@ -156,22 +168,22 @@ export default function AdminPage() {
     }
   }, [user, authLoading, router]);
 
+  // Fetch data based on active tab
   useEffect(() => {
     if (!user) return;
 
-    if ((user.role === "owner" || user.role === "admin") && activeTab === "users") {
+    if (activeTab === "users") {
       fetchUsers();
-    }
-    if (user.role === "owner" && activeTab === "candidates") {
-      fetchCandidates();
-    }
-    if (activeTab === "feedback") {
-      fetchSummary();
-      if (feedbackViewMode === "byResponse") {
-        fetchResponses();
+    } else if (activeTab === "manageAdmins") {
+      fetchUsers();
+      if (user.role === "owner") {
+        fetchCandidates();
       }
+    } else if (activeTab === "feedback") {
+      fetchSummary();
+      fetchResponses();
     }
-  }, [activeTab, user, feedbackViewMode]);
+  }, [activeTab, user]);
 
   const fetchUsers = async () => {
     setIsLoadingData(true);
@@ -189,37 +201,30 @@ export default function AdminPage() {
   };
 
   const fetchSummary = async () => {
-    setIsLoadingData(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/feedback/summary`, {
+      const res = await fetch(`${API_BASE_URL}/admin/feedback/summary`, {
         credentials: "include",
       });
       const data = await res.json();
       if (data.success) setSummary(data.summary);
     } catch (error) {
       console.error("Error fetching summary:", error);
-    } finally {
-      setIsLoadingData(false);
     }
   };
 
   const fetchResponses = async () => {
-    setIsLoadingData(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/feedback/all`, {
+      const res = await fetch(`${API_BASE_URL}/admin/feedback/all`, {
         credentials: "include",
       });
       const data = await res.json();
       if (data.success) setResponses(data.feedbacks);
     } catch (error) {
       console.error("Error fetching responses:", error);
-    } finally {
-      setIsLoadingData(false);
     }
   };
 
   const fetchCandidates = async () => {
-    setIsLoadingData(true);
     try {
       const res = await fetch(`${API_BASE_URL}/admin/candidates`, {
         credentials: "include",
@@ -228,12 +233,14 @@ export default function AdminPage() {
       if (data.success) setCandidates(data.candidates);
     } catch (error) {
       console.error("Error fetching candidates:", error);
-    } finally {
-      setIsLoadingData(false);
     }
   };
 
-  const handleUpdateRole = async (userId: string, role: string, expiresIn?: number) => {
+  const handleUpdateRole = async (
+    userId: string,
+    role: string,
+    expiresIn?: number
+  ) => {
     try {
       const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
         method: "PUT",
@@ -244,93 +251,140 @@ export default function AdminPage() {
       const data = await res.json();
       if (data.success) {
         fetchUsers();
+        alert("Role updated successfully!");
       }
     } catch (error) {
       console.error("Error updating role:", error);
+      alert("Failed to update role");
     }
   };
 
-  const handleSuggestCandidate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSuggestCandidate = async () => {
+    if (!adminFormEmail || !adminFormName || !adminFormReason) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
     try {
       const res = await fetch(`${API_BASE_URL}/admin/candidates`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          candidateName: suggestName,
-          candidateEmail: suggestEmail,
-          reason: suggestReason,
+          candidateName: adminFormName,
+          candidateEmail: adminFormEmail,
+          reason: adminFormReason,
         }),
       });
       const data = await res.json();
       if (data.success) {
-        setSuggestName("");
-        setSuggestEmail("");
-        setSuggestReason("");
+        resetAdminForm();
         alert("Candidate suggested successfully!");
+        fetchCandidates();
       }
     } catch (error) {
       console.error("Error suggesting candidate:", error);
+      alert("Failed to suggest candidate");
     }
   };
 
-  // Filter and sort users
-  const filteredUsers = useMemo(() => {
-    let filtered = [...users];
+  const handleAddAdmin = async () => {
+    if (!adminFormEmail || !adminFormReason) {
+      alert("Please fill in all required fields");
+      return;
+    }
 
-    // Apply search
-    if (userSearch) {
-      filtered = filtered.filter(
+    if (!adminFormPermanent && !adminFormExpiry) {
+      alert("Please select an expiry date or mark as permanent");
+      return;
+    }
+
+    try {
+      // Find the user by email
+      const targetUser = users.find((u) => u.email === adminFormEmail);
+      if (!targetUser) {
+        alert("User not found");
+        return;
+      }
+
+      // Calculate expiresIn (days from now)
+      let expiresIn: number | undefined = undefined;
+      if (!adminFormPermanent && adminFormExpiry) {
+        const expiryDate = new Date(adminFormExpiry);
+        const now = new Date();
+        const diffTime = expiryDate.getTime() - now.getTime();
+        expiresIn = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      }
+
+      await handleUpdateRole(targetUser._id, "admin", expiresIn);
+      resetAdminForm();
+    } catch (error) {
+      console.error("Error adding admin:", error);
+      alert("Failed to add admin");
+    }
+  };
+
+  const resetAdminForm = () => {
+    setShowAdminForm(false);
+    setAdminFormEmail("");
+    setAdminFormName("");
+    setAdminFormReason("");
+    setAdminFormPermanent(false);
+    setAdminFormExpiry("");
+    setAdminFormSearchResults([]);
+  };
+
+  const handleEmailSearch = (email: string) => {
+    setAdminFormEmail(email);
+    if (email.length >= 2) {
+      const results = users.filter(
+        (u) =>
+          u.email.toLowerCase().includes(email.toLowerCase()) ||
+          u.displayName.toLowerCase().includes(email.toLowerCase())
+      );
+      setAdminFormSearchResults(results.slice(0, 5));
+    } else {
+      setAdminFormSearchResults([]);
+    }
+  };
+
+  const selectUserFromSearch = (selectedUser: AdminUser) => {
+    setAdminFormEmail(selectedUser.email);
+    setAdminFormName(selectedUser.displayName);
+    setAdminFormSearchResults([]);
+  };
+
+  // Filter users and admins
+  const filteredUsers = useMemo(() => {
+    if (!userSearch) return users.filter((u) => u.role === "user");
+    return users
+      .filter((u) => u.role === "user")
+      .filter(
         (u) =>
           u.displayName.toLowerCase().includes(userSearch.toLowerCase()) ||
           u.email.toLowerCase().includes(userSearch.toLowerCase())
       );
-    }
+  }, [users, userSearch]);
 
-    // Apply role filter
-    if (userFilterRole !== "all") {
-      filtered = filtered.filter((u) => u.role === userFilterRole);
-    }
+  const adminsList = useMemo(() => {
+    return users.filter((u) => u.role === "admin" || u.role === "owner");
+  }, [users]);
 
-    // Apply sorting
-    filtered.sort((a, b) => {
-      switch (userSortBy) {
-        case "name":
-          return a.displayName.localeCompare(b.displayName);
-        case "email":
-          return a.email.localeCompare(b.email);
-        case "role":
-          const roleOrder = { owner: 0, admin: 1, user: 2 };
-          return roleOrder[a.role] - roleOrder[b.role];
-        case "date":
-          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-        default:
-          return 0;
-      }
-    });
-
-    return filtered;
-  }, [users, userSearch, userSortBy, userFilterRole]);
-
-  // Filter responses for search
   const filteredResponses = useMemo(() => {
     if (!feedbackSearch) return responses;
-    
     return responses.filter(
       (r) =>
-        r.userId.displayName.toLowerCase().includes(feedbackSearch.toLowerCase()) ||
+        r.userId.displayName
+          .toLowerCase()
+          .includes(feedbackSearch.toLowerCase()) ||
         r.userId.email.toLowerCase().includes(feedbackSearch.toLowerCase()) ||
-        r.additionalFeedback?.toLowerCase().includes(feedbackSearch.toLowerCase())
+        r.additionalFeedback
+          ?.toLowerCase()
+          .includes(feedbackSearch.toLowerCase())
     );
   }, [responses, feedbackSearch]);
 
-  if (authLoading || !user) return <GlobalLoading isLoading={true} />;
-
-  const totalAdmins = users.filter((u) => u.role === "admin").length;
-  const totalOwners = users.filter((u) => u.role === "owner").length;
-
-  // Helper functions for mapping values to labels
+  // Helper functions
   const getFirstImpressionLabel = (value: string) =>
     FIRST_IMPRESSION_OPTIONS.find((o) => o.value === value)?.label || value;
 
@@ -343,1056 +397,709 @@ export default function AdminPage() {
   const getRecommendEmoji = (value: number) =>
     RECOMMEND_EMOJIS.find((e) => e.value === value);
 
-  const renderFeedbackContent = () => {
-    if (isLoadingData && !summary) {
+  // Render pie chart for categorical data
+  const renderPieChart = (data: { _id: string; count: number }[], total: number, getLabel: (val: string) => string) => {
+    if (!data || data.length === 0) {
       return (
-        <div className="flex justify-center py-16">
-          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        <div className="text-center py-8 text-gray-500">
+          <p>No responses yet</p>
         </div>
       );
     }
 
-    if (!summary || summary.total === 0) {
-      return (
-        <div className="glass-strong rounded-2xl p-8 text-center">
-          <div className="text-6xl mb-4">📭</div>
-          <p className="text-lg font-semibold mb-2">No feedback yet</p>
-          <p className="text-sm text-gray-500">
-            Responses will appear here once users submit the feedback form.
-          </p>
-        </div>
-      );
-    }
+    // Calculate total for percentages
+    const dataTotal = data.reduce((sum, item) => sum + item.count, 0);
 
-    switch (feedbackViewMode) {
-      case "summary":
-        return renderSummaryView();
-      case "byQuestion":
-        return renderByQuestionView();
-      case "byResponse":
-        return renderByResponseView();
-      default:
-        return null;
-    }
-  };
-
-  const renderSummaryView = () => {
-    if (!summary) return null;
-
-    return (
-      <>
-        {/* Summary Cards */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
-        >
-          <div className="glass-strong rounded-2xl p-6">
-            <div className="text-4xl mb-3">📊</div>
-            <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
-              Total Responses
-            </p>
-            <p className="text-3xl font-bold">{summary.total}</p>
-            <p className="text-xs text-gray-500 mt-2">
-              Beta testers who shared feedback
-            </p>
-          </div>
-
-          <div className="glass-strong rounded-2xl p-6">
-            <div className="text-4xl mb-3">📱</div>
-            <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
-              Ease of Use Score
-            </p>
-            <div className="flex items-baseline gap-2">
-              <p className="text-3xl font-bold text-secondary">
-                {summary.avgEaseOfUse.toFixed(1)}
-              </p>
-              <span className="text-xl">
-                {getEaseEmoji(Math.round(summary.avgEaseOfUse))?.emoji}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              {getEaseEmoji(Math.round(summary.avgEaseOfUse))?.label}
-            </p>
-          </div>
-
-          <div className="glass-strong rounded-2xl p-6">
-            <div className="text-4xl mb-3">💬</div>
-            <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">
-              Would Recommend
-            </p>
-            <div className="flex items-baseline gap-2">
-              <p className="text-3xl font-bold text-accent">
-                {summary.avgRecommendation.toFixed(1)}
-              </p>
-              <span className="text-xl">
-                {getRecommendEmoji(Math.round(summary.avgRecommendation))?.emoji}
-              </span>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              {getRecommendEmoji(Math.round(summary.avgRecommendation))?.label}
-            </p>
-          </div>
-        </motion.div>
-
-        {/* All Questions Overview */}
-        <div className="space-y-8">
-          {/* Q1: First Impressions */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="glass-strong rounded-2xl p-6"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <span className="text-2xl">👀</span>
-              <div>
-                <h3 className="text-lg font-bold">
-                  Question 1: First Impressions
-                </h3>
-                <p className="text-xs text-gray-500">
-                  What users think the app is for • {summary.total} responses
-                </p>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {FIRST_IMPRESSION_OPTIONS.map((option) => {
-                const item = summary.firstImpression.find(
-                  (i) => i._id === option.value
-                );
-                const count = item?.count || 0;
-                const pct = summary.total > 0 ? ((count / summary.total) * 100).toFixed(1) : "0";
-                
-                return (
-                  <div key={option.value} className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span>{option.label}</span>
-                      <span className="font-semibold text-gray-600 dark:text-gray-400">
-                        {count} ({pct}%)
-                      </span>
-                    </div>
-                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                      <motion.div
-                        className="h-full bg-gradient-to-r from-primary to-secondary"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${pct}%` }}
-                        transition={{ duration: 0.5, delay: 0.2 }}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Q2: Ease of Use */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="glass-strong rounded-2xl p-6"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <span className="text-2xl">📱</span>
-                <div>
-                  <h3 className="text-lg font-bold">
-                    Question 2: How Easy Was It?
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    Ease of use rating distribution
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-end justify-between gap-2 h-32">
-                {EASE_EMOJIS.map((emoji) => {
-                  const count =
-                    summary.easeOfUse.find((i) => i._id === emoji.value)?.count || 0;
-                  const percentage =
-                    summary.total > 0 ? (count / summary.total) * 100 : 0;
-                  
-                  return (
-                    <div
-                      key={emoji.value}
-                      className="flex-1 flex flex-col items-center gap-2"
-                    >
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-t-lg relative flex-1">
-                        <motion.div
-                          className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-secondary to-secondary/60 rounded-t-lg"
-                          initial={{ height: 0 }}
-                          animate={{ height: `${percentage}%` }}
-                          transition={{ duration: 0.5, delay: 0.3 }}
-                        />
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xl">{emoji.emoji}</div>
-                        <span className="text-[10px] text-gray-500">
-                          {count}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-
-            {/* Q4: Would Recommend */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="glass-strong rounded-2xl p-6"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <span className="text-2xl">💬</span>
-                <div>
-                  <h3 className="text-lg font-bold">
-                    Question 4: Would You Share It?
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    Recommendation likelihood
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-end justify-between gap-2 h-32">
-                {RECOMMEND_EMOJIS.map((emoji) => {
-                  const count =
-                    summary.recommendation.find((i) => i._id === emoji.value)?.count ||
-                    0;
-                  const percentage =
-                    summary.total > 0 ? (count / summary.total) * 100 : 0;
-                  
-                  return (
-                    <div
-                      key={emoji.value}
-                      className="flex-1 flex flex-col items-center gap-2"
-                    >
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-t-lg relative flex-1">
-                        <motion.div
-                          className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-accent to-accent/60 rounded-t-lg"
-                          initial={{ height: 0 }}
-                          animate={{ height: `${percentage}%` }}
-                          transition={{ duration: 0.5, delay: 0.4 }}
-                        />
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xl">{emoji.emoji}</div>
-                        <span className="text-[10px] text-gray-500">
-                          {count}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Q3: Issues */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="glass-strong rounded-2xl p-6"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <span className="text-2xl">🔧</span>
-                <div>
-                  <h3 className="text-lg font-bold">
-                    Question 3: Did Anything Break?
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    Reported issues • Users could select multiple
-                  </p>
-                </div>
-              </div>
-              <div className="space-y-3">
-                {ISSUE_OPTIONS.map((option) => {
-                  const item = summary.issues.find(
-                    (i) => i._id === option.value
-                  );
-                  const count = item?.count || 0;
-                  
-                  if (count === 0) return null;
-                  
-                  return (
-                    <div
-                      key={option.value}
-                      className="flex justify-between items-center p-3 glass rounded-xl"
-                    >
-                      <span className="text-sm flex items-center gap-2">
-                        {option.value === "none" ? (
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                        ) : (
-                          <AlertCircle className="w-4 h-4 text-yellow-500" />
-                        )}
-                        {option.label}
-                      </span>
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-white/20">
-                        {count}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-
-            {/* Q6: Referrals */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="glass-strong rounded-2xl p-6"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <span className="text-2xl">👥</span>
-                <div>
-                  <h3 className="text-lg font-bold">
-                    Question 6: Who Referred Users?
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    Referral sources
-                  </p>
-                </div>
-              </div>
-              <div className="space-y-3">
-                {summary.referral.map((item) => {
-                  const pct =
-                    summary.total > 0
-                      ? ((item.count / summary.total) * 100).toFixed(1)
-                      : "0";
-                  
-                  return (
-                    <div key={item._id} className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="font-medium">{item._id}</span>
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {item.count} ({pct}%)
-                        </span>
-                      </div>
-                      <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <motion.div
-                          className="h-full bg-gradient-to-r from-purple-500 to-purple-400"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${pct}%` }}
-                          transition={{ duration: 0.5, delay: 0.6 }}
-                        />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </>
-    );
-  };
-
-  const renderByQuestionView = () => {
-    if (!summary) return null;
-
-    const questions = [
-      { id: "q1", emoji: "👀", title: "First Impressions", key: "firstImpression" },
-      { id: "q2", emoji: "📱", title: "How Easy Was It?", key: "easeOfUse" },
-      { id: "q3", emoji: "🔧", title: "Did Anything Break?", key: "issues" },
-      { id: "q4", emoji: "💬", title: "Would You Share It?", key: "recommendation" },
-      { id: "q6", emoji: "👥", title: "Who Referred You?", key: "referral" },
-    ];
-
-    const selectedQ = questions.find(q => q.id === selectedQuestion) || questions[0];
-
-    return (
-      <div className="space-y-6">
-        {/* Question Selector */}
-        <div className="glass-strong rounded-2xl p-4">
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            <button
-              onClick={() => setSelectedQuestion("all")}
-              className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap ${
-                selectedQuestion === "all"
-                  ? "bg-primary text-white"
-                  : "glass hover:bg-white/50 dark:hover:bg-white/10"
-              }`}
-            >
-              All Questions
-            </button>
-            {questions.map((q) => (
-              <button
-                key={q.id}
-                onClick={() => setSelectedQuestion(q.id)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap flex items-center gap-2 ${
-                  selectedQuestion === q.id
-                    ? "bg-primary text-white"
-                    : "glass hover:bg-white/50 dark:hover:bg-white/10"
-                }`}
-              >
-                <span>{q.emoji}</span>
-                {q.title}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Display selected question or all */}
-        {selectedQuestion === "all" ? (
-          renderSummaryView()
-        ) : (
-          <motion.div
-            key={selectedQuestion}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="glass-strong rounded-2xl p-6"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <span className="text-4xl">{selectedQ.emoji}</span>
-              <div>
-                <h3 className="text-xl font-bold">{selectedQ.title}</h3>
-                <p className="text-sm text-gray-500">
-                  Detailed breakdown • {summary.total} responses
-                </p>
-              </div>
-            </div>
-
-            {/* Render question-specific content */}
-            {selectedQ.key === "firstImpression" && (
-              <div className="space-y-4">
-                {FIRST_IMPRESSION_OPTIONS.map((option) => {
-                  const item = summary.firstImpression.find(
-                    (i) => i._id === option.value
-                  );
-                  const count = item?.count || 0;
-                  const pct = summary.total > 0 ? ((count / summary.total) * 100).toFixed(1) : "0";
-                  
-                  return (
-                    <div key={option.value} className="glass rounded-xl p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="font-medium">{option.label}</span>
-                        <span className="text-2xl font-bold text-primary">
-                          {pct}%
-                        </span>
-                      </div>
-                      <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                        <motion.div
-                          className="h-full bg-gradient-to-r from-primary to-secondary"
-                          initial={{ width: 0 }}
-                          animate={{ width: `${pct}%` }}
-                          transition={{ duration: 0.5 }}
-                        />
-                      </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        {count} {count === 1 ? 'response' : 'responses'}
-                      </p>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {/* Similar detailed views for other questions... */}
-          </motion.div>
-        )}
-      </div>
-    );
-  };
-
-  const renderByResponseView = () => {
     return (
       <div className="space-y-4">
-        {filteredResponses.length === 0 ? (
-          <div className="glass-strong rounded-2xl p-8 text-center">
-            <p className="text-gray-500">No responses found</p>
-          </div>
-        ) : (
-          filteredResponses.map((response) => (
-            <motion.div
-              key={response._id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="glass-strong rounded-2xl p-6"
-            >
-              {/* User Info Header */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-sm font-bold">
-                    {response.userId.avatar ? (
-                      <img
-                        src={response.userId.avatar}
-                        alt={response.userId.displayName}
-                        className="w-full h-full object-cover rounded-full"
-                      />
-                    ) : (
-                      response.userId.displayName?.[0]?.toUpperCase()
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-semibold">{response.userId.displayName}</p>
-                    <p className="text-xs text-gray-500">{response.userId.email}</p>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500">
-                  {new Date(response.createdAt).toLocaleDateString()}
-                </p>
+        {data.map((item, index) => {
+          const percentage = dataTotal > 0 ? ((item.count / dataTotal) * 100).toFixed(1) : 0;
+          const colors = [
+            "bg-blue-500",
+            "bg-purple-500",
+            "bg-pink-500",
+            "bg-green-500",
+            "bg-yellow-500",
+            "bg-red-500",
+            "bg-indigo-500",
+          ];
+          const color = colors[index % colors.length];
+
+          return (
+            <div key={item._id} className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium">
+                  {getLabel(item._id)}
+                </span>
+                <span className="text-sm font-bold">
+                  {item.count} ({percentage}%)
+                </span>
               </div>
-
-              {/* Response Details */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">First Impression</p>
-                    <p className="font-medium">{getFirstImpressionLabel(response.firstImpression)}</p>
-                    {response.firstImpressionOther && (
-                      <p className="text-xs text-gray-400 mt-1">{response.firstImpressionOther}</p>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Ease of Use</p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">
-                        {getEaseEmoji(response.easeOfUse)?.emoji}
-                      </span>
-                      <span className="font-medium">
-                        {getEaseEmoji(response.easeOfUse)?.label}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Would Recommend</p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">
-                        {getRecommendEmoji(response.recommendation)?.emoji}
-                      </span>
-                      <span className="font-medium">
-                        {getRecommendEmoji(response.recommendation)?.label}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Issues Reported</p>
-                    <div className="space-y-1">
-                      {response.issues.map((issue) => (
-                        <div key={issue} className="flex items-center gap-2">
-                          {issue === "none" ? (
-                            <CheckCircle className="w-3 h-3 text-green-500" />
-                          ) : (
-                            <AlertCircle className="w-3 h-3 text-yellow-500" />
-                          )}
-                          <span className="text-xs">{getIssueLabel(issue)}</span>
-                        </div>
-                      ))}
-                      {response.issuesOther && (
-                        <p className="text-xs text-gray-400 mt-1">{response.issuesOther}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Referred by</p>
-                    <p className="font-medium">{response.referral}</p>
-                  </div>
-                </div>
+              <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div
+                  className={`h-full ${color}`}
+                  style={{ width: `${percentage}%` }}
+                />
               </div>
-
-              {response.additionalFeedback && (
-                <div className="mt-4 pt-4 border-t border-white/10">
-                  <p className="text-xs text-gray-500 mb-2">Additional Feedback</p>
-                  <p className="text-sm italic">"{response.additionalFeedback}"</p>
-                </div>
-              )}
-            </motion.div>
-          ))
-        )}
+            </div>
+          );
+        })}
       </div>
     );
   };
+
+  // Render bar chart for rating data
+  const renderBarChart = (
+    data: { _id: number; count: number }[],
+    total: number,
+    getEmoji: (val: number) => any
+  ) => {
+    const ratings = [1, 2, 3, 4, 5];
+    
+    return (
+      <div className="flex items-end justify-between h-48 gap-2">
+        {ratings.map((rating) => {
+          const item = data.find((d) => d._id === rating);
+          const count = item?.count || 0;
+          const percentage = total > 0 ? (count / total) * 100 : 0;
+          const emoji = getEmoji(rating);
+
+          return (
+            <div key={rating} className="flex-1 flex flex-col items-center gap-2">
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-t-lg relative flex-1">
+                <div
+                  className="absolute bottom-0 left-0 right-0 bg-primary rounded-t-lg transition-all duration-500 flex items-center justify-center"
+                  style={{ height: `${percentage}%`, minHeight: count > 0 ? "30px" : "0" }}
+                >
+                  {count > 0 && (
+                    <span className="text-white font-bold text-sm">{count}</span>
+                  )}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl">{emoji?.emoji}</div>
+                <div className="text-xs font-bold">{rating}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  if (authLoading || !user) return <GlobalLoading isLoading={true} />;
+
+  const isOwner = user.role === "owner";
 
   return (
     <div className="min-h-screen bg-gradient-soft dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 sm:p-8 pt-24">
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between"
-        >
+        <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gradient flex items-center gap-3">
               <Shield className="w-8 h-8 text-primary" />
               Admin Console
             </h1>
-            <p className="text-neutral-dark dark:text-gray-400 mt-2 text-sm">
-              Logged in as {user.displayName} ({user.role})
+            <p className="text-neutral-dark dark:text-gray-400 mt-2">
+              Welcome back, {user.displayName} ({user.role})
             </p>
           </div>
-          <div className="text-6xl">🐱</div>
-        </motion.div>
-
-        {/* Tabs */}
-        <div className="flex gap-3 mb-4 overflow-x-auto pb-1 border-b border-white/10">
-          <button
-            onClick={() => setActiveTab("feedback")}
-            className={`px-4 py-2 rounded-t-xl font-medium text-sm flex items-center gap-2 border-b-2 ${
-              activeTab === "feedback"
-                ? "border-primary text-primary bg-white/70 dark:bg-white/5"
-                : "border-transparent text-gray-500 hover:text-primary"
-            }`}
-          >
-            <MessageSquare className="w-4 h-4" />
-            Feedback Responses
-          </button>
-
-          {(user.role === "owner" || user.role === "admin") && (
-            <button
-              onClick={() => setActiveTab("users")}
-              className={`px-4 py-2 rounded-t-xl font-medium text-sm flex items-center gap-2 border-b-2 ${
-                activeTab === "users"
-                  ? "border-primary text-primary bg-white/70 dark:bg-white/5"
-                  : "border-transparent text-gray-500 hover:text-primary"
-              }`}
-            >
-              <Users className="w-4 h-4" />
-              Users & Admins
-            </button>
-          )}
-
-          {user.role === "owner" && (
-            <button
-              onClick={() => setActiveTab("candidates")}
-              className={`px-4 py-2 rounded-t-xl font-medium text-sm flex items-center gap-2 border-b-2 ${
-                activeTab === "candidates"
-                  ? "border-primary text-primary bg-white/70 dark:bg-white/5"
-                  : "border-transparent text-gray-500 hover:text-primary"
-              }`}
-            >
-              <UserPlus className="w-4 h-4" />
-              Admin Candidates
-            </button>
-          )}
         </div>
 
-        {/* FEEDBACK TAB */}
-        {activeTab === "feedback" && (
-          <div className="space-y-6">
-            {/* Filters and View Mode */}
-            <div className="glass-strong rounded-2xl p-4">
-              <div className="flex flex-col lg:flex-row gap-4">
-                {/* Search */}
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                    <input
-                      type="text"
-                      placeholder="Search feedback..."
-                      value={feedbackSearch}
-                      onChange={(e) => setFeedbackSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 rounded-xl glass border border-white/20 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                </div>
+        {/* Tabs */}
+        <div className="flex gap-4 mb-8 overflow-x-auto pb-2">
+          <button
+            onClick={() => setActiveTab("feedback")}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === "feedback"
+                ? "bg-primary text-white shadow-lg"
+                : "glass hover:bg-white/50 dark:hover:bg-white/10"
+            }`}
+          >
+            <BarChart3 className="w-5 h-5" />
+            Feedback Responses
+          </button>
+          
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === "users"
+                ? "bg-primary text-white shadow-lg"
+                : "glass hover:bg-white/50 dark:hover:bg-white/10"
+            }`}
+          >
+            <Users className="w-5 h-5" />
+            Users & Admins
+          </button>
 
-                {/* View Mode Selector */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setFeedbackViewMode("summary")}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 ${
-                      feedbackViewMode === "summary"
-                        ? "bg-primary text-white"
-                        : "glass hover:bg-white/50 dark:hover:bg-white/10"
-                    }`}
-                  >
-                    <Grid3x3 className="w-4 h-4" />
-                    Summary
-                  </button>
-                  <button
-                    onClick={() => setFeedbackViewMode("byQuestion")}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 ${
-                      feedbackViewMode === "byQuestion"
-                        ? "bg-primary text-white"
-                        : "glass hover:bg-white/50 dark:hover:bg-white/10"
-                    }`}
-                  >
-                    <List className="w-4 h-4" />
-                    By Question
-                  </button>
-                  <button
-                    onClick={() => setFeedbackViewMode("byResponse")}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 ${
-                      feedbackViewMode === "byResponse"
-                        ? "bg-primary text-white"
-                        : "glass hover:bg-white/50 dark:hover:bg-white/10"
-                    }`}
-                  >
-                    <FileText className="w-4 h-4" />
-                    By Response
-                  </button>
-                </div>
-              </div>
-            </div>
+          <button
+            onClick={() => setActiveTab("manageAdmins")}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === "manageAdmins"
+                ? "bg-primary text-white shadow-lg"
+                : "glass hover:bg-white/50 dark:hover:bg-white/10"
+            }`}
+          >
+            <Crown className="w-5 h-5" />
+            Manage Admins
+          </button>
+        </div>
 
-            {/* Feedback Content */}
-            {renderFeedbackContent()}
-
-            {/* Suggest Admin Form (only in summary view) */}
-            {feedbackViewMode === "summary" && summary && summary.total > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="glass-strong rounded-2xl p-6"
-              >
-                <div className="flex items-center gap-3 mb-6">
-                  <span className="text-2xl">🎯</span>
-                  <div>
-                    <h3 className="text-lg font-bold">
-                      Suggest an Admin Candidate
-                    </h3>
-                    <p className="text-xs text-gray-500">
-                      Nominate someone to help manage the platform
-                    </p>
-                  </div>
-                </div>
-                <form onSubmit={handleSuggestCandidate} className="space-y-3">
+        {/* Tab Content */}
+        <AnimatePresence mode="wait">
+          {activeTab === "feedback" && (
+            <motion.div
+              key="feedback"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-8"
+            >
+              {/* Search */}
+              <div className="glass-strong rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <Search className="w-5 h-5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Candidate name"
-                    value={suggestName}
-                    onChange={(e) => setSuggestName(e.target.value)}
-                    className="w-full p-3 rounded-xl glass border border-white/20 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
+                    placeholder="Search feedback by user name, email, or content..."
+                    value={feedbackSearch}
+                    onChange={(e) => setFeedbackSearch(e.target.value)}
+                    className="flex-1 bg-transparent border-none outline-none"
                   />
-                  <input
-                    type="email"
-                    placeholder="Candidate email"
-                    value={suggestEmail}
-                    onChange={(e) => setSuggestEmail(e.target.value)}
-                    className="w-full p-3 rounded-xl glass border border-white/20 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    required
-                  />
-                  <textarea
-                    placeholder="Why should this person be an admin?"
-                    value={suggestReason}
-                    onChange={(e) => setSuggestReason(e.target.value)}
-                    className="w-full p-3 rounded-xl glass border border-white/20 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                    rows={3}
-                    required
-                  />
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-primary to-secondary text-white py-3 rounded-xl text-sm font-semibold"
-                  >
-                    Submit Nomination
-                  </motion.button>
-                </form>
-              </motion.div>
-            )}
-          </div>
-        )}
-
-        {/* USERS TAB */}
-        {activeTab === "users" && (
-          <div className="space-y-6">
-            {/* Filters */}
-            <div className="glass-strong rounded-2xl p-4">
-              <div className="flex flex-col lg:flex-row gap-4">
-                {/* Search */}
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                    <input
-                      type="text"
-                      placeholder="Search users by name or email..."
-                      value={userSearch}
-                      onChange={(e) => setUserSearch(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 rounded-xl glass border border-white/20 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    />
-                  </div>
-                </div>
-
-                {/* Filter and Sort Controls */}
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="px-4 py-2 rounded-xl glass hover:bg-white/50 dark:hover:bg-white/10 text-sm font-medium flex items-center gap-2"
-                  >
-                    <Filter className="w-4 h-4" />
-                    Filter
-                    <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-                  </button>
-                  
-                  <select
-                    value={userSortBy}
-                    onChange={(e) => setUserSortBy(e.target.value as UserSortBy)}
-                    className="px-4 py-2 rounded-xl glass border border-white/20 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="name">Sort by Name</option>
-                    <option value="email">Sort by Email</option>
-                    <option value="role">Sort by Role</option>
-                    <option value="date">Sort by Date</option>
-                  </select>
                 </div>
               </div>
 
-              {/* Expanded Filters */}
-              <AnimatePresence>
-                {showFilters && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="pt-4 mt-4 border-t border-white/10">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setUserFilterRole("all")}
-                          className={`px-4 py-2 rounded-xl text-sm font-medium ${
-                            userFilterRole === "all"
-                              ? "bg-primary text-white"
-                              : "glass hover:bg-white/50 dark:hover:bg-white/10"
-                          }`}
-                        >
-                          All Roles
-                        </button>
-                        <button
-                          onClick={() => setUserFilterRole("owner")}
-                          className={`px-4 py-2 rounded-xl text-sm font-medium ${
-                            userFilterRole === "owner"
-                              ? "bg-primary text-white"
-                              : "glass hover:bg-white/50 dark:hover:bg-white/10"
-                          }`}
-                        >
-                          Owners
-                        </button>
-                        <button
-                          onClick={() => setUserFilterRole("admin")}
-                          className={`px-4 py-2 rounded-xl text-sm font-medium ${
-                            userFilterRole === "admin"
-                              ? "bg-primary text-white"
-                              : "glass hover:bg-white/50 dark:hover:bg-white/10"
-                          }`}
-                        >
-                          Admins
-                        </button>
-                        <button
-                          onClick={() => setUserFilterRole("user")}
-                          className={`px-4 py-2 rounded-xl text-sm font-medium ${
-                            userFilterRole === "user"
-                              ? "bg-primary text-white"
-                              : "glass hover:bg-white/50 dark:hover:bg-white/10"
-                          }`}
-                        >
-                          Users
-                        </button>
+              {/* Summary Statistics */}
+              {summary && summary.total > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="glass-strong rounded-2xl p-6 text-center">
+                      <h3 className="text-lg font-semibold mb-2">Total Responses</h3>
+                      <p className="text-4xl font-bold text-primary">{summary.total}</p>
+                    </div>
+                    <div className="glass-strong rounded-2xl p-6 text-center">
+                      <h3 className="text-lg font-semibold mb-2">Avg Ease of Use</h3>
+                      <p className="text-4xl font-bold text-secondary">
+                        {summary.avgEaseOfUse.toFixed(1)}/5
+                      </p>
+                    </div>
+                    <div className="glass-strong rounded-2xl p-6 text-center">
+                      <h3 className="text-lg font-semibold mb-2">Avg Recommendation</h3>
+                      <p className="text-4xl font-bold text-accent">
+                        {summary.avgRecommendation.toFixed(1)}/5
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Questions in correct order */}
+                  <div className="space-y-6">
+                    {/* 1. First Impressions */}
+                    <div className="glass-strong rounded-2xl p-6">
+                      <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <PieChart className="w-5 h-5" />
+                        1. First Impressions
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-4">
+                        What brought you here today?
+                      </p>
+                      {renderPieChart(summary.firstImpression, summary.total, getFirstImpressionLabel)}
+                    </div>
+
+                    {/* 2. How Easy Was It? */}
+                    <div className="glass-strong rounded-2xl p-6">
+                      <h3 className="text-xl font-bold mb-4">
+                        2. How Easy Was It? (1-5)
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Rate the ease of use
+                      </p>
+                      {renderBarChart(summary.easeOfUse, summary.total, getEaseEmoji)}
+                    </div>
+
+                    {/* 3. Did Anything Break? */}
+                    <div className="glass-strong rounded-2xl p-6">
+                      <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <AlertCircle className="w-5 h-5" />
+                        3. Did Anything Break?
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Reported issues and problems
+                      </p>
+                      {renderPieChart(summary.issues, summary.total, getIssueLabel)}
+                    </div>
+
+                    {/* 4. Would You Share It? */}
+                    <div className="glass-strong rounded-2xl p-6">
+                      <h3 className="text-xl font-bold mb-4">
+                        4. Would You Share It? (1-5)
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Recommendation score
+                      </p>
+                      {renderBarChart(summary.recommendation, summary.total, getRecommendEmoji)}
+                    </div>
+
+                    {/* 5. Any Other Thoughts? */}
+                    <div className="glass-strong rounded-2xl p-6">
+                      <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <MessageSquare className="w-5 h-5" />
+                        5. Any Other Thoughts?
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-2">
+                        {filteredResponses.filter(r => r.additionalFeedback && r.additionalFeedback.trim().length > 0).length} users shared additional feedback
+                      </p>
+                      <div className="space-y-3 mt-4 max-h-96 overflow-y-auto">
+                        {filteredResponses
+                          .filter(r => r.additionalFeedback && r.additionalFeedback.trim().length > 0)
+                          .map((response) => (
+                            <div key={response._id} className="bg-white/5 p-4 rounded-xl">
+                              <div className="flex items-center gap-3 mb-2">
+                                {response.userId.avatar && (
+                                  <img
+                                    src={response.userId.avatar}
+                                    alt={response.userId.displayName}
+                                    className="w-8 h-8 rounded-full"
+                                  />
+                                )}
+                                <div>
+                                  <p className="font-semibold text-sm">
+                                    {response.userId.displayName}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {new Date(response.createdAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                              <p className="text-sm italic">"{response.additionalFeedback}"</p>
+                            </div>
+                          ))}
                       </div>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
 
-            {/* Admin/Owner Summary */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="glass-strong rounded-2xl p-4">
-                <div className="flex items-center gap-3">
-                  <Crown className="w-5 h-5 text-purple-500" />
-                  <div>
-                    <p className="text-xs text-gray-500">Owners</p>
-                    <p className="text-2xl font-bold">{totalOwners}</p>
+                    {/* 6. Who Referred You? */}
+                    <div className="glass-strong rounded-2xl p-6">
+                      <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <UserCheck className="w-5 h-5" />
+                        6. Who Referred You?
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Referral sources
+                      </p>
+                      {renderPieChart(summary.referral, summary.total, (val) => val)}
+                    </div>
                   </div>
+                </>
+              ) : (
+                <div className="glass-strong rounded-2xl p-8 text-center">
+                  <div className="text-6xl mb-4">📭</div>
+                  <p className="text-lg font-semibold mb-2">No feedback yet</p>
+                  <p className="text-sm text-gray-500">
+                    Responses will appear here once users submit the feedback form.
+                  </p>
                 </div>
-              </div>
-              <div className="glass-strong rounded-2xl p-4">
-                <div className="flex items-center gap-3">
-                  <Shield className="w-5 h-5 text-blue-500" />
-                  <div>
-                    <p className="text-xs text-gray-500">Admins</p>
-                    <p className="text-2xl font-bold">{totalAdmins}</p>
-                  </div>
-                </div>
-              </div>
-              <div className="glass-strong rounded-2xl p-4">
-                <div className="flex items-center gap-3">
-                  <Users className="w-5 h-5 text-gray-500" />
-                  <div>
-                    <p className="text-xs text-gray-500">Showing</p>
-                    <p className="text-2xl font-bold">{filteredUsers.length}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+              )}
+            </motion.div>
+          )}
 
-            {isLoadingData && users.length === 0 ? (
-              <div className="flex justify-center py-16">
-                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          {activeTab === "users" && (
+            <motion.div
+              key="users"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* Search */}
+              <div className="glass-strong rounded-xl p-4">
+                <div className="flex items-center gap-3">
+                  <Search className="w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search users..."
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    className="flex-1 bg-transparent border-none outline-none"
+                  />
+                </div>
               </div>
-            ) : filteredUsers.length === 0 ? (
-              <div className="glass-strong rounded-2xl p-6 text-center text-sm text-gray-500">
-                No users found matching your search.
+
+              {/* Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="glass-strong rounded-xl p-6 text-center">
+                  <Users className="w-8 h-8 mx-auto mb-2 text-primary" />
+                  <p className="text-2xl font-bold">{users.length}</p>
+                  <p className="text-sm text-gray-500">Total Users</p>
+                </div>
+                <div className="glass-strong rounded-xl p-6 text-center">
+                  <Crown className="w-8 h-8 mx-auto mb-2 text-yellow-500" />
+                  <p className="text-2xl font-bold">{adminsList.length}</p>
+                  <p className="text-sm text-gray-500">Admins & Owners</p>
+                </div>
+                <div className="glass-strong rounded-xl p-6 text-center">
+                  <UserCheck className="w-8 h-8 mx-auto mb-2 text-green-500" />
+                  <p className="text-2xl font-bold">{filteredUsers.length}</p>
+                  <p className="text-sm text-gray-500">Regular Users</p>
+                </div>
               </div>
-            ) : (
-              <div className="overflow-x-auto glass-strong rounded-2xl">
-                <table className="w-full text-left border-collapse text-sm">
-                  <thead>
-                    <tr className="border-b border-white/10 text-xs uppercase tracking-wide text-gray-500">
-                      <th className="p-4">User</th>
-                      <th className="p-4">Role</th>
-                      <th className="p-4">Admin Expires</th>
-                      {user.role === "owner" && <th className="p-4">Actions</th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredUsers.map((u) => (
-                      <tr
-                        key={u._id}
-                        className="border-b border-white/5 hover:bg-white/5 text-sm"
-                      >
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-xs font-bold">
-                              {u.avatar ? (
-                                <img
-                                  src={u.avatar}
-                                  alt={u.displayName}
-                                  className="w-full h-full object-cover rounded-full"
-                                />
-                              ) : (
-                                u.displayName?.[0]?.toUpperCase()
-                              )}
-                            </div>
-                            <div>
-                              <div className="font-semibold">{u.displayName}</div>
-                              <div className="text-xs opacity-60">{u.email}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <span
-                            className={`px-3 py-1 rounded-full text-[11px] font-semibold uppercase ${
-                              u.role === "owner"
-                                ? "bg-purple-500/15 text-purple-400"
-                                : u.role === "admin"
-                                ? "bg-blue-500/15 text-blue-400"
-                                : "bg-gray-500/15 text-gray-400"
-                            }`}
-                          >
-                            {u.role}
+
+              {/* Admin List */}
+              <div className="glass-strong rounded-2xl p-6">
+                <h3 className="text-xl font-bold mb-4">Admins & Owners</h3>
+                <div className="space-y-3">
+                  {adminsList.map((admin) => (
+                    <div
+                      key={admin._id}
+                      className="flex items-center justify-between p-4 bg-white/5 rounded-xl"
+                    >
+                      <div className="flex items-center gap-3">
+                        {admin.avatar && (
+                          <img
+                            src={admin.avatar}
+                            alt={admin.displayName}
+                            className="w-10 h-10 rounded-full"
+                          />
+                        )}
+                        <div>
+                          <p className="font-semibold">{admin.displayName}</p>
+                          <p className="text-sm text-gray-500">{admin.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        {admin.role === "owner" ? (
+                          <span className="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 text-sm font-bold flex items-center gap-1">
+                            <Crown className="w-4 h-4" />
+                            Owner
                           </span>
-                        </td>
-                        <td className="p-4 text-xs opacity-60">
-                          {u.adminExpiresAt
-                            ? new Date(u.adminExpiresAt).toLocaleDateString()
-                            : u.role === "admin"
-                            ? "Permanent"
-                            : "-"}
-                        </td>
-                        {user.role === "owner" && (
-                          <td className="p-4">
-                            {u.role !== "owner" ? (
+                        ) : (
+                          <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-500 text-sm font-bold flex items-center gap-1">
+                            <Shield className="w-4 h-4" />
+                            Admin
+                            {admin.adminExpiresAt && (
+                              <span className="ml-1 text-xs">
+                                (until {new Date(admin.adminExpiresAt).toLocaleDateString()})
+                              </span>
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* User List */}
+              <div className="glass-strong rounded-2xl p-6">
+                <h3 className="text-xl font-bold mb-4">Regular Users</h3>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {filteredUsers.map((u) => (
+                    <div
+                      key={u._id}
+                      className="flex items-center justify-between p-4 bg-white/5 rounded-xl"
+                    >
+                      <div className="flex items-center gap-3">
+                        {u.avatar && (
+                          <img
+                            src={u.avatar}
+                            alt={u.displayName}
+                            className="w-10 h-10 rounded-full"
+                          />
+                        )}
+                        <div>
+                          <p className="font-semibold">{u.displayName}</p>
+                          <p className="text-sm text-gray-500">{u.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {filteredUsers.length === 0 && (
+                    <p className="text-center text-gray-500 py-8">No users found</p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === "manageAdmins" && (
+            <motion.div
+              key="manageAdmins"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* Current Admins List */}
+              <div className="glass-strong rounded-2xl p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold">Current Admins</h3>
+                  {isOwner && (
+                    <button
+                      onClick={() => setShowAdminForm(true)}
+                      className="px-4 py-2 bg-primary text-white rounded-xl font-semibold hover:opacity-90 transition-opacity flex items-center gap-2"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Add Admin
+                    </button>
+                  )}
+                  {!isOwner && (
+                    <button
+                      onClick={() => setShowAdminForm(true)}
+                      className="px-4 py-2 bg-secondary text-white rounded-xl font-semibold hover:opacity-90 transition-opacity flex items-center gap-2"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Propose Candidate
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  {adminsList.map((admin) => (
+                    <div
+                      key={admin._id}
+                      className="flex items-center justify-between p-4 bg-white/5 rounded-xl"
+                    >
+                      <div className="flex items-center gap-3">
+                        {admin.avatar && (
+                          <img
+                            src={admin.avatar}
+                            alt={admin.displayName}
+                            className="w-12 h-12 rounded-full"
+                          />
+                        )}
+                        <div>
+                          <p className="font-semibold">{admin.displayName}</p>
+                          <p className="text-sm text-gray-500">{admin.email}</p>
+                          {admin.adminExpiresAt && (
+                            <p className="text-xs text-yellow-500 flex items-center gap-1 mt-1">
+                              <Clock className="w-3 h-3" />
+                              Expires: {new Date(admin.adminExpiresAt).toLocaleDateString()}
+                            </p>
+                          )}
+                          {admin.role === "admin" && !admin.adminExpiresAt && (
+                            <p className="text-xs text-green-500 flex items-center gap-1 mt-1">
+                              <Infinity className="w-3 h-3" />
+                              Permanent Admin
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {admin.role === "owner" ? (
+                          <span className="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 text-sm font-bold flex items-center gap-1">
+                            <Crown className="w-4 h-4" />
+                            Owner
+                          </span>
+                        ) : (
+                          <>
+                            <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-500 text-sm font-bold">
+                              Admin
+                            </span>
+                            {isOwner && (
                               <div className="flex gap-2">
                                 <button
-                                  onClick={() => handleUpdateRole(u._id, "admin", 30)}
-                                  className="p-2 rounded-lg bg-blue-500/10 text-blue-400 hover:bg-blue-500/20"
-                                  title="Make admin for 30 days"
+                                  onClick={() => {
+                                    const expiry = prompt("Enter expiry days (or leave empty for permanent):");
+                                    if (expiry !== null) {
+                                      handleUpdateRole(admin._id, "admin", expiry ? parseInt(expiry) : undefined);
+                                    }
+                                  }}
+                                  className="p-2 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 transition-colors"
+                                  title="Edit Expiry"
                                 >
                                   <Calendar className="w-4 h-4" />
                                 </button>
                                 <button
-                                  onClick={() => handleUpdateRole(u._id, "admin")}
-                                  className="p-2 rounded-lg bg-purple-500/10 text-purple-400 hover:bg-purple-500/20"
-                                  title="Make permanent admin"
+                                  onClick={() => {
+                                    if (confirm("Revoke admin privileges?")) {
+                                      handleUpdateRole(admin._id, "user");
+                                    }
+                                  }}
+                                  className="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+                                  title="Revoke Admin"
                                 >
-                                  <Crown className="w-4 h-4" />
+                                  <UserX className="w-4 h-4" />
                                 </button>
-                                {u.role === "admin" && (
-                                  <button
-                                    onClick={() => handleUpdateRole(u._id, "user")}
-                                    className="p-2 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                                    title="Revoke admin"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
-                                )}
                               </div>
-                            ) : (
-                              <span className="text-xs text-gray-500">Owner</span>
                             )}
-                          </td>
+                          </>
                         )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* CANDIDATES TAB (owner only) */}
-        {activeTab === "candidates" && user.role === "owner" && (
-          <div className="space-y-4">
-            {isLoadingData && candidates.length === 0 ? (
-              <div className="flex justify-center py-16">
-                <Loader2 className="w-6 h-6 animate-spin text-primary" />
-              </div>
-            ) : candidates.length === 0 ? (
-              <div className="glass-strong rounded-2xl p-8 text-center">
-                <div className="text-6xl mb-4">📝</div>
-                <p className="text-lg font-semibold mb-2">No pending candidates</p>
-                <p className="text-sm text-gray-500">
-                  Admin nominations will appear here for your review.
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {candidates.map((candidate) => (
-                  <motion.div
-                    key={candidate._id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="glass-strong rounded-2xl p-6"
-                  >
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold">
-                          {candidate.candidateName}
-                        </h3>
-                        <p className="text-xs opacity-60">
-                          {candidate.candidateEmail}
-                        </p>
                       </div>
-                      <span className="px-3 py-1 rounded-full text-[11px] font-semibold bg-yellow-500/20 text-yellow-500 uppercase">
-                        {candidate.status}
-                      </span>
                     </div>
-                    <div className="bg-white/5 p-4 rounded-xl mb-4">
-                      <p className="text-sm italic">"{candidate.reason}"</p>
-                      <p className="text-[11px] opacity-60 mt-2 text-right">
-                        Suggested by {candidate.suggestedBy?.displayName}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <button className="flex-1 bg-green-500/20 text-green-500 py-2 rounded-xl text-sm font-semibold hover:bg-green-500/30 transition-colors">
-                        Approve
-                      </button>
-                      <button className="flex-1 bg-red-500/20 text-red-500 py-2 rounded-xl text-sm font-semibold hover:bg-red-500/30 transition-colors">
-                        Reject
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
+                  ))}
+                </div>
               </div>
-            )}
-          </div>
-        )}
+
+              {/* Add/Propose Admin Form */}
+              {showAdminForm && (
+                <div className="glass-strong rounded-2xl p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold">
+                      {isOwner ? "Add New Admin" : "Propose Admin Candidate"}
+                    </h3>
+                    <button
+                      onClick={resetAdminForm}
+                      className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Email Search */}
+                    <div className="relative">
+                      <label className="block text-sm font-semibold mb-2">
+                        Email <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                        <input
+                          type="email"
+                          placeholder="Search user by email..."
+                          value={adminFormEmail}
+                          onChange={(e) => handleEmailSearch(e.target.value)}
+                          className="w-full p-3 pl-10 rounded-xl bg-white/50 dark:bg-black/20 border border-white/20"
+                        />
+                      </div>
+                      {adminFormSearchResults.length > 0 && (
+                        <div className="absolute z-10 w-full mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-white/20 max-h-48 overflow-y-auto">
+                          {adminFormSearchResults.map((u) => (
+                            <button
+                              key={u._id}
+                              onClick={() => selectUserFromSearch(u)}
+                              className="w-full p-3 hover:bg-gray-100 dark:hover:bg-gray-700 text-left flex items-center gap-3"
+                            >
+                              {u.avatar && (
+                                <img
+                                  src={u.avatar}
+                                  alt={u.displayName}
+                                  className="w-8 h-8 rounded-full"
+                                />
+                              )}
+                              <div>
+                                <p className="font-semibold text-sm">{u.displayName}</p>
+                                <p className="text-xs text-gray-500">{u.email}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Name (auto-filled) */}
+                    <div>
+                      <label className="block text-sm font-semibold mb-2">
+                        Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Name (auto-filled)"
+                        value={adminFormName}
+                        readOnly
+                        className="w-full p-3 rounded-xl bg-gray-200 dark:bg-gray-700 border border-white/20 cursor-not-allowed"
+                      />
+                    </div>
+
+                    {/* Reason */}
+                    <div>
+                      <label className="block text-sm font-semibold mb-2">
+                        Reason <span className="text-red-500">*</span>
+                      </label>
+                      <textarea
+                        placeholder="Why should this person become an admin?"
+                        value={adminFormReason}
+                        onChange={(e) => setAdminFormReason(e.target.value)}
+                        className="w-full p-3 rounded-xl bg-white/50 dark:bg-black/20 border border-white/20"
+                        rows={4}
+                      />
+                    </div>
+
+                    {/* Owner-only fields */}
+                    {isOwner && (
+                      <>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            id="permanent"
+                            checked={adminFormPermanent}
+                            onChange={(e) => {
+                              setAdminFormPermanent(e.target.checked);
+                              if (e.target.checked) setAdminFormExpiry("");
+                            }}
+                            className="w-5 h-5"
+                          />
+                          <label htmlFor="permanent" className="font-semibold flex items-center gap-2">
+                            <Infinity className="w-5 h-5" />
+                            Permanent Admin
+                          </label>
+                        </div>
+
+                        {!adminFormPermanent && (
+                          <div>
+                            <label className="block text-sm font-semibold mb-2">
+                              Admin Until <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="date"
+                              value={adminFormExpiry}
+                              onChange={(e) => setAdminFormExpiry(e.target.value)}
+                              min={new Date().toISOString().split("T")[0]}
+                              className="w-full p-3 rounded-xl bg-white/50 dark:bg-black/20 border border-white/20"
+                            />
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {/* Submit */}
+                    <button
+                      onClick={isOwner ? handleAddAdmin : handleSuggestCandidate}
+                      className="w-full bg-primary text-white py-3 rounded-xl font-bold hover:opacity-90 transition-opacity"
+                    >
+                      {isOwner ? "Add Admin" : "Suggest Candidate"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Pending Candidates (Owner only) */}
+              {isOwner && candidates.length > 0 && (
+                <div className="glass-strong rounded-2xl p-6">
+                  <h3 className="text-xl font-bold mb-4">Pending Candidates</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {candidates.map((candidate) => (
+                      <div key={candidate._id} className="bg-white/5 p-4 rounded-xl">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h4 className="font-bold">{candidate.candidateName}</h4>
+                            <p className="text-sm text-gray-500">{candidate.candidateEmail}</p>
+                          </div>
+                          <span className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-500/20 text-yellow-500 uppercase">
+                            {candidate.status}
+                          </span>
+                        </div>
+                        <div className="bg-white/5 p-3 rounded-lg mb-3">
+                          <p className="text-sm italic">"{candidate.reason}"</p>
+                          <p className="text-xs text-gray-500 mt-2 text-right">
+                            Suggested by: {candidate.suggestedBy?.displayName}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button className="flex-1 bg-green-500/20 text-green-500 py-2 rounded-xl font-bold hover:bg-green-500/30 transition-colors">
+                            Approve
+                          </button>
+                          <button className="flex-1 bg-red-500/20 text-red-500 py-2 rounded-xl font-bold hover:bg-red-500/30 transition-colors">
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
