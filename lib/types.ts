@@ -3,6 +3,8 @@ export interface User {
   email: string;
   image: string;
   totalStamps: number;
+  role?: 'user' | 'admin' | 'owner';
+  adminExpiresAt?: string;
 }
 
 export interface Country {

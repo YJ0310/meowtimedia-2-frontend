@@ -14,6 +14,7 @@ import {
   Loader2,
   Volume2,
   VolumeX,
+  Shield,
 } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
@@ -268,37 +269,51 @@ export default function ProfilePage() {
                 </motion.button>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/feedback">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md mx-auto">
+                <Link href="/feedback" className="w-full">
                   <motion.button
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="glass px-6 py-3 rounded-xl font-semibold text-primary flex items-center justify-center gap-2 border border-primary/30"
+                    className="w-full glass px-6 py-3 rounded-xl font-semibold text-primary flex items-center justify-center gap-2 border border-primary/30"
                   >
                     <span className="text-lg">📝</span>
                     Give Feedback
                   </motion.button>
                 </Link>
+
+                {(user.role === "admin" || user.role === "owner") && (
+                  <Link href="/admin" className="w-full">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full glass px-6 py-3 rounded-xl font-semibold text-secondary flex items-center justify-center gap-2 border border-secondary/30"
+                    >
+                      <Shield className="w-5 h-5" />
+                      Admin Console
+                    </motion.button>
+                  </Link>
+                )}
+
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={logout}
-                  className="glass px-6 py-3 rounded-xl font-semibold text-red-500 flex items-center justify-center gap-2"
+                  className="w-full glass px-6 py-3 rounded-xl font-semibold text-red-500 flex items-center justify-center gap-2"
                 >
                   <LogOut className="w-5 h-5" />
                   Sign Out
                 </motion.button>
-              </div>
 
-              <Link href="/dashboard">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="glass px-6 py-3 rounded-xl font-semibold text-black dark:text-white w-full"
-                >
-                  Back to Dashboard
-                </motion.button>
-              </Link>
+                <Link href="/dashboard" className="w-full">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full glass px-6 py-3 rounded-xl font-semibold text-black dark:text-white"
+                  >
+                    Back to Dashboard
+                  </motion.button>
+                </Link>
+              </div>
             </div>
           )}
 
