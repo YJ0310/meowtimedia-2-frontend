@@ -3,7 +3,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  BarChart3,
   ThumbsUp,
   TrendingUp,
   PieChart,
@@ -16,7 +15,9 @@ import {
   Calendar,
   Filter,
   ChevronDown,
-  Check
+  Check,
+  User,
+  Activity
 } from "lucide-react";
 import { DonutChart, RatingHistogram, HorizontalBarChart } from "./charts";
 import { FeedbackSummary, FeedbackResponse, FeedbackSubTab } from "../types";
@@ -45,7 +46,6 @@ const CustomSelect = ({
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Close on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -59,13 +59,13 @@ const CustomSelect = ({
   const selectedLabel = options.find(o => o.value === value)?.label;
 
   return (
-    <div className="relative w-full" ref={containerRef}>
+    <div className="relative w-full md:w-64" ref={containerRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl px-4 py-3 transition-all"
+        className="w-full flex items-center justify-between bg-card hover:bg-muted/50 border border-input rounded-xl px-4 py-3 transition-all shadow-sm"
       >
-        <span className="font-medium text-gray-200">{selectedLabel}</span>
-        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <span className="font-medium text-foreground">{selectedLabel}</span>
+        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       <AnimatePresence>
@@ -74,7 +74,7 @@ const CustomSelect = ({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full left-0 right-0 mt-2 bg-black/90 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden z-50 shadow-2xl"
+            className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-xl overflow-hidden z-50 shadow-xl"
           >
             {options.map((opt) => (
               <button
@@ -83,9 +83,9 @@ const CustomSelect = ({
                   onChange(opt.value);
                   setIsOpen(false);
                 }}
-                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-white/10 transition-colors text-sm"
+                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/50 transition-colors text-sm"
               >
-                <span className={opt.value === value ? "text-primary font-semibold" : "text-gray-300"}>
+                <span className={opt.value === value ? "text-primary font-semibold" : "text-popover-foreground"}>
                   {opt.label}
                 </span>
                 {opt.value === value && <Check className="w-4 h-4 text-primary" />}
@@ -103,15 +103,19 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
   const [selectedResponseIndex, setSelectedResponseIndex] = useState(0);
   const [selectedQuestion, setSelectedQuestion] = useState<string>("impression");
 
-  // --- CHART DATA HELPERS ---
+  // --- CHART DATA HELPERS (Updated Colors) ---
   const getFirstImpressionChartData = useMemo(() => {
     if (!summary) return [];
-    return summary.firstImpression.map(item => {
+    // Using CSS variable colors for charts would be ideal, but here we fallback to hex codes 
+    // that match the 'meow' theme defined in global css (#a8bedf, #c7d5e8, etc)
+    const THEME_COLORS = ["#a8bedf", "#c7d5e8", "#efe4d4", "#d8c9ba"];
+    
+    return summary.firstImpression.map((item, index) => {
       const option = FIRST_IMPRESSION_OPTIONS.find(o => o.value === item._id);
       return {
         label: option?.label || item._id,
         count: item.count,
-        color: option?.color || "#9CA3AF"
+        color: option?.color || THEME_COLORS[index % THEME_COLORS.length]
       };
     });
   }, [summary]);
@@ -148,10 +152,10 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
   const TabButton = ({ id, label }: { id: FeedbackSubTab; label: string }) => (
     <button
       onClick={() => setFeedbackSubTab(id)}
-      className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors relative ${
+      className={`px-4 py-2 text-sm font-medium rounded-full transition-all border ${
         feedbackSubTab === id
-          ? "text-primary border-b-2 border-primary bg-primary/5"
-          : "text-gray-500 hover:bg-white/5 hover:text-gray-300"
+          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+          : "bg-transparent text-muted-foreground border-transparent hover:bg-muted/50"
       }`}
     >
       {label}
@@ -162,14 +166,14 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white/5 border border-white/10 rounded-xl overflow-hidden shadow-sm backdrop-blur-sm"
+      className="glass-strong rounded-2xl overflow-hidden"
     >
-      <div className="p-4 border-b border-white/10 bg-white/5 flex items-center justify-between">
+      <div className="p-4 border-b border-border bg-muted/20 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="bg-white/10 text-xs font-bold px-2 py-1 rounded text-gray-400">Q{index}</span>
-          <h3 className="font-semibold text-lg text-gray-200">{title}</h3>
+          <span className="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded border border-primary/20">Q{index}</span>
+          <h3 className="font-semibold text-lg text-foreground">{title}</h3>
         </div>
-        {Icon && <Icon className="w-5 h-5 text-gray-500" />}
+        {Icon && <Icon className="w-5 h-5 text-muted-foreground" />}
       </div>
       <div className="p-6">
         {children}
@@ -179,7 +183,6 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
 
   const currentResponse = responses[selectedResponseIndex];
 
-  // Options for the dropdown
   const questionOptions = [
     { value: "impression", label: "1. First Impression" },
     { value: "ease", label: "2. Ease of Use" },
@@ -189,18 +192,24 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto min-h-screen pb-20">
+    <div className="max-w-5xl mx-auto min-h-screen pb-20 px-4">
       
       {/* --- SUB NAVIGATION --- */}
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md pt-4 pb-2 border-b border-white/10 mb-8">
-        <div className="flex items-center justify-between mb-4 px-2">
-          <h2 className="text-2xl font-bold">Feedback Analysis</h2>
-          <span className="text-sm text-gray-500">{summary?.total || 0} responses</span>
-        </div>
-        <div className="flex space-x-2">
-          <TabButton id="summary" label="Summary" />
-          <TabButton id="question" label="By Question" />
-          <TabButton id="individual" label="Individual" />
+      <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl pt-6 pb-4 border-b border-border mb-8 -mx-4 px-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              Feedback Analysis
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Analyzing <span className="text-foreground font-semibold">{summary?.total || 0}</span> total responses
+            </p>
+          </div>
+          <div className="bg-muted/30 p-1 rounded-full flex gap-1 border border-border/50">
+            <TabButton id="summary" label="Summary" />
+            <TabButton id="question" label="By Question" />
+            <TabButton id="individual" label="Individual" />
+          </div>
         </div>
       </div>
 
@@ -215,22 +224,33 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
           >
             {/* Top Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-               <div className="bg-blue-500/10 border border-blue-500/20 p-5 rounded-xl">
-                 <p className="text-blue-400 text-sm font-semibold uppercase">Total Responses</p>
-                 <p className="text-4xl font-bold text-white mt-2">{summary.total}</p>
+               <div className="glass p-6 rounded-2xl relative overflow-hidden group">
+                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <Activity className="w-20 h-20 text-primary" />
+                 </div>
+                 <p className="text-muted-foreground text-sm font-semibold uppercase tracking-wider">Total Responses</p>
+                 <p className="text-4xl font-bold text-primary mt-2">{summary.total}</p>
                </div>
-               <div className="bg-green-500/10 border border-green-500/20 p-5 rounded-xl">
-                 <p className="text-green-400 text-sm font-semibold uppercase">Avg Ease of Use</p>
+               
+               <div className="glass p-6 rounded-2xl relative overflow-hidden group">
+                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <ThumbsUp className="w-20 h-20 text-secondary" />
+                 </div>
+                 <p className="text-muted-foreground text-sm font-semibold uppercase tracking-wider">Avg Ease of Use</p>
                  <div className="flex items-baseline gap-2 mt-2">
-                   <p className="text-4xl font-bold text-white">{summary.avgEaseOfUse.toFixed(1)}</p>
-                   <span className="text-white/40">/ 5</span>
+                   <p className="text-4xl font-bold text-secondary">{summary.avgEaseOfUse.toFixed(1)}</p>
+                   <span className="text-muted-foreground text-lg">/ 5</span>
                  </div>
                </div>
-               <div className="bg-purple-500/10 border border-purple-500/20 p-5 rounded-xl">
-                 <p className="text-purple-400 text-sm font-semibold uppercase">Recommendation</p>
+               
+               <div className="glass p-6 rounded-2xl relative overflow-hidden group">
+                 <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <TrendingUp className="w-20 h-20 text-accent" />
+                 </div>
+                 <p className="text-muted-foreground text-sm font-semibold uppercase tracking-wider">Recommendation</p>
                  <div className="flex items-baseline gap-2 mt-2">
-                   <p className="text-4xl font-bold text-white">{summary.avgRecommendation.toFixed(1)}</p>
-                   <span className="text-white/40">/ 5</span>
+                   <p className="text-4xl font-bold text-accent-foreground dark:text-accent">{summary.avgRecommendation.toFixed(1)}</p>
+                   <span className="text-muted-foreground text-lg">/ 5</span>
                  </div>
                </div>
             </div>
@@ -259,22 +279,22 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
             <QuestionCard index={5} title="Additional Feedback" icon={MessageSquare}>
               <div className="max-h-96 overflow-y-auto pr-2 space-y-3">
                 {responses.filter(r => r.additionalFeedback).map((r, i) => (
-                  <div key={i} className="bg-black/20 p-4 rounded-lg border border-white/5 hover:border-white/20 transition-all">
+                  <div key={i} className="bg-muted/30 p-4 rounded-xl border border-border hover:border-primary/30 transition-all">
                     <div className="flex items-center gap-3 mb-2">
                       {r.userId.avatar ? (
-                        <img src={r.userId.avatar} alt="" className="w-6 h-6 rounded-full object-cover" />
+                        <img src={r.userId.avatar} alt="" className="w-6 h-6 rounded-full object-cover ring-2 ring-background" />
                       ) : (
-                        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center text-[10px] font-bold text-white">
+                        <div className="w-6 h-6 rounded-full gradient-primary flex items-center justify-center text-[10px] font-bold text-primary-foreground shadow-sm">
                           {r.userId.displayName?.[0] || "?"}
                         </div>
                       )}
-                      <span className="text-xs text-gray-400 font-medium">{r.userId.displayName}</span>
+                      <span className="text-xs text-muted-foreground font-medium">{r.userId.displayName}</span>
                     </div>
-                    <p className="text-gray-200 text-sm leading-relaxed">"{r.additionalFeedback}"</p>
+                    <p className="text-foreground text-sm leading-relaxed">"{r.additionalFeedback}"</p>
                   </div>
                 ))}
                 {responses.filter(r => r.additionalFeedback).length === 0 && (
-                   <div className="text-center py-8 text-gray-500">No written feedback provided yet.</div>
+                   <div className="text-center py-8 text-muted-foreground italic">No written feedback provided yet.</div>
                 )}
               </div>
             </QuestionCard>
@@ -296,51 +316,51 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="space-y-6"
           >
-            <div className="bg-white/5 border border-white/10 p-2 rounded-lg flex items-center justify-between">
+            <div className="glass p-2 rounded-xl flex items-center justify-between sticky top-32 z-20">
                <button 
                   onClick={() => setSelectedResponseIndex(Math.max(0, selectedResponseIndex - 1))}
                   disabled={selectedResponseIndex === 0}
-                  className="p-2 hover:bg-white/10 rounded-md disabled:opacity-30 disabled:hover:bg-transparent"
+                  className="p-2 hover:bg-muted rounded-lg disabled:opacity-30 disabled:hover:bg-transparent text-foreground transition-colors"
                >
                  <ChevronLeft className="w-5 h-5" />
                </button>
-               <span className="text-sm font-mono font-medium">
-                 {selectedResponseIndex + 1} of {responses.length}
+               <span className="text-sm font-mono font-medium text-foreground">
+                 {selectedResponseIndex + 1} / {responses.length}
                </span>
                <button 
                   onClick={() => setSelectedResponseIndex(Math.min(responses.length - 1, selectedResponseIndex + 1))}
                   disabled={selectedResponseIndex === responses.length - 1}
-                  className="p-2 hover:bg-white/10 rounded-md disabled:opacity-30 disabled:hover:bg-transparent"
+                  className="p-2 hover:bg-muted rounded-lg disabled:opacity-30 disabled:hover:bg-transparent text-foreground transition-colors"
                >
                  <ChevronRight className="w-5 h-5" />
                </button>
             </div>
 
-            <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-              <div className="p-6 border-b border-white/10 bg-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                 <div className="flex items-center gap-4">
+            <div className="glass-strong rounded-2xl overflow-hidden">
+              <div className="p-8 border-b border-border bg-muted/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                 <div className="flex items-center gap-5">
                     {currentResponse.userId.avatar ? (
-                      <img src={currentResponse.userId.avatar} alt="" className="w-16 h-16 rounded-full border-2 border-white/10 object-cover" />
+                      <img src={currentResponse.userId.avatar} alt="" className="w-20 h-20 rounded-full border-4 border-background shadow-md object-cover" />
                     ) : (
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
+                      <div className="w-20 h-20 rounded-full gradient-primary flex items-center justify-center text-3xl font-bold text-primary-foreground shadow-md">
                         {currentResponse.userId.displayName?.[0] || "?"}
                       </div>
                     )}
                     <div>
-                      <h2 className="text-xl font-bold text-white">{currentResponse.userId.displayName}</h2>
-                      <div className="flex items-center gap-2 text-sm text-gray-400 mt-1">
+                      <h2 className="text-2xl font-bold text-foreground">{currentResponse.userId.displayName}</h2>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                         <Mail className="w-3 h-3" />
                         {currentResponse.userId.email}
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                         <Calendar className="w-3 h-3" />
-                        {new Date(currentResponse.createdAt).toLocaleDateString()}
+                        {new Date(currentResponse.createdAt).toLocaleDateString(undefined, { dateStyle: 'long' })}
                       </div>
                     </div>
                  </div>
               </div>
 
-              <div className="divide-y divide-white/5">
+              <div className="divide-y divide-border">
                 {[
                   { q: "1. First Impression", a: currentResponse.firstImpression, type: "badge" },
                   { q: "2. Ease of Use", a: `${currentResponse.easeOfUse} / 5`, type: "rating" },
@@ -349,11 +369,11 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
                   { q: "5. Additional Feedback", a: currentResponse.additionalFeedback || "No answer", type: "long-text" },
                   { q: "6. Referred By", a: currentResponse.referral || "Organic", type: "text" }
                 ].map((item, i) => (
-                  <div key={i} className="p-6 hover:bg-white/5 transition-colors">
-                    <p className="text-xs uppercase text-gray-500 font-bold mb-2">{item.q}</p>
-                    <div className={`text-lg ${item.type === 'long-text' && !item.a ? 'text-gray-500 italic' : 'text-gray-200'}`}>
+                  <div key={i} className="p-6 hover:bg-muted/20 transition-colors">
+                    <p className="text-xs uppercase text-muted-foreground font-bold mb-2 tracking-wide">{item.q}</p>
+                    <div className={`text-lg ${item.type === 'long-text' && !item.a ? 'text-muted-foreground italic' : 'text-foreground'}`}>
                       {item.type === 'badge' ? (
-                        <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-base font-medium border border-blue-500/30">
+                        <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-base font-medium border border-primary/20">
                           {item.a}
                         </span>
                       ) : item.a}
@@ -365,18 +385,18 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
           </motion.div>
         )}
 
-        {/* === QUESTION VIEW (FIXED) === */}
+        {/* === QUESTION VIEW === */}
         {feedbackSubTab === "question" && (
           <motion.div
             key="question"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="space-y-6"
           >
-            {/* Custom Dropdown (No native select to avoid cursor issues) */}
-            <div className="glass-strong p-4 rounded-xl flex flex-col md:flex-row items-center gap-4">
-              <div className="flex items-center gap-2 text-gray-400 min-w-fit">
+            {/* Custom Dropdown */}
+            <div className="glass-strong p-6 rounded-2xl flex flex-col md:flex-row items-center gap-4 border border-border">
+              <div className="flex items-center gap-2 text-muted-foreground min-w-fit">
                 <Filter className="w-5 h-5" />
-                <span className="font-medium">Filter by:</span>
+                <span className="font-medium">Filter by question:</span>
               </div>
               <CustomSelect 
                 options={questionOptions} 
@@ -386,17 +406,15 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
             </div>
 
             {/* Answer List */}
-            <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-               <div className="p-4 bg-white/5 border-b border-white/10 text-sm text-gray-400 flex justify-between items-center">
+            <div className="glass-strong rounded-2xl overflow-hidden border border-border">
+               <div className="p-4 bg-muted/20 border-b border-border text-sm text-muted-foreground flex justify-between items-center">
                  <span>Showing responses for <strong>{questionOptions.find(o => o.value === selectedQuestion)?.label}</strong></span>
-                 <span className="bg-white/10 px-2 py-0.5 rounded text-xs">{responses.length} total</span>
+                 <span className="bg-background px-2 py-0.5 rounded-md border border-border text-xs font-mono">{responses.length} total</span>
                </div>
                
-               <div className="divide-y divide-white/5 max-h-[600px] overflow-y-auto">
+               <div className="divide-y divide-border max-h-[600px] overflow-y-auto">
                  {responses.map((r, i) => {
                    let answer: any = "";
-                   
-                   // Safe Data Access
                    try {
                      if (selectedQuestion === "impression") answer = r.firstImpression;
                      if (selectedQuestion === "ease") answer = `${r.easeOfUse} / 5`;
@@ -407,24 +425,23 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
                      answer = "Error reading data";
                    }
 
-                   // Filter out empty feedback if that's the selected view
                    if (selectedQuestion === "feedback" && !answer) return null;
 
                    return (
-                     <div key={i} className="p-4 flex items-start gap-4 hover:bg-white/5 transition-colors group">
+                     <div key={i} className="p-4 flex items-start gap-4 hover:bg-muted/10 transition-colors group">
                        <div className="mt-1 flex-shrink-0">
                          {r.userId.avatar ? (
-                            <img src={r.userId.avatar} className="w-8 h-8 rounded-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" />
+                            <img src={r.userId.avatar} className="w-9 h-9 rounded-full object-cover opacity-80 group-hover:opacity-100 transition-opacity ring-1 ring-border" />
                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-gray-400 group-hover:bg-primary group-hover:text-white transition-colors">
+                            <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                               {r.userId.displayName?.[0] || "?"}
                             </div>
                          )}
                        </div>
                        <div className="flex-grow">
-                         <div className="text-gray-200 text-base leading-snug">{answer || <span className="text-gray-600 italic">No answer</span>}</div>
-                         <div className="text-xs text-gray-500 mt-1.5 flex items-center gap-2">
-                            <span className="font-medium text-gray-400">{r.userId.displayName}</span>
+                         <div className="text-foreground text-base leading-snug">{answer || <span className="text-muted-foreground italic">No answer</span>}</div>
+                         <div className="text-xs text-muted-foreground mt-1.5 flex items-center gap-2">
+                            <span className="font-medium">{r.userId.displayName}</span>
                             <span>•</span>
                             <span>{new Date(r.createdAt).toLocaleDateString()}</span>
                          </div>
@@ -433,9 +450,8 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
                    )
                  })}
                  
-                 {/* Empty State for Feedback */}
                  {selectedQuestion === "feedback" && responses.filter(r => r.additionalFeedback).length === 0 && (
-                   <div className="p-8 text-center text-gray-500 italic">
+                   <div className="p-8 text-center text-muted-foreground italic">
                      No written feedback found for this question.
                    </div>
                  )}
