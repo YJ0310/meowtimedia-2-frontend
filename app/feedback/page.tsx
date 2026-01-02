@@ -24,7 +24,7 @@ const API_BASE_URL =
 
 // --- ANIMATION CONFIGS ---
 const pageTransition = {
-  type: "spring",
+  type: "spring" as const,
   stiffness: 300,
   damping: 30,
 };
@@ -439,7 +439,7 @@ export default function FeedbackPage() {
                 exit={{ opacity: 0, y: -10 }}
                 className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 mb-6 flex items-center gap-3"
               >
-                <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />
+                <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
                 <span className="text-destructive text-sm">{error}</span>
               </motion.div>
             )}
@@ -461,7 +461,7 @@ export default function FeedbackPage() {
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: "spring" }}
+                  transition={{ delay: 0.2, type: "spring" as const }}
                   className="text-5xl mb-4"
                 >
                   {QUESTIONS[currentQuestion].emoji}
@@ -702,7 +702,7 @@ const OptionButton = ({
   >
     {/* Checkbox/Radio indicator */}
     <div
-      className={`w-5 h-5 flex-shrink-0 flex items-center justify-center transition-all ${
+      className={`w-5 h-5 shrink-0 flex items-center justify-center transition-all ${
         type === "radio" ? "rounded-full" : "rounded-md"
       } border-2 ${
         selected ? "border-primary bg-primary" : "border-muted-foreground/40"
@@ -726,7 +726,7 @@ const OptionButton = ({
     </div>
 
     {/* Icon */}
-    <span className="text-xl flex-shrink-0">{icon}</span>
+    <span className="text-xl shrink-0">{icon}</span>
 
     {/* Label */}
     <span
