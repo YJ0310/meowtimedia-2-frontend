@@ -333,7 +333,7 @@ export default function UsersTab({ users }: UsersTabProps) {
                 animate={{ opacity: 1, x: 0, width: 320 }}
                 exit={{ opacity: 0, x: 20, width: 0 }}
                 transition={pageTransition}
-                className="hidden lg:block flex-shrink-0 overflow-hidden"
+                className="hidden lg:block flex-shrink-0 self-start sticky overflow-hidden"
               >
                 <UserDetailPanel user={selectedUser} onClose={() => setSelectedUser(null)} />
               </motion.aside>
@@ -387,7 +387,7 @@ const UserCard = ({
     <motion.div
       variants={cardVariants}
       custom={index}
-    //   layout
+      layout
       whileHover={{ x: 4 }}
       onClick={onClick}
       className={`group flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200 ${
@@ -467,7 +467,7 @@ const UserDetailPanel = ({
   const config = roleConfigs[user.role] || roleConfigs.user;
 
   return (
-    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-xl">
+    <div className="bg-card border border-border rounded-2xl shadow-xl">
       {/* Header with gradient */}
       <div className={`relative h-20 ${config.bg}`}>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-card" />
