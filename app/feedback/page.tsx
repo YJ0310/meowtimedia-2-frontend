@@ -19,6 +19,8 @@ import GlobalLoading from "@/components/global-loading";
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "https://api.meowtimap.smoltako.space";
 
+// ... (KEEP ALL YOUR CONSTANTS HERE: EASE_EMOJIS, RECOMMEND_EMOJIS, etc.) ...
+
 // Emoji ratings for ease of use
 const EASE_EMOJIS = [
   { value: 1, emoji: "😵", label: "Super confusing" },
@@ -37,7 +39,6 @@ const RECOMMEND_EMOJIS = [
   { value: 5, emoji: "💯", label: "Definitely!" },
 ];
 
-// First impression options
 const FIRST_IMPRESSION_OPTIONS = [
   { value: "learning", label: "Learning about Asian countries and cultures" },
   { value: "planning", label: "Planning a trip to Asia" },
@@ -46,7 +47,6 @@ const FIRST_IMPRESSION_OPTIONS = [
   { value: "other", label: "Other" },
 ];
 
-// Issues options
 const ISSUE_OPTIONS = [
   { value: "none", label: "Nope, everything worked great! ✨" },
   { value: "slow", label: "Some things were a bit slow" },
@@ -56,7 +56,6 @@ const ISSUE_OPTIONS = [
   { value: "other", label: "Other" },
 ];
 
-// Referral options
 const REFERRAL_OPTIONS = [
   "Sek Yin Jia",
   "Foo Jia Qian",
@@ -171,7 +170,6 @@ export default function FeedbackPage() {
       const data = await response.json();
 
       if (data.success) {
-        // Redirect to success page
         router.push('/feedback/success');
       } else {
         setError(data.message || "Failed to submit feedback");
@@ -402,20 +400,21 @@ export default function FeedbackPage() {
               </p>
             </div>
           </div>
-          <div className="flex justify-between gap-2">
+          {/* UPDATED: Uses grid-cols-5 for fixed ratio, reduced padding/text for mobile */}
+          <div className="grid grid-cols-5 gap-2">
             {EASE_EMOJIS.map((item) => (
               <motion.button
                 key={item.value}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setEaseOfUse(item.value)}
-                className={`flex-1 p-4 rounded-xl text-center transition-all ${
+                className={`p-2 sm:p-4 rounded-xl text-center transition-all flex flex-col items-center justify-center ${
                   easeOfUse === item.value
                     ? "bg-gradient-to-r from-primary/20 to-secondary/20 border-2 border-primary"
                     : "glass hover:bg-white/50 dark:hover:bg-white/10"
                 }`}
               >
-                <div className="text-3xl mb-1">{item.emoji}</div>
+                <div className="text-xl sm:text-3xl mb-1">{item.emoji}</div>
                 <div className="text-xs text-neutral-dark dark:text-gray-400 hidden sm:block">
                   {item.label}
                 </div>
@@ -505,20 +504,21 @@ export default function FeedbackPage() {
               </p>
             </div>
           </div>
-          <div className="flex justify-between gap-2">
+          {/* UPDATED: Uses grid-cols-5 for fixed ratio, reduced padding/text for mobile */}
+          <div className="grid grid-cols-5 gap-2">
             {RECOMMEND_EMOJIS.map((item) => (
               <motion.button
                 key={item.value}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setRecommendation(item.value)}
-                className={`flex-1 p-4 rounded-xl text-center transition-all ${
+                className={`p-2 sm:p-4 rounded-xl text-center transition-all flex flex-col items-center justify-center ${
                   recommendation === item.value
                     ? "bg-gradient-to-r from-primary/20 to-secondary/20 border-2 border-primary"
                     : "glass hover:bg-white/50 dark:hover:bg-white/10"
                 }`}
               >
-                <div className="text-3xl mb-1">{item.emoji}</div>
+                <div className="text-xl sm:text-3xl mb-1">{item.emoji}</div>
                 <div className="text-xs text-neutral-dark dark:text-gray-400 hidden sm:block">
                   {item.label}
                 </div>
