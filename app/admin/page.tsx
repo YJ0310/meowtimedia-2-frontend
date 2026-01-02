@@ -124,7 +124,7 @@ interface Candidate {
 }
 
 type TabType = "feedback" | "users" | "manageAdmins";
-type ModalType = "add" | "propose" | "approve" | null;
+type ModalType = "add" | "propose" | "approve" | "editExpiry" | null;
 
 // Format date as "dd MMM yyyy"
 const formatDate = (dateString: string | undefined) => {
@@ -155,6 +155,7 @@ export default function AdminPage() {
 
   // User management states
   const [userSearch, setUserSearch] = useState("");
+  const [userRoleFilter, setUserRoleFilter] = useState<"all" | "user" | "admin" | "owner">("all");
 
   // Modal states
   const [modalType, setModalType] = useState<ModalType>(null);
@@ -165,6 +166,7 @@ export default function AdminPage() {
   const [modalExpiry, setModalExpiry] = useState("");
   const [modalSearchResults, setModalSearchResults] = useState<AdminUser[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<Candidate | null>(null);
+  const [selectedAdmin, setSelectedAdmin] = useState<AdminUser | null>(null);
   const [showPresetDropdown, setShowPresetDropdown] = useState(false);
 
   // Check authentication and permissions
@@ -381,6 +383,32 @@ export default function AdminPage() {
     }
   };
 
+  const handleEditExpiry = async () => {
+    if (!selectedAdmin) return;
+
+    if (!modalPermanent && !modalExpiry) {
+      warning("Missing Expiry", "Please select an expiry date or mark as permanent");
+      return;
+    }
+
+    try {
+      // Calculate expiresIn (days from now)
+      let expiresIn: number | undefined = undefined;
+      if (!modalPermanent && modalExpiry) {
+        const expiryDate = new Date(modalExpiry);
+        const now = new Date();
+        const diffTime = expiryDate.getTime() - now.getTime();
+        expiresIn = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      }
+
+      await handleUpdateRole(selectedAdmin._id, "admin", expiresIn);
+      resetModal();
+    } catch (err) {
+      error("Error", "Failed to update admin expiry");
+      console.error("Error updating expiry:", err);
+    }
+  };
+
   const handleRejectCandidate = async (candidateId: string) => {
     try {
       const res = await fetch(
@@ -414,6 +442,15 @@ export default function AdminPage() {
     setModalExpiry("");
   };
 
+  const openEditExpiryModal = (admin: AdminUser) => {
+    setSelectedAdmin(admin);
+    setModalType("editExpiry");
+    setModalEmail(admin.email);
+    setModalName(admin.displayName);
+    setModalPermanent(!admin.adminExpiresAt);
+    setModalExpiry(admin.adminExpiresAt ? new Date(admin.adminExpiresAt).toISOString().split("T")[0] : "");
+  };
+
   const resetModal = () => {
     setModalType(null);
     setModalEmail("");
@@ -423,6 +460,7 @@ export default function AdminPage() {
     setModalExpiry("");
     setModalSearchResults([]);
     setSelectedCandidate(null);
+    setSelectedAdmin(null);
   };
 
   const handleEmailSearch = (email: string) => {
@@ -463,15 +501,28 @@ export default function AdminPage() {
 
   // Filter users and admins
   const filteredUsers = useMemo(() => {
-    if (!userSearch) return users.filter((u) => u.role === "user");
-    return users
-      .filter((u) => u.role === "user")
-      .filter(
+    let filtered = users;
+    
+    // Apply role filter
+    if (userRoleFilter === "user") {
+      filtered = filtered.filter((u) => u.role === "user");
+    } else if (userRoleFilter === "admin") {
+      filtered = filtered.filter((u) => u.role === "admin");
+    } else if (userRoleFilter === "owner") {
+      filtered = filtered.filter((u) => u.role === "owner");
+    }
+    
+    // Apply search
+    if (userSearch) {
+      filtered = filtered.filter(
         (u) =>
           u.displayName.toLowerCase().includes(userSearch.toLowerCase()) ||
           u.email.toLowerCase().includes(userSearch.toLowerCase())
       );
-  }, [users, userSearch]);
+    }
+    
+    return filtered;
+  }, [users, userSearch, userRoleFilter]);
 
   const adminsList = useMemo(() => {
     return users.filter((u) => u.role === "admin" || u.role === "owner");
@@ -687,6 +738,7 @@ export default function AdminPage() {
                     {modalType === "add" && "Add New Admin"}
                     {modalType === "propose" && "Propose Admin Candidate"}
                     {modalType === "approve" && "Approve Candidate"}
+                    {modalType === "editExpiry" && "Edit Admin Expiry"}
                   </h3>
                   <button
                     onClick={resetModal}
@@ -697,8 +749,8 @@ export default function AdminPage() {
                 </div>
 
                 <div className="space-y-4">
-                  {/* Email Search (for add/propose, not approve) */}
-                  {modalType !== "approve" && (
+                  {/* Email Search (for add/propose, not approve/editExpiry) */}
+                  {modalType !== "approve" && modalType !== "editExpiry" && (
                     <div className="relative">
                       <label className="block text-sm font-semibold mb-2">
                         Email <span className="text-red-500">*</span>
@@ -756,6 +808,21 @@ export default function AdminPage() {
                     </div>
                   )}
 
+                  {/* Email (read-only for editExpiry) */}
+                  {modalType === "editExpiry" && (
+                    <div>
+                      <label className="block text-sm font-semibold mb-2">
+                        Email
+                      </label>
+                      <input
+                        type="email"
+                        value={modalEmail}
+                        readOnly
+                        className="w-full p-3 rounded-xl bg-gray-200 dark:bg-gray-700 border border-white/20 cursor-not-allowed"
+                      />
+                    </div>
+                  )}
+
                   {/* Name (auto-filled) */}
                   <div>
                     <label className="block text-sm font-semibold mb-2">
@@ -771,32 +838,34 @@ export default function AdminPage() {
                   </div>
 
                   {/* Reason */}
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">
-                      Reason{" "}
-                      {(modalType === "propose" || modalType === "approve") && (
-                        <span className="text-red-500">*</span>
-                      )}
-                    </label>
-                    <textarea
-                      placeholder={
-                        modalType === "approve"
-                          ? "Reason from suggester (read-only)"
-                          : "Why should this person become an admin?"
-                      }
-                      value={modalReason}
-                      onChange={(e) => setModalReason(e.target.value)}
-                      readOnly={modalType === "approve"}
-                      className={`w-full p-3 rounded-xl border border-white/20 ${
-                        modalType === "approve"
-                          ? "bg-gray-200 dark:bg-gray-700 cursor-not-allowed"
-                          : "bg-white/50 dark:bg-black/20"
-                      }`}
-                      rows={4}
-                    />
-                  </div>
+                  {modalType !== "editExpiry" && (
+                    <div>
+                      <label className="block text-sm font-semibold mb-2">
+                        Reason{" "}
+                        {(modalType === "propose" || modalType === "approve") && (
+                          <span className="text-red-500">*</span>
+                        )}
+                      </label>
+                      <textarea
+                        placeholder={
+                          modalType === "approve"
+                            ? "Reason from suggester (read-only)"
+                            : "Why should this person become an admin?"
+                        }
+                        value={modalReason}
+                        onChange={(e) => setModalReason(e.target.value)}
+                        readOnly={modalType === "approve"}
+                        className={`w-full p-3 rounded-xl border border-white/20 ${
+                          modalType === "approve"
+                            ? "bg-gray-200 dark:bg-gray-700 cursor-not-allowed"
+                            : "bg-white/50 dark:bg-black/20"
+                        }`}
+                        rows={4}
+                      />
+                    </div>
+                  )}
 
-                  {/* Owner-only fields (for add and approve) */}
+                  {/* Owner-only fields (for add, approve, and editExpiry) */}
                   {isOwner && modalType !== "propose" && (
                     <>
                       <div className="flex items-center gap-3">
@@ -869,12 +938,14 @@ export default function AdminPage() {
                       if (modalType === "add") handleAddAdmin();
                       else if (modalType === "propose") handleSuggestCandidate();
                       else if (modalType === "approve") handleApproveCandidate();
+                      else if (modalType === "editExpiry") handleEditExpiry();
                     }}
                     className="w-full bg-primary text-white py-3 rounded-xl font-bold hover:opacity-90 transition-opacity"
                   >
                     {modalType === "add" && "Add Admin"}
                     {modalType === "propose" && "Suggest Candidate"}
                     {modalType === "approve" && "Approve & Promote"}
+                    {modalType === "editExpiry" && "Update Expiry"}
                   </button>
                 </div>
               </motion.div>
@@ -1162,25 +1233,84 @@ export default function AdminPage() {
 
               {/* User List */}
               <div className="glass-strong rounded-2xl p-6">
-                <h3 className="text-xl font-bold mb-4">Regular Users</h3>
-                <div className="space-y-3 max-h-96 overflow-y-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold">Regular Users</h3>
+                  
+                  {/* Search and Filter Controls */}
+                  <div className="flex items-center gap-3">
+                    {/* Search */}
+                    <div className="relative">
+                      <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search users..."
+                        value={userSearch}
+                        onChange={(e) => setUserSearch(e.target.value)}
+                        className="pl-10 pr-4 py-2 rounded-xl bg-white/50 dark:bg-black/20 border border-white/20 text-sm min-w-[200px]"
+                      />
+                    </div>
+                    
+                    {/* Role Filter */}
+                    <select
+                      value={userRoleFilter}
+                      onChange={(e) => setUserRoleFilter(e.target.value as "all" | "user" | "admin" | "owner")}
+                      className="px-4 py-2 rounded-xl bg-white/50 dark:bg-black/20 border border-white/20 text-sm"
+                    >
+                      <option value="all">All Roles</option>
+                      <option value="user">User Only</option>
+                      <option value="admin">Admin Only</option>
+                      <option value="owner">Owner Only</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="space-y-4 max-h-96 overflow-y-auto">
                   {filteredUsers.map((u) => (
                     <div
                       key={u._id}
-                      className="flex items-center justify-between p-4 bg-white/5 rounded-xl"
+                      className="flex items-center justify-between p-5 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-4 flex-1">
                         {u.avatar && (
                           <img
                             src={u.avatar}
                             alt={u.displayName}
-                            className="w-10 h-10 rounded-full"
+                            className="w-12 h-12 rounded-full border-2 border-white/20"
                           />
                         )}
-                        <div>
-                          <p className="font-semibold">{u.displayName}</p>
+                        <div className="flex-1">
+                          <p className="font-bold text-base">{u.displayName}</p>
                           <p className="text-sm text-gray-500">{u.email}</p>
+                          {u.createdAt && (
+                            <p className="text-xs text-gray-400 mt-1">
+                              Joined {formatDate(u.createdAt)}
+                            </p>
+                          )}
                         </div>
+                      </div>
+                      
+                      {/* Role Badge */}
+                      <div className="flex items-center gap-2">
+                        {u.role === "owner" ? (
+                          <span className="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-500 text-sm font-bold flex items-center gap-1">
+                            <Crown className="w-4 h-4" />
+                            Owner
+                          </span>
+                        ) : u.role === "admin" ? (
+                          <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-500 text-sm font-bold flex items-center gap-1">
+                            <Shield className="w-4 h-4" />
+                            Admin
+                            {u.adminExpiresAt && (
+                              <span className="ml-1 text-xs">
+                                (until {formatDate(u.adminExpiresAt)})
+                              </span>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="px-3 py-1 rounded-full bg-gray-500/20 text-gray-500 text-sm font-bold">
+                            User
+                          </span>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -1272,18 +1402,7 @@ export default function AdminPage() {
                             {isOwner && (
                               <div className="flex gap-2">
                                 <button
-                                  onClick={() => {
-                                    const expiry = prompt(
-                                      "Enter expiry days (or leave empty for permanent):"
-                                    );
-                                    if (expiry !== null) {
-                                      handleUpdateRole(
-                                        admin._id,
-                                        "admin",
-                                        expiry ? parseInt(expiry) : undefined
-                                      );
-                                    }
-                                  }}
+                                  onClick={() => openEditExpiryModal(admin)}
                                   className="p-2 rounded-lg bg-blue-500/10 text-blue-500 hover:bg-blue-500/20 transition-colors"
                                   title="Edit Expiry"
                                 >
