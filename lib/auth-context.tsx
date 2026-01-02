@@ -25,6 +25,8 @@ export interface User {
   totalStamps?: number;
   countriesProgress?: CountryProgress[];
   feedbackStampCollectedAt?: string;
+  role?: 'user' | 'admin' | 'owner';
+  adminExpiresAt?: string;
 }
 
 interface AuthContextType {
