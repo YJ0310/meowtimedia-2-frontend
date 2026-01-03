@@ -145,17 +145,42 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
   const getAnswerForQuestion = useCallback((response: FeedbackResponse, questionId: string) => {
     switch (questionId) {
       case "impression":
-        return response.firstImpression;
+        // Check if it's "other" and show the custom text
+        if (response.firstImpression === "other" && response.firstImpressionOther) {
+          return `Other: ${response.firstImpressionOther}`;
+        }
+        // Find the label for the selected option
+        const impressionOption = FIRST_IMPRESSION_OPTIONS.find(
+          (o) => o.value === response.firstImpression
+        );
+        return impressionOption?.label || response.firstImpression;
+
       case "ease":
         return `${response.easeOfUse} / 5`;
+
       case "issues":
-        return (response.issues || []).join(", ") || "None reported";
+        if (!response.issues || response.issues.length === 0) {
+          return "None reported";
+        }
+        // Map issue values to labels, handling "other" specially
+        const issueLabels = response.issues.map((issue) => {
+          if (issue === "other" && response.issuesOther) {
+            return `Other: ${response.issuesOther}`;
+          }
+          const issueOption = ISSUE_OPTIONS.find((o) => o.value === issue);
+          return issueOption?.label || issue;
+        });
+        return issueLabels.join(", ");
+
       case "recommend":
         return `${response.recommendation} / 5`;
+
       case "feedback":
         return response.additionalFeedback || null;
+
       case "referral":
         return response.referral || "Direct / Organic";
+
       default:
         return null;
     }
