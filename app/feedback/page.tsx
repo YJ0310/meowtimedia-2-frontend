@@ -313,7 +313,7 @@ export default function FeedbackPage() {
   if (hasAlreadySubmitted) {
     return (
       <div
-        className="fixed inset-0 bg-background flex items-center justify-center p-4"
+        className="fixed inset-0 bg-background flex items-center justify-center p-4 pb-24 md:pb-4"
         onClick={handlePageClick}
       >
         <motion.div
@@ -334,7 +334,7 @@ export default function FeedbackPage() {
           <p className="text-muted-foreground mb-8">
             You've already submitted your feedback. Check your passport for the feedback stamp!
           </p>
-          <div className="flex gap-3 justify-center">
+          <div className="flex gap-3 justify-center flex-wrap">
             <Link href="/passport">
               <motion.button
                 whileHover={{ scale: 1.03 }}
@@ -363,12 +363,12 @@ export default function FeedbackPage() {
 
   return (
     <div
-      className="fixed inset-0 bg-background overflow-hidden"
+      className="min-h-screen bg-background"
       onClick={handlePageClick}
     >
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-2xl mx-auto px-4 py-4">
+      {/* Header - Fixed */}
+      <header className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border">
+        <div className="max-w-2xl mx-auto px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <Link href="/profile">
               <motion.button
@@ -391,7 +391,7 @@ export default function FeedbackPage() {
           </div>
 
           {/* Progress Dots */}
-          <div className="flex items-center justify-center gap-2 mt-4">
+          <div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-3 sm:mt-4">
             {QUESTIONS.map((q, i) => {
               const isComplete = questionStatus[q.id as keyof typeof questionStatus];
               const isCurrent = i === currentQuestion;
@@ -402,7 +402,7 @@ export default function FeedbackPage() {
                   whileHover={{ scale: 1.2 }}
                   whileTap={{ scale: 0.9 }}
                   onClick={() => goToQuestion(i)}
-                  className={`relative w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
+                  className={`relative w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all duration-300 ${
                     isCurrent
                       ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
                       : isComplete
@@ -411,14 +411,14 @@ export default function FeedbackPage() {
                   }`}
                 >
                   {isComplete && !isCurrent ? (
-                    <Check className="w-4 h-4" />
+                    <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   ) : (
-                    <span className="text-xs font-bold">{i + 1}</span>
+                    <span className="text-[10px] sm:text-xs font-bold">{i + 1}</span>
                   )}
 
                   {/* Required indicator */}
                   {q.required && !isComplete && !isCurrent && (
-                    <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-destructive rounded-full" />
+                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-destructive rounded-full" />
                   )}
                 </motion.button>
               );
@@ -427,8 +427,8 @@ export default function FeedbackPage() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="pt-32 pb-32 px-4 h-full overflow-y-auto">
+      {/* Main Content - Scrollable */}
+      <main className="pt-28 sm:pt-32 pb-40 md:pb-28 px-4 min-h-screen">
         <div className="max-w-2xl mx-auto">
           {/* Error Message */}
           <AnimatePresence>
@@ -437,10 +437,10 @@ export default function FeedbackPage() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-destructive/10 border border-destructive/30 rounded-xl p-4 mb-6 flex items-center gap-3"
+                className="bg-destructive/10 border border-destructive/30 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3"
               >
-                <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
-                <span className="text-destructive text-sm">{error}</span>
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-destructive shrink-0" />
+                <span className="text-destructive text-xs sm:text-sm">{error}</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -457,33 +457,33 @@ export default function FeedbackPage() {
               transition={pageTransition}
             >
               {/* Question Header */}
-              <div className="text-center mb-8">
+              <div className="text-center mb-6 sm:mb-8">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.2, type: "spring" as const }}
-                  className="text-5xl mb-4"
+                  className="text-4xl sm:text-5xl mb-3 sm:mb-4"
                 >
                   {QUESTIONS[currentQuestion].emoji}
                 </motion.div>
-                <h2 className="text-2xl font-bold text-foreground mb-2">
+                <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-1.5 sm:mb-2">
                   {QUESTIONS[currentQuestion].title}
                   {!QUESTIONS[currentQuestion].required && (
-                    <span className="text-sm font-normal text-muted-foreground ml-2">
+                    <span className="text-xs sm:text-sm font-normal text-muted-foreground ml-2">
                       (Optional)
                     </span>
                   )}
                 </h2>
-                <p className="text-muted-foreground">
+                <p className="text-sm sm:text-base text-muted-foreground px-2">
                   {QUESTIONS[currentQuestion].subtitle}
                 </p>
               </div>
 
               {/* Question Content */}
-              <div className="bg-card border border-border rounded-2xl p-6 shadow-lg">
+              <div className="bg-card border border-border rounded-2xl p-4 sm:p-6 shadow-lg">
                 {/* Question 1: First Impressions */}
                 {currentQuestion === 0 && (
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 sm:space-y-3">
                     {FIRST_IMPRESSION_OPTIONS.map((option) => (
                       <OptionButton
                         key={option.value}
@@ -504,7 +504,7 @@ export default function FeedbackPage() {
                           placeholder="Please specify..."
                           value={firstImpressionOther}
                           onChange={(e) => setFirstImpressionOther(e.target.value)}
-                          className="w-full bg-muted/50 border border-border p-4 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                          className="w-full bg-muted/50 border border-border p-3 sm:p-4 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                         />
                       )}
                     </AnimatePresence>
@@ -513,7 +513,7 @@ export default function FeedbackPage() {
 
                 {/* Question 2: Ease of Use */}
                 {currentQuestion === 1 && (
-                  <div className="grid grid-cols-5 gap-2 sm:gap-3">
+                  <div className="grid grid-cols-5 gap-1.5 sm:gap-3">
                     {EASE_EMOJIS.map((item) => (
                       <EmojiButton
                         key={item.value}
@@ -528,7 +528,7 @@ export default function FeedbackPage() {
 
                 {/* Question 3: Issues */}
                 {currentQuestion === 2 && (
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 sm:space-y-3">
                     {ISSUE_OPTIONS.map((option) => (
                       <OptionButton
                         key={option.value}
@@ -549,7 +549,7 @@ export default function FeedbackPage() {
                           placeholder="Please describe the issue..."
                           value={issuesOther}
                           onChange={(e) => setIssuesOther(e.target.value)}
-                          className="w-full bg-muted/50 border border-border p-4 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                          className="w-full bg-muted/50 border border-border p-3 sm:p-4 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                         />
                       )}
                     </AnimatePresence>
@@ -558,7 +558,7 @@ export default function FeedbackPage() {
 
                 {/* Question 4: Recommendation */}
                 {currentQuestion === 3 && (
-                  <div className="grid grid-cols-5 gap-2 sm:gap-3">
+                  <div className="grid grid-cols-5 gap-1.5 sm:gap-3">
                     {RECOMMEND_EMOJIS.map((item) => (
                       <EmojiButton
                         key={item.value}
@@ -577,21 +577,21 @@ export default function FeedbackPage() {
                     value={additionalFeedback}
                     onChange={(e) => setAdditionalFeedback(e.target.value)}
                     placeholder="Your thoughts here... 🐾"
-                    rows={5}
-                    className="w-full bg-muted/30 border border-border p-4 rounded-xl resize-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    rows={4}
+                    className="w-full bg-muted/30 border border-border p-3 sm:p-4 rounded-xl resize-none text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
                   />
                 )}
 
                 {/* Question 6: Referral */}
                 {currentQuestion === 5 && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-2.5 sm:gap-3">
                     {REFERRAL_OPTIONS.map((name) => (
                       <motion.button
                         key={name}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setReferral(name)}
-                        className={`p-4 rounded-xl text-center font-medium transition-all border ${
+                        className={`p-3 sm:p-4 rounded-xl text-center font-medium transition-all border ${
                           referral === name
                             ? "bg-primary/10 border-primary text-primary"
                             : "bg-muted/30 border-border text-foreground hover:border-primary/50"
@@ -608,27 +608,41 @@ export default function FeedbackPage() {
         </div>
       </main>
 
-      {/* Footer Navigation */}
-      <footer className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-border">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between gap-4">
+      {/* Footer Navigation - Positioned above dock on mobile */}
+      <footer className="fixed left-0 right-0 z-40 bg-background/90 backdrop-blur-xl border-t border-border bottom-[calc(4rem+env(safe-area-inset-bottom)+16px)] md:bottom-0">
+        <div className="max-w-2xl mx-auto px-4 py-3 sm:py-4">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
             {/* Previous Button */}
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={goPrev}
               disabled={currentQuestion === 0}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-muted text-foreground font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl bg-muted text-foreground font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm sm:text-base"
             >
-              <ChevronLeft className="w-5 h-5" />
-              <span className="hidden sm:inline">Previous</span>
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden xs:inline sm:inline">Previous</span>
             </motion.button>
 
             {/* Progress Indicator */}
             <div className="flex-1 text-center">
-              <span className="text-sm text-muted-foreground">
-                {completedCount}/5 required
-              </span>
+              <div className="flex items-center justify-center gap-1.5">
+                <span className="text-xs sm:text-sm text-muted-foreground">
+                  {completedCount}/5
+                </span>
+                <span className="hidden sm:inline text-xs sm:text-sm text-muted-foreground">
+                  required
+                </span>
+              </div>
+              {/* Mini progress bar for mobile */}
+              <div className="w-full max-w-[120px] mx-auto h-1 bg-muted rounded-full mt-1 overflow-hidden">
+                <motion.div
+                  className="h-full bg-primary rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(completedCount / 5) * 100}%` }}
+                  transition={{ duration: 0.3 }}
+                />
+              </div>
             </div>
 
             {/* Next / Submit Button */}
@@ -637,14 +651,14 @@ export default function FeedbackPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={goNext}
-                className={`flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all ${
+                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl font-medium transition-all text-sm sm:text-base ${
                   isCurrentComplete
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                     : "bg-muted text-muted-foreground"
                 }`}
               >
-                <span className="hidden sm:inline">Next</span>
-                <ChevronRight className="w-5 h-5" />
+                <span className="hidden xs:inline sm:inline">Next</span>
+                <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </motion.button>
             ) : (
               <motion.button
@@ -652,18 +666,18 @@ export default function FeedbackPage() {
                 whileTap={{ scale: 0.98 }}
                 onClick={handleSubmit}
                 disabled={!canSubmit || isSubmitting}
-                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20 transition-all"
+                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2.5 sm:py-3 rounded-xl bg-emerald-500 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-emerald-500/20 transition-all text-sm sm:text-base"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                     <span className="hidden sm:inline">Submitting...</span>
                   </>
                 ) : (
                   <>
-                    <Send className="w-5 h-5" />
-                    <span className="hidden sm:inline">Submit</span>
-                    <Sparkles className="w-4 h-4" />
+                    <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden xs:inline sm:inline">Submit</span>
+                    <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
                   </>
                 )}
               </motion.button>
@@ -694,7 +708,7 @@ const OptionButton = ({
     whileHover={{ scale: 1.01 }}
     whileTap={{ scale: 0.99 }}
     onClick={onClick}
-    className={`w-full p-4 rounded-xl text-left transition-all border flex items-center gap-4 ${
+    className={`w-full p-3 sm:p-4 rounded-xl text-left transition-all border flex items-center gap-3 sm:gap-4 ${
       selected
         ? "bg-primary/10 border-primary"
         : "bg-muted/30 border-border hover:border-primary/50"
@@ -702,7 +716,7 @@ const OptionButton = ({
   >
     {/* Checkbox/Radio indicator */}
     <div
-      className={`w-5 h-5 shrink-0 flex items-center justify-center transition-all ${
+      className={`w-4 h-4 sm:w-5 sm:h-5 shrink-0 flex items-center justify-center transition-all ${
         type === "radio" ? "rounded-full" : "rounded-md"
       } border-2 ${
         selected ? "border-primary bg-primary" : "border-muted-foreground/40"
@@ -716,9 +730,9 @@ const OptionButton = ({
             exit={{ scale: 0 }}
           >
             {type === "radio" ? (
-              <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary-foreground" />
             ) : (
-              <Check className="w-3 h-3 text-primary-foreground" />
+              <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary-foreground" />
             )}
           </motion.div>
         )}
@@ -726,11 +740,11 @@ const OptionButton = ({
     </div>
 
     {/* Icon */}
-    <span className="text-xl shrink-0">{icon}</span>
+    <span className="text-lg sm:text-xl shrink-0">{icon}</span>
 
     {/* Label */}
     <span
-      className={`text-sm ${
+      className={`text-xs sm:text-sm ${
         selected ? "text-foreground font-medium" : "text-muted-foreground"
       }`}
     >
@@ -754,21 +768,21 @@ const EmojiButton = ({
     whileHover={{ scale: 1.08, y: -2 }}
     whileTap={{ scale: 0.95 }}
     onClick={onClick}
-    className={`aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 transition-all border ${
+    className={`aspect-square rounded-xl sm:rounded-2xl flex flex-col items-center justify-center gap-0.5 sm:gap-1 transition-all border p-1 sm:p-2 ${
       selected
         ? "bg-primary/10 border-primary shadow-lg shadow-primary/20"
         : "bg-muted/30 border-border hover:border-primary/50"
     }`}
   >
     <motion.span
-      className="text-2xl sm:text-3xl"
+      className="text-xl sm:text-3xl"
       animate={selected ? { scale: [1, 1.2, 1] } : {}}
       transition={{ duration: 0.3 }}
     >
       {emoji}
     </motion.span>
     <span
-      className={`text-[10px] sm:text-xs text-center px-1 leading-tight ${
+      className={`text-[8px] sm:text-xs text-center leading-tight line-clamp-2 ${
         selected ? "text-primary font-medium" : "text-muted-foreground"
       }`}
     >
