@@ -608,7 +608,10 @@ export const RatingHistogram = ({ data, total, emojiMap }: RatingHistogramProps)
                 >
                   {emojiItem?.emoji}
                 </motion.div>
-                <div className={`text-sm font-bold transition-all duration-300 ${isHovered ? 'text-foreground' : 'text-muted-foreground'}`}>
+                <div className={`
+                  text-sm font-bold transition-all duration-300
+                  ${isHovered ? 'text-foreground' : 'text-muted-foreground'}
+                `}>
                   {rating}
                 </div>
               </motion.div>
