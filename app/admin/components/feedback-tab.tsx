@@ -21,7 +21,7 @@ import {
   Sparkles,
   Quote,
 } from "lucide-react";
-import { DonutChart, RatingHistogram, HorizontalBarChart, StatCard } from "./charts";
+import { DonutChart, HorizontalBarChart, StatCard } from "./charts";
 import { FeedbackSummary, FeedbackResponse, FeedbackSubTab } from "../types";
 import {
   FIRST_IMPRESSION_OPTIONS,
@@ -138,6 +138,26 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
       count: item.count,
     }));
     processed.sort((a, b) => (a.value === "none" ? -1 : b.value === "none" ? 1 : b.count - a.count));
+    return { data: processed, max: Math.max(...processed.map((i) => i.count), 1) };
+  }, [summary]);
+
+  const easeData = useMemo(() => {
+    if (!summary) return { data: [], max: 0 };
+    const processed = summary.easeOfUse.map((item) => ({
+      label: EASE_EMOJIS.find((o) => o.value === item._id)?.label || `Rating ${item._id}`,
+      value: `${item._id}`,
+      count: item.count,
+    }));
+    return { data: processed, max: Math.max(...processed.map((i) => i.count), 1) };
+  }, [summary]);
+
+  const recommendData = useMemo(() => {
+    if (!summary) return { data: [], max: 0 };
+    const processed = summary.recommendation.map((item) => ({
+      label: RECOMMEND_EMOJIS.find((o) => o.value === item._id)?.label || `Rating ${item._id}`,
+      value: `${item._id}`,
+      count: item.count,
+    }));
     return { data: processed, max: Math.max(...processed.map((i) => i.count), 1) };
   }, [summary]);
 
@@ -394,11 +414,17 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
                 </QuestionSummaryCard>
 
                 <QuestionSummaryCard index={2} question={questions[1]} color={THEME.secondary}>
-                  <RatingHistogram
-                    data={summary.easeOfUse}
-                    total={summary.total}
-                    emojiConfig={EASE_EMOJIS}
-                  />
+                  <div className="space-y-4">
+                    <StatCard
+                      label="Average Ease"
+                      value={summary.avgEaseOfUse.toFixed(1)}
+                      icon={<TrendingUp className="w-5 h-5" />}
+                    />
+                    <HorizontalBarChart
+                      data={easeData.data}
+                      total={summary.total}
+                    />
+                  </div>
                 </QuestionSummaryCard>
 
                 <QuestionSummaryCard index={3} question={questions[2]} color={THEME.accent}>
@@ -409,11 +435,17 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
                 </QuestionSummaryCard>
 
                 <QuestionSummaryCard index={4} question={questions[3]} color={THEME.neutral}>
-                  <RatingHistogram
-                    data={summary.recommendation}
-                    total={summary.total}
-                    emojiConfig={RECOMMEND_EMOJIS}
-                  />
+                  <div className="space-y-4">
+                    <StatCard
+                      label="Average Recommendation"
+                      value={summary.avgRecommendation.toFixed(1)}
+                      icon={<TrendingUp className="w-5 h-5" />}
+                    />
+                    <HorizontalBarChart
+                      data={recommendData.data}
+                      total={summary.total}
+                    />
+                  </div>
                 </QuestionSummaryCard>
 
                 <QuestionSummaryCard index={5} question={questions[4]} color={THEME.primary}>
