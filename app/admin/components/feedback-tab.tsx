@@ -19,6 +19,7 @@ import {
   FileText,
   ChevronDown,
   Sparkles,
+  Quote,
 } from "lucide-react";
 import { DonutChart, RatingHistogram, HorizontalBarChart, StatCard } from "./charts";
 import { FeedbackSummary, FeedbackResponse, FeedbackSubTab } from "../types";
@@ -29,28 +30,36 @@ import {
   RECOMMEND_EMOJIS,
 } from "../constants";
 
+// --- THEME COLORS ---
+const THEME = {
+  primary: "#a8bedf",
+  secondary: "#c7d5e8",
+  accent: "#efe4d4",
+  neutral: "#d8c9ba",
+};
+
 // --- ANIMATION CONFIGS ---
 const pageTransition = {
   type: "spring" as const,
-  stiffness: 300,
-  damping: 30,
+  stiffness: 200,
+  damping: 25,
 };
 
 const pageVariants = {
-  initial: { opacity: 0, y: 8 },
+  initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -8 },
+  exit: { opacity: 0, y: -12 },
 };
 
 const cardVariants = {
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 0, y: 24 },
   animate: (i: number) => ({
     opacity: 1,
     y: 0,
     transition: {
-      delay: i * 0.06,
-      duration: 0.4,
-      ease: easeOut,
+      delay: i * 0.08,
+      duration: 0.5,
+      ease: "easeOut" as const,
     },
   }),
 };
@@ -58,8 +67,8 @@ const cardVariants = {
 const staggerContainer = {
   animate: {
     transition: {
-      staggerChildren: 0.05,
-      delayChildren: 0.1,
+      staggerChildren: 0.06,
+      delayChildren: 0.12,
     },
   },
 };
@@ -75,6 +84,7 @@ interface Question {
   label: string;
   shortLabel: string;
   icon: React.ComponentType<{ className?: string }>;
+  emoji: string;
 }
 
 // --- MAIN COMPONENT ---
@@ -86,12 +96,12 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
   // Question definitions
   const questions: Question[] = useMemo(
     () => [
-      { id: "impression", label: "What was your first impression?", shortLabel: "First Impression", icon: PieChart },
-      { id: "ease", label: "How easy was it to use?", shortLabel: "Ease of Use", icon: ThumbsUp },
-      { id: "issues", label: "Did you encounter any issues?", shortLabel: "Issues", icon: AlertTriangle },
-      { id: "recommend", label: "How likely are you to recommend?", shortLabel: "Recommendation", icon: TrendingUp },
-      { id: "feedback", label: "Any additional feedback?", shortLabel: "Feedback", icon: MessageSquare },
-      { id: "referral", label: "How did you hear about us?", shortLabel: "Referral", icon: Award },
+      { id: "impression", label: "What was your first impression?", shortLabel: "Impression", icon: PieChart, emoji: "✨" },
+      { id: "ease", label: "How easy was it to use?", shortLabel: "Ease", icon: ThumbsUp, emoji: "🎯" },
+      { id: "issues", label: "Did you encounter any issues?", shortLabel: "Issues", icon: AlertTriangle, emoji: "🔧" },
+      { id: "recommend", label: "How likely are you to recommend?", shortLabel: "Recommend", icon: TrendingUp, emoji: "💫" },
+      { id: "feedback", label: "Any additional feedback?", shortLabel: "Feedback", icon: MessageSquare, emoji: "💬" },
+      { id: "referral", label: "How did you hear about us?", shortLabel: "Referral", icon: Award, emoji: "🎁" },
     ],
     []
   );
@@ -99,9 +109,9 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
   // Tab config
   const tabs = useMemo(
     () => [
-      { id: "summary" as FeedbackSubTab, label: "Summary", icon: BarChart3 },
-      { id: "question" as FeedbackSubTab, label: "Question", icon: FileText },
-      { id: "individual" as FeedbackSubTab, label: "Individual", icon: User },
+      { id: "summary" as FeedbackSubTab, label: "Summary", icon: BarChart3, emoji: "📊" },
+      { id: "question" as FeedbackSubTab, label: "By Question", icon: FileText, emoji: "📝" },
+      { id: "individual" as FeedbackSubTab, label: "Individual", icon: User, emoji: "👤" },
     ],
     []
   );
@@ -109,7 +119,7 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
   // Chart data
   const firstImpressionData = useMemo(() => {
     if (!summary) return [];
-    const colors = ["#7c3aed", "#a78bfa", "#c4b5fd", "#ddd6fe", "#ede9fe"];
+    const colors = [THEME.primary, THEME.secondary, THEME.accent, THEME.neutral, "#b8d4e3"];
     return summary.firstImpression.map((item, index) => {
       const option = FIRST_IMPRESSION_OPTIONS.find((o) => o.value === item._id);
       return {
@@ -212,10 +222,15 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
           animate={{ opacity: 1, scale: 1 }}
           className="text-center"
         >
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted/50 flex items-center justify-center animate-pulse">
-            <BarChart3 className="w-8 h-8 text-muted-foreground/50" />
+          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-linear-to-br from-meow-primary/30 to-meow-accent/30 flex items-center justify-center">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            >
+              <Sparkles className="w-8 h-8 text-meow-primary" />
+            </motion.div>
           </div>
-          <p className="text-muted-foreground">Loading feedback data...</p>
+          <p className="text-muted-foreground font-medium">Loading feedback data...</p>
         </motion.div>
       </div>
     );
@@ -225,54 +240,68 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
     <div className="max-w-4xl mx-auto min-h-screen">
       {/* --- HEADER --- */}
       <motion.header
-        initial={{ opacity: 0, y: -10 }}
+        initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border"
+        transition={{ duration: 0.5 }}
+        className="sticky top-0 z-40 glass-strong rounded-b-3xl"
       >
-        <div className="px-4 md:px-6 pt-6 pb-4">
-          {/* Title & Stats */}
+        <div className="px-5 md:px-8 pt-6 pb-5">
+          {/* Title & Badge */}
           <div className="flex items-start justify-between mb-6">
             <div>
-              <h1 className="text-xl md:text-2xl font-semibold text-foreground flex items-center gap-2">
-                Feedback Analysis
-                <Sparkles className="w-5 h-5 text-primary/60" />
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
+                <span className="text-gradient">Feedback</span>
+                <motion.span
+                  animate={{ rotate: [0, 10, -10, 0] }}
+                  transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                  className="text-2xl"
+                >
+                  📊
+                </motion.span>
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                {summary.total} responses collected
+              <p className="text-sm text-muted-foreground mt-1.5 font-medium">
+                Insights from {summary.total} amazing responses
               </p>
             </div>
+            
             <motion.div
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 bg-primary/10 text-primary px-3 py-1.5 rounded-full text-sm font-medium cursor-default"
+              className="flex items-center gap-2.5 glass px-4 py-2.5 rounded-2xl"
             >
-              <Users className="w-4 h-4" />
-              {summary.total}
+              <div className="w-8 h-8 rounded-full bg-linear-to-br from-meow-primary to-meow-secondary flex items-center justify-center">
+                <Users className="w-4 h-4 text-white" />
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-bold text-foreground leading-none">{summary.total}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">responses</p>
+              </div>
             </motion.div>
           </div>
 
           {/* Tab Navigation */}
-          <nav className="relative flex border-b border-transparent -mb-4">
+          <nav className="flex gap-2 p-1 bg-muted/30 rounded-2xl">
             {tabs.map((tab) => (
               <motion.button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 whileHover={{ y: -1 }}
-                whileTap={{ y: 0 }}
-                className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors duration-200 ${
-                  activeTab === tab.id ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                whileTap={{ scale: 0.98 }}
+                className={`relative flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+                  activeTab === tab.id
+                    ? "text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                <tab.icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
                 {activeTab === tab.id && (
                   <motion.div
-                    layoutId="activeTabIndicator"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full"
+                    layoutId="activeTabBg"
+                    className="absolute inset-0 glass-strong rounded-xl"
                     transition={pageTransition}
                   />
                 )}
+                <span className="relative z-10 text-base">{tab.emoji}</span>
+                <span className="relative z-10 hidden sm:inline">{tab.label}</span>
               </motion.button>
             ))}
           </nav>
@@ -292,7 +321,7 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
               exit="exit"
               transition={pageTransition}
             >
-              {/* Quick Stats - Enhanced with StatCard-like styling */}
+              {/* Quick Stats */}
               <motion.div
                 variants={staggerContainer}
                 initial="initial"
@@ -301,42 +330,54 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
               >
                 {[
                   {
-                    label: "Total",
+                    label: "Responses",
                     value: summary.total,
-                    color: "text-primary",
-                    bg: "bg-primary/5",
-                    border: "border-primary/20",
+                    emoji: "📬",
+                    gradient: "from-meow-primary/20 to-meow-secondary/20",
+                    border: "border-meow-primary/30",
                   },
                   {
                     label: "Avg Ease",
                     value: summary.avgEaseOfUse.toFixed(1),
-                    color: "text-emerald-600 dark:text-emerald-400",
-                    bg: "bg-emerald-500/5",
-                    border: "border-emerald-500/20",
+                    emoji: "⭐",
+                    gradient: "from-meow-accent/30 to-meow-neutral/20",
+                    border: "border-meow-accent/30",
                   },
                   {
                     label: "Avg NPS",
                     value: summary.avgRecommendation.toFixed(1),
-                    color: "text-blue-600 dark:text-blue-400",
-                    bg: "bg-blue-500/5",
-                    border: "border-blue-500/20",
+                    emoji: "💯",
+                    gradient: "from-meow-secondary/20 to-meow-primary/20",
+                    border: "border-meow-secondary/30",
                   },
                 ].map((stat, i) => (
                   <motion.div
                     key={stat.label}
                     variants={cardVariants}
                     custom={i}
-                    whileHover={{ y: -4, scale: 1.02, transition: { duration: 0.2 } }}
-                    className={`${stat.bg} rounded-2xl p-4 md:p-5 border ${stat.border} relative overflow-hidden group`}
+                    whileHover={{ y: -6, scale: 1.02 }}
+                    className={`glass rounded-3xl p-4 md:p-5 border ${stat.border} relative overflow-hidden group`}
                   >
-                    {/* Hover gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1 relative z-10">
-                      {stat.label}
-                    </p>
-                    <p className={`text-2xl md:text-3xl font-bold ${stat.color} relative z-10`}>
-                      {stat.value}
-                    </p>
+                    {/* Background gradient */}
+                    <div className={`absolute inset-0 bg-linear-to-br ${stat.gradient} opacity-50 group-hover:opacity-80 transition-opacity duration-300`} />
+                    
+                    {/* Emoji */}
+                    <motion.span
+                      className="absolute top-3 right-3 text-2xl opacity-40 group-hover:opacity-70 group-hover:scale-110 transition-all duration-300"
+                      animate={{ rotate: [0, 5, -5, 0] }}
+                      transition={{ duration: 3, repeat: Infinity, delay: i * 0.5 }}
+                    >
+                      {stat.emoji}
+                    </motion.span>
+                    
+                    <div className="relative z-10">
+                      <p className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-2">
+                        {stat.label}
+                      </p>
+                      <p className="text-3xl md:text-4xl font-bold text-gradient">
+                        {stat.value}
+                      </p>
+                    </div>
                   </motion.div>
                 ))}
               </motion.div>
@@ -346,46 +387,43 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
                 variants={staggerContainer}
                 initial="initial"
                 animate="animate"
-                className="space-y-4"
+                className="space-y-5"
               >
-                <QuestionSummaryCard index={1} question={questions[0].label} icon={questions[0].icon}>
-                  <DonutChart data={firstImpressionData} total={summary.total} />
+                <QuestionSummaryCard index={1} question={questions[0]} color={THEME.primary}>
+                  <DonutChart data={firstImpressionData} total={summary.total} title="Responses" />
                 </QuestionSummaryCard>
 
-                <QuestionSummaryCard index={2} question={questions[1].label} icon={questions[1].icon}>
+                <QuestionSummaryCard index={2} question={questions[1]} color={THEME.secondary}>
                   <RatingHistogram
                     data={summary.easeOfUse}
                     total={summary.total}
-                    emojiMap={EASE_EMOJIS}
+                    emojiConfig={EASE_EMOJIS}
                   />
                 </QuestionSummaryCard>
 
-                <QuestionSummaryCard index={3} question={questions[2].label} icon={questions[2].icon}>
+                <QuestionSummaryCard index={3} question={questions[2]} color={THEME.accent}>
                   <HorizontalBarChart
                     data={issuesData.data}
                     total={summary.total}
-                    maxVal={issuesData.max}
-                    colorMap={ISSUE_OPTIONS}
                   />
                 </QuestionSummaryCard>
 
-                <QuestionSummaryCard index={4} question={questions[3].label} icon={questions[3].icon}>
+                <QuestionSummaryCard index={4} question={questions[3]} color={THEME.neutral}>
                   <RatingHistogram
                     data={summary.recommendation}
                     total={summary.total}
-                    emojiMap={RECOMMEND_EMOJIS}
+                    emojiConfig={RECOMMEND_EMOJIS}
                   />
                 </QuestionSummaryCard>
 
-                <QuestionSummaryCard index={5} question={questions[4].label} icon={questions[4].icon}>
+                <QuestionSummaryCard index={5} question={questions[4]} color={THEME.primary}>
                   <FeedbackTextList responses={responses} />
                 </QuestionSummaryCard>
 
-                <QuestionSummaryCard index={6} question={questions[5].label} icon={questions[5].icon}>
+                <QuestionSummaryCard index={6} question={questions[5]} color={THEME.secondary}>
                   <HorizontalBarChart
                     data={referralData.data}
                     total={summary.total}
-                    maxVal={referralData.max}
                   />
                 </QuestionSummaryCard>
               </motion.div>
@@ -402,65 +440,74 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
               exit="exit"
               transition={pageTransition}
             >
-              {/* Question Selector Pills */}
-              <div className="flex gap-2 overflow-x-auto pb-4 mb-4 -mx-1 px-1 scrollbar-hide">
+              {/* Question Selector */}
+              <div className="flex gap-2 overflow-x-auto pb-4 mb-5 -mx-2 px-2 scrollbar-hide">
                 {questions.map((q, i) => (
                   <motion.button
                     key={q.id}
-                    whileHover={{ scale: 1.02, y: -1 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.03, y: -2 }}
+                    whileTap={{ scale: 0.97 }}
                     onClick={() => setSelectedQuestionIndex(i)}
-                    className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all duration-200 border ${
+                    className={`shrink-0 flex items-center gap-2.5 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-300 ${
                       selectedQuestionIndex === i
-                        ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20"
-                        : "bg-card text-muted-foreground border-border hover:border-primary/50 hover:text-foreground"
+                        ? "glass-strong shadow-lg"
+                        : "bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    <span
-                      className={`w-5 h-5 flex items-center justify-center rounded-full text-xs font-bold ${
-                        selectedQuestionIndex === i ? "bg-white/20" : "bg-muted"
-                      }`}
-                    >
-                      {i + 1}
-                    </span>
+                    <span className="text-lg">{q.emoji}</span>
                     <span className="hidden sm:inline">{q.shortLabel}</span>
+                    {selectedQuestionIndex === i && (
+                      <motion.div
+                        layoutId="questionIndicator"
+                        className="w-2 h-2 rounded-full bg-meow-primary"
+                      />
+                    )}
                   </motion.button>
                 ))}
               </div>
 
-              {/* Question Header Card */}
+              {/* Question Header */}
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-card border border-border rounded-2xl p-5 mb-4"
+                className="glass-strong rounded-3xl p-5 md:p-6 mb-5"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <currentQuestion.icon className="w-5 h-5 text-primary" />
-                  </div>
+                <div className="flex items-center gap-4">
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    className="w-14 h-14 rounded-2xl bg-linear-to-br from-meow-primary/30 to-meow-secondary/30 flex items-center justify-center text-2xl"
+                  >
+                    {currentQuestion.emoji}
+                  </motion.div>
                   <div>
-                    <h2 className="text-lg font-semibold text-foreground">{currentQuestion.label}</h2>
-                    <p className="text-sm text-muted-foreground">{filteredResponses.length} responses</p>
+                    <h2 className="text-lg md:text-xl font-semibold text-foreground">
+                      {currentQuestion.label}
+                    </h2>
+                    <p className="text-sm text-muted-foreground mt-0.5">
+                      <span className="font-semibold text-meow-primary">{filteredResponses.length}</span> responses
+                    </p>
                   </div>
                 </div>
               </motion.div>
 
-              {/* Responses */}
+              {/* Responses List */}
               <motion.div
                 variants={staggerContainer}
                 initial="initial"
                 animate="animate"
-                className="space-y-2"
+                className="space-y-3"
               >
                 <AnimatePresence mode="popLayout">
                   {filteredResponses.length === 0 ? (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="text-center py-16 text-muted-foreground"
+                      className="glass rounded-3xl p-12 text-center"
                     >
-                      <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                      <p>No responses for this question yet.</p>
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-linear-to-br from-meow-primary/20 to-meow-accent/20 flex items-center justify-center">
+                        <MessageSquare className="w-8 h-8 text-muted-foreground/50" />
+                      </div>
+                      <p className="text-muted-foreground font-medium">No responses for this question yet.</p>
                     </motion.div>
                   ) : (
                     filteredResponses.map((response, i) => (
@@ -469,19 +516,20 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
                         variants={cardVariants}
                         custom={i}
                         layout
-                        className="bg-card border border-border rounded-xl p-4 hover:border-primary/30 hover:shadow-md transition-all duration-200"
+                        whileHover={{ scale: 1.01, y: -2 }}
+                        className="glass rounded-2xl p-4 md:p-5 transition-all duration-300 hover:shadow-lg group"
                       >
-                        <div className="flex items-start gap-3">
-                          <UserAvatar user={response.userId} size="sm" />
+                        <div className="flex items-start gap-4">
+                          <UserAvatar user={response.userId} size="md" />
                           <div className="flex-1 min-w-0">
-                            <p className="text-foreground leading-relaxed">
+                            <p className="text-foreground leading-relaxed font-medium">
                               {getAnswerForQuestion(response, currentQuestion.id) || (
-                                <span className="text-muted-foreground italic">No answer</span>
+                                <span className="text-muted-foreground italic font-normal">No answer</span>
                               )}
                             </p>
-                            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                              <span className="font-medium">{response.userId.displayName}</span>
-                              <span className="opacity-50">•</span>
+                            <div className="flex items-center gap-2.5 mt-3 text-xs text-muted-foreground">
+                              <span className="font-semibold">{response.userId.displayName}</span>
+                              <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
                               <span>{new Date(response.createdAt).toLocaleDateString()}</span>
                             </div>
                           </div>
@@ -505,24 +553,28 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
               transition={pageTransition}
             >
               {/* Navigator */}
-              <div className="bg-card border border-border rounded-2xl p-3 mb-4 flex items-center justify-between gap-4">
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="glass-strong rounded-3xl p-4 mb-5 flex items-center justify-between gap-4"
+              >
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={{ scale: 1.05, x: -2 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => navigateResponse("prev")}
                   disabled={selectedResponseIndex === 0}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm font-medium"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-muted/50 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm font-medium"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   <span className="hidden sm:inline">Previous</span>
                 </motion.button>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <div className="relative">
                     <select
                       value={selectedResponseIndex}
                       onChange={(e) => setSelectedResponseIndex(Number(e.target.value))}
-                      className="appearance-none bg-muted/50 rounded-lg py-2 pl-3 pr-8 text-sm font-medium text-center focus:outline-none focus:ring-2 focus:ring-primary/50"
+                      className="appearance-none glass rounded-xl py-2.5 pl-4 pr-10 text-sm font-semibold text-center focus:outline-none focus:ring-2 focus:ring-meow-primary/50"
                     >
                       {responses.map((r, i) => (
                         <option key={i} value={i}>
@@ -530,49 +582,52 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
                         </option>
                       ))}
                     </select>
-                    <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                   </div>
-                  <span className="text-muted-foreground text-sm">of {responses.length}</span>
+                  <span className="text-muted-foreground text-sm font-medium">of {responses.length}</span>
                 </div>
 
                 <motion.button
-                  whileHover={{ scale: 1.05 }}
+                  whileHover={{ scale: 1.05, x: 2 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => navigateResponse("next")}
                   disabled={selectedResponseIndex === responses.length - 1}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm font-medium"
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-muted/50 hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all text-sm font-medium"
                 >
                   <span className="hidden sm:inline">Next</span>
                   <ChevronRight className="w-4 h-4" />
                 </motion.button>
-              </div>
+              </motion.div>
 
               {/* Response Card */}
               <AnimatePresence mode="wait">
                 <motion.div
                   key={selectedResponseIndex}
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -30 }}
-                  transition={{ duration: 0.25, ease: "easeOut" }}
-                  className="bg-card border border-border rounded-2xl overflow-hidden"
+                  initial={{ opacity: 0, x: 40, scale: 0.98 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: -40, scale: 0.98 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="glass-strong rounded-3xl overflow-hidden"
                 >
                   {/* User Header */}
-                  <div className="p-5 md:p-6 border-b border-border bg-muted/20">
-                    <div className="flex items-center gap-4">
-                      <UserAvatar user={currentResponse.userId} size="lg" />
+                  <div className="p-6 md:p-8 bg-linear-to-br from-meow-primary/10 via-meow-secondary/5 to-transparent">
+                    <div className="flex items-center gap-5">
+                      <UserAvatar user={currentResponse.userId} size="xl" />
                       <div className="min-w-0 flex-1">
-                        <h2 className="text-lg md:text-xl font-semibold text-foreground truncate">
+                        <h2 className="text-xl md:text-2xl font-bold text-foreground truncate">
                           {currentResponse.userId.displayName}
                         </h2>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground mt-1">
-                          <span className="flex items-center gap-1.5 truncate">
-                            <Mail className="w-3.5 h-3.5 flex-shrink-0" />
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-muted-foreground mt-2">
+                          <span className="flex items-center gap-2 truncate">
+                            <div className="w-5 h-5 rounded-full bg-meow-primary/20 flex items-center justify-center">
+                              <Mail className="w-3 h-3 text-meow-primary" />
+                            </div>
                             <span className="truncate">{currentResponse.userId.email}</span>
                           </span>
-                          <span className="hidden sm:inline opacity-50">•</span>
-                          <span className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5" />
+                          <span className="flex items-center gap-2">
+                            <div className="w-5 h-5 rounded-full bg-meow-accent/30 flex items-center justify-center">
+                              <Calendar className="w-3 h-3 text-meow-neutral" />
+                            </div>
                             {new Date(currentResponse.createdAt).toLocaleDateString(undefined, {
                               dateStyle: "medium",
                             })}
@@ -582,8 +637,8 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
                     </div>
                   </div>
 
-                  {/* Answers Grid */}
-                  <div className="divide-y divide-border">
+                  {/* Answers */}
+                  <div className="divide-y divide-border/50">
                     {questions.map((q, i) => {
                       const answer = getAnswerForQuestion(currentResponse, q.id);
                       return (
@@ -591,18 +646,23 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
                           key={q.id}
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.04 }}
-                          className="p-4 md:p-5 hover:bg-muted/10 transition-colors group"
+                          transition={{ delay: i * 0.05 }}
+                          className="p-5 md:p-6 hover:bg-muted/5 transition-colors group"
                         >
-                          <div className="flex items-start gap-3">
-                            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                              <span className="text-xs font-bold text-primary">{i + 1}</span>
-                            </div>
+                          <div className="flex items-start gap-4">
+                            <motion.div
+                              whileHover={{ scale: 1.1, rotate: 5 }}
+                              className="shrink-0 w-11 h-11 rounded-2xl bg-linear-to-br from-meow-primary/20 to-meow-secondary/20 flex items-center justify-center text-xl group-hover:from-meow-primary/30 group-hover:to-meow-secondary/30 transition-all"
+                            >
+                              {q.emoji}
+                            </motion.div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm text-muted-foreground mb-1">{q.label}</p>
+                              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                                {q.shortLabel}
+                              </p>
                               <p
-                                className={`text-foreground ${
-                                  !answer ? "text-muted-foreground italic text-sm" : ""
+                                className={`text-foreground font-medium ${
+                                  !answer ? "text-muted-foreground italic font-normal text-sm" : ""
                                 }`}
                               >
                                 {answer || "No answer provided"}
@@ -625,51 +685,71 @@ export default function FeedbackTab({ summary, responses }: FeedbackTabProps) {
 
 // --- SUBCOMPONENTS ---
 
-const QuestionSummaryCard = ({
-  index,
-  question,
-  icon: Icon,
-  children,
-}: {
+interface QuestionSummaryCardProps {
   index: number;
-  question: string;
-  icon?: React.ComponentType<{ className?: string }>;
+  question: Question;
+  color: string;
   children: React.ReactNode;
-}) => (
+}
+
+const QuestionSummaryCard = ({ index, question, color, children }: QuestionSummaryCardProps) => (
   <motion.div
     variants={cardVariants}
     custom={index}
-    whileHover={{ y: -2, transition: { duration: 0.2 } }}
-    className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl hover:shadow-primary/5 transition-all duration-300"
+    whileHover={{ y: -4, transition: { duration: 0.25 } }}
+    className="glass rounded-3xl overflow-hidden hover:shadow-2xl hover:shadow-black/5 dark:hover:shadow-white/5 transition-all duration-400"
   >
-    <div className="p-4 md:p-5 border-b border-border bg-muted/10 flex items-center gap-3">
-      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-        {Icon ? (
-          <Icon className="w-4 h-4 text-primary" />
-        ) : (
-          <span className="text-sm font-bold text-primary">{index}</span>
-        )}
-      </div>
+    {/* Header */}
+    <div
+      className="p-5 md:p-6 flex items-center gap-4"
+      style={{
+        background: `linear-gradient(135deg, ${color}15 0%, transparent 100%)`,
+      }}
+    >
+      <motion.div
+        whileHover={{ scale: 1.1, rotate: 5 }}
+        className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl"
+        style={{
+          background: `linear-gradient(135deg, ${color}30 0%, ${color}15 100%)`,
+        }}
+      >
+        {question.emoji}
+      </motion.div>
       <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-foreground truncate">{question}</h3>
-        <p className="text-xs text-muted-foreground">Question {index}</p>
+        <h3 className="font-semibold text-foreground text-base md:text-lg truncate">
+          {question.label}
+        </h3>
+        <p className="text-xs text-muted-foreground font-medium mt-0.5">
+          Question {index}
+        </p>
       </div>
     </div>
-    <div className="p-4 md:p-6">{children}</div>
+    
+    {/* Content */}
+    <div className="p-5 md:p-7">
+      {children}
+    </div>
   </motion.div>
 );
 
-const UserAvatar = ({
-  user,
-  size = "md",
-}: {
+interface UserAvatarProps {
   user: { avatar?: string; displayName?: string };
-  size?: "sm" | "md" | "lg";
-}) => {
+  size?: "sm" | "md" | "lg" | "xl";
+}
+
+const UserAvatar = ({ user, size = "md" }: UserAvatarProps) => {
   const sizeClasses = {
-    sm: "w-9 h-9 text-sm",
-    md: "w-11 h-11 text-base",
+    sm: "w-10 h-10 text-sm",
+    md: "w-12 h-12 text-base",
     lg: "w-14 h-14 text-lg",
+    xl: "w-18 h-18 text-xl",
+  };
+
+  const sizePx = {
+    sm: 40,
+    md: 48,
+    lg: 56,
+    xl: 72,
   };
 
   const initial = user.displayName?.[0]?.toUpperCase() || "?";
@@ -677,25 +757,31 @@ const UserAvatar = ({
   if (user.avatar) {
     return (
       <motion.img
-        whileHover={{ scale: 1.05 }}
+        whileHover={{ scale: 1.08 }}
         src={user.avatar}
         alt={user.displayName || "User"}
-        className={`${sizeClasses[size]} rounded-full object-cover ring-2 ring-background shadow-md`}
+        className={`${sizeClasses[size]} rounded-2xl object-cover ring-3 ring-background shadow-lg`}
+        style={{ width: sizePx[size], height: sizePx[size] }}
       />
     );
   }
 
   return (
     <motion.div
-      whileHover={{ scale: 1.05 }}
-      className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-primary/20 to-primary/5 text-primary flex items-center justify-center font-bold ring-2 ring-background shadow-md`}
+      whileHover={{ scale: 1.08 }}
+      className={`${sizeClasses[size]} rounded-2xl bg-linear-to-br from-meow-primary via-meow-secondary to-meow-accent text-white flex items-center justify-center font-bold ring-3 ring-background shadow-lg`}
+      style={{ width: sizePx[size], height: sizePx[size] }}
     >
       {initial}
     </motion.div>
   );
 };
 
-const FeedbackTextList = ({ responses }: { responses: FeedbackResponse[] }) => {
+interface FeedbackTextListProps {
+  responses: FeedbackResponse[];
+}
+
+const FeedbackTextList = ({ responses }: FeedbackTextListProps) => {
   const feedbackResponses = useMemo(
     () => responses.filter((r) => r.additionalFeedback),
     [responses]
@@ -703,33 +789,47 @@ const FeedbackTextList = ({ responses }: { responses: FeedbackResponse[] }) => {
 
   if (feedbackResponses.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30" />
-        <p className="text-sm">No written feedback provided yet.</p>
+      <div className="text-center py-16">
+        <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-linear-to-br from-meow-primary/20 to-meow-accent/20 flex items-center justify-center">
+          <MessageSquare className="w-10 h-10 text-muted-foreground/40" />
+        </div>
+        <p className="text-muted-foreground font-medium">No written feedback provided yet.</p>
+        <p className="text-sm text-muted-foreground/60 mt-1">Check back later!</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+    <div className="space-y-4 max-h-[450px] overflow-y-auto pr-2">
       {feedbackResponses.map((r, i) => (
         <motion.div
           key={r._id || i}
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.03 }}
-          whileHover={{ scale: 1.01, transition: { duration: 0.2 } }}
-          className="bg-muted/30 p-4 rounded-xl border border-border/50 hover:border-primary/30 hover:shadow-md transition-all duration-200"
+          transition={{ delay: i * 0.04 }}
+          whileHover={{ scale: 1.01, y: -2 }}
+          className="glass p-5 rounded-2xl transition-all duration-300 group hover:shadow-lg"
         >
-          <div className="flex items-center gap-2.5 mb-2">
-            <UserAvatar user={r.userId} size="sm" />
-            <span className="text-xs text-muted-foreground font-medium">{r.userId.displayName}</span>
-            <span className="text-xs text-muted-foreground/50">•</span>
-            <span className="text-xs text-muted-foreground">
-              {new Date(r.createdAt).toLocaleDateString()}
-            </span>
+          {/* Quote mark */}
+          <div className="absolute -top-1 -left-1 opacity-10 text-6xl font-serif text-meow-primary">
+            "
           </div>
-          <p className="text-foreground text-sm leading-relaxed pl-11">"{r.additionalFeedback}"</p>
+          
+          <div className="relative">
+            <div className="flex items-center gap-3 mb-3">
+              <UserAvatar user={r.userId} size="sm" />
+              <div>
+                <span className="text-sm font-semibold text-foreground">{r.userId.displayName}</span>
+                <span className="block text-xs text-muted-foreground">
+                  {new Date(r.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+            
+            <p className="text-foreground leading-relaxed italic">
+              "{r.additionalFeedback}"
+            </p>
+          </div>
         </motion.div>
       ))}
     </div>
