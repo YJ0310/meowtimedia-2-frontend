@@ -37,6 +37,8 @@ export interface Stamp {
   topicName: string;
   date: string;
   icon: string;
+  stampImage?: string; // Path to stamp image in /stamp folder
+  isVisible?: boolean; // Whether the stamp should be shown (conditions to be announced)
 }
 
 export interface Lesson {
@@ -58,4 +60,20 @@ export interface QuizQuestion {
   question: string;
   options: string[];
   correctAnswer: number;
+}
+
+export interface ContentItem {
+  id: string;
+  countrySlug: string;
+  type: 'festival' | 'food' | 'funfact';
+  title: string;
+  content: string;
+  image: string;
+}
+
+export interface QuizData {
+  countrySlug: string;
+  highestScore: number;
+  totalQuestions: number;
+  questions: QuizQuestion[];
 }

@@ -3,9 +3,10 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { Moon, Sun, Book } from 'lucide-react';
-import { mockUser } from '@/lib/mock-data';
+import { useAuth } from '@/lib/auth-context';
 
 export default function Navbar() {
+  const { user, isAuthenticated, login } = useAuth();
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
   useEffect(() => {
@@ -63,61 +64,78 @@ export default function Navbar() {
                 {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
               </button>
 
-              <Link href="/profile" className="flex items-center gap-2 group">
-                <img 
-                  src={mockUser.image} 
-                  alt={mockUser.name}
-                  className="w-9 h-9 rounded-full border-2 border-primary/50 group-hover:border-primary transition-colors"
-                />
-              </Link>
+              {isAuthenticated && user ? (
+                <Link href="/profile" className="flex items-center gap-2 group">
+                  <img 
+                    src={user.avatar} 
+                    alt={user.displayName}
+                    className="w-9 h-9 rounded-full border-2 border-primary/50 group-hover:border-primary transition-colors"
+                  />
+                </Link>
+              ) : (
+                <button 
+                  onClick={login}
+                  className="px-4 py-2 rounded-full bg-primary text-white font-medium hover:bg-primary/90 transition-colors"
+                >
+                  Sign In
+                </button>
+              )}
             </div>
           </div>
         </div>
       </nav>
 
-      {/* Mobile Bottom Dock - Fixed aspect ratio */}
-      <nav className="mobile-dock md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-white/20 dark:bg-black/30 backdrop-blur-2xl backdrop-saturate-150 border border-white/30 dark:border-white/10 shadow-xl shadow-black/10 rounded-full px-[5%] py-[2.5%] transition-all duration-300 w-[min(90vw,400px)] aspect-5/1">
-        <div className="flex items-center justify-between h-full w-full">
+      {/* Mobile Bottom Dock - Full width with fixed aspect ratio */}
+      <nav className="mobile-dock md:hidden fixed bottom-4 left-2 right-2 z-50 bg-white/20 dark:bg-black/30 backdrop-blur-2xl backdrop-saturate-150 border border-white/30 dark:border-white/10 shadow-xl shadow-black/10 rounded-full transition-all duration-300" style={{ height: 'clamp(48px, 12vw, 64px)' }}>
+        <div className="flex items-center justify-around h-full w-full px-2">
           <Link 
             href="/" 
-            className="p-[6%] rounded-full hover:bg-primary/20 transition-colors active:scale-95 flex items-center justify-center"
+            className="rounded-full hover:bg-primary/20 transition-colors active:scale-95 flex items-center justify-center" style={{ width: 'clamp(32px, 8vw, 40px)', height: 'clamp(32px, 8vw, 40px)' }}
           >
-            <img src="/logo.png" alt="Paw" className="w-full h-full max-w-8 max-h-8 object-contain" />
+            <img src="/logo.png" alt="Paw" className="w-full h-full object-contain" style={{ maxWidth: 'clamp(20px, 5vw, 28px)', maxHeight: 'clamp(20px, 5vw, 28px)' }} />
           </Link>
 
           <Link 
             href="/dashboard" 
-            className="p-[6%] rounded-full hover:bg-primary/20 transition-colors active:scale-95 flex items-center justify-center"
+            className="rounded-full hover:bg-primary/20 transition-colors active:scale-95 flex items-center justify-center" style={{ width: 'clamp(32px, 8vw, 40px)', height: 'clamp(32px, 8vw, 40px)' }}
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg style={{ width: 'clamp(18px, 4.5vw, 24px)', height: 'clamp(18px, 4.5vw, 24px)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </Link>
 
           <Link 
             href="/passport" 
-            className="p-[6%] rounded-full hover:bg-primary/20 transition-colors active:scale-95 flex items-center justify-center"
+            className="rounded-full hover:bg-primary/20 transition-colors active:scale-95 flex items-center justify-center" style={{ width: 'clamp(32px, 8vw, 40px)', height: 'clamp(32px, 8vw, 40px)' }}
           >
-            <Book size={24} />
+            <Book style={{ width: 'clamp(18px, 4.5vw, 24px)', height: 'clamp(18px, 4.5vw, 24px)' }} />
           </Link>
 
           <button
             onClick={toggleTheme}
-            className="p-[6%] rounded-full hover:bg-primary/20 transition-colors active:scale-95 flex items-center justify-center"
+            className="rounded-full hover:bg-primary/20 transition-colors active:scale-95 flex items-center justify-center"
+            style={{ width: 'clamp(32px, 8vw, 40px)', height: 'clamp(32px, 8vw, 40px)' }}
             aria-label="Toggle theme"
           >
-            {theme === 'light' ? <Moon size={24} /> : <Sun size={24} />}
+            {theme === 'light' ? <Moon style={{ width: 'clamp(18px, 4.5vw, 24px)', height: 'clamp(18px, 4.5vw, 24px)' }} /> : <Sun style={{ width: 'clamp(18px, 4.5vw, 24px)', height: 'clamp(18px, 4.5vw, 24px)' }} />}
           </button>
 
           <Link 
             href="/profile" 
             className="rounded-full border-2 border-primary active:scale-95 transition-transform flex items-center justify-center overflow-hidden"
+            style={{ width: 'clamp(32px, 8vw, 40px)', height: 'clamp(32px, 8vw, 40px)' }}
           >
-            <img 
-              src={mockUser.image} 
-              alt={mockUser.name}
-              className="w-10 h-10 rounded-full object-cover"
-            />
+            {isAuthenticated && user ? (
+              <img 
+                src={user.avatar} 
+                alt={user.displayName}
+                className="w-full h-full rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-primary text-xs font-bold">?</span>
+              </div>
+            )}
           </Link>
         </div>
       </nav>

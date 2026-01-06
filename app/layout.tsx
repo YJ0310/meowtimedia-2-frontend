@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/navbar";
+import CustomCursor from "@/components/custom-cursor";
+import { AuthProvider } from "@/lib/auth-context";
+import { ReactionsProvider } from "@/lib/reactions-context";
+import { BGMProvider } from "@/lib/bgm-context";
 
 export const metadata: Metadata = {
   title: "Meowtimap - Your Journey Through Asian Culture",
@@ -9,14 +13,14 @@ export const metadata: Metadata = {
   authors: [{ name: "Meowtimap" }],
   creator: "Meowtimap",
   publisher: "Meowtimap",
-  metadataBase: new URL('https://frontend1.meowtimedia-test.smoltako.space'),
+  metadataBase: new URL('https://meowtimap.smoltako.space'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     title: "Meowtimap - Your Journey Through Asian Culture",
     description: "Collect cultures. Earn stamps. Fall in love with Asia.",
-    url: 'https://frontend1.meowtimedia-test.smoltako.space',
+    url: 'https://meowtimap.smoltako.space',
     siteName: 'Meowtimap',
     images: [
       {
@@ -61,10 +65,17 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
-        <Navbar />
-        <main className="pt-16 md:pt-16 pb-24 md:pb-0">
-          {children}
-        </main>
+        <AuthProvider>
+          <ReactionsProvider>
+            <BGMProvider>
+              <CustomCursor />
+              <Navbar />
+              <main className="pt-16 md:pt-16 pb-24 md:pb-0">
+                {children}
+              </main>
+            </BGMProvider>
+          </ReactionsProvider>
+        </AuthProvider>
       </body>
     </html>
   );

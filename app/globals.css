@@ -5,14 +5,14 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Global custom cursor for all elements */
+/* Hide default cursor globally - custom cursor component handles display */
 *, *::before, *::after {
-  cursor: url('/cursor2.png') 8 8, auto !important;
+  cursor: none !important;
 }
 
-/* Ensure clickable elements also use custom cursor */
+/* Ensure clickable elements also hide cursor */
 a, button, input, select, textarea, [role="button"], [onclick] {
-  cursor: url('/cursor2.png') 8 8, pointer !important;
+  cursor: none !important;
 }
 
 @theme inline {
@@ -69,13 +69,13 @@ a, button, input, select, textarea, [role="button"], [onclick] {
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.78 0.06 250);
+  --primary-foreground: oklch(0.15 0 0);
+  --secondary: oklch(0.86 0.04 250);
+  --secondary-foreground: oklch(0.15 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
+  --accent: oklch(0.92 0.03 70);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);

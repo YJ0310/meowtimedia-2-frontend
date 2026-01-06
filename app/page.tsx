@@ -2,68 +2,48 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
+import { useAuth } from '@/lib/auth-context';
+import { ToastContainer, useToast } from '@/components/toast';
+import GlobalLoading from '@/components/global-loading';
 
 export default function Home() {
   const router = useRouter();
+  const { login, isAuthenticated, showAuthToast, setShowAuthToast } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const { toasts, removeToast, warning } = useToast();
+
+  // Show auth toast when triggered
+  useEffect(() => {
+    if (showAuthToast) {
+      warning('Login Required', 'Please sign in to access this feature', '🔐');
+      setShowAuthToast(false);
+    }
+  }, [showAuthToast, setShowAuthToast, warning]);
+
+  // If already authenticated, redirect to dashboard
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, router]);
 
   const handleBeginJourney = () => {
     setIsLoading(true);
-    // Simulate loading for 1 second, then redirect to dashboard
-    // In future: This will redirect to OAuth login page instead
+    // Show loading animation briefly then redirect to Google OAuth
     setTimeout(() => {
-      router.push('/dashboard');
-    }, 1000);
+      login();
+    }, 800);
   };
 
   return (
     <>
-      {/* Loading Overlay */}
-      <AnimatePresence>
-        {isLoading && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-100 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center gap-6"
-          >
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            >
-              <Loader2 className="w-12 h-12 text-primary" />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="text-center"
-            >
-              <h2 className="text-2xl font-bold text-gradient">Preparing Your Journey</h2>
-              <p className="text-muted-foreground mt-2">Loading your adventure...</p>
-            </motion.div>
-            <motion.div
-              className="flex gap-3"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-            >
-              {['/japan.gif', '/south korea.gif', '/thailand.gif', '/malaysia.gif', '/indonesia.gif'].map((flag, i) => (
-                <motion.img
-                  key={i}
-                  src={flag}
-                  alt="Flag"
-                  className="w-8 h-8 object-contain"
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: 0.5, delay: i * 0.1, repeat: Infinity, repeatDelay: 1 }}
-                />
-              ))}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Global Loading Overlay */}
+      <GlobalLoading isLoading={isLoading} />
+
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onRemove={removeToast} hasNavbar={false} />
 
       <div className="min-h-screen relative overflow-hidden">
       {/* Animated Background */}

@@ -42,8 +42,8 @@ export default function ProgressCircle({ progress, size = 120, strokeWidth = 8 }
         />
         <defs>
           <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#A8BEDF" />
-            <stop offset="100%" stopColor="#C7D5E8" />
+            <stop offset="0%" stopColor="#FFD700" />
+            <stop offset="100%" stopColor="#F4A836" />
           </linearGradient>
         </defs>
       </svg>
